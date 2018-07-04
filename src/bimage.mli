@@ -49,17 +49,28 @@ val rgba: rgba color
 val channels_of_color: 'a color -> int
 (** Returns the number of channels for a given color *)
 
-val kind_max: ('a, 'b) kind -> 'a
-(** [kind_max k] returns the maximum normalized value for [k] *)
+module Kind: sig
+  val max: ('a, 'b) kind -> 'a
+  (** [max k] returns the maximum normalized value for [k] *)
 
-val kind_min: ('a, 'b) kind -> 'a
-(** [kind_min k] returns the minimum normalized value for [k] *)
+  val min: ('a, 'b) kind -> 'a
+  (** [min k] returns the minimum normalized value for [k] *)
 
-val to_float: ('a, 'b) kind -> 'a -> float
-(** [to_float k x] converts a value of kind [k] to float *)
+  val max_f: ('a, 'b) kind -> float
+  (** [max k] returns the maximum normalized value for [k] as a float *)
 
-val of_float: ('a, 'b) kind -> float -> 'a
-(** [of_float k x] converts a float to a value of kind [k] *)
+  val min_f: ('a, 'b) kind -> float
+  (** [min k] returns the minimum normalized value for [k] as a float *)
+
+  val to_float: ('a, 'b) kind -> 'a -> float
+  (** [to_float k x] converts a value of kind [k] to float *)
+
+  val of_float: ('a, 'b) kind -> float -> 'a
+  (** [of_float k x] converts a float to a value of kind [k] *)
+
+  val clamp: ('a, 'b) kind -> float -> float
+  (** Converts a float value to a value within the proper range for the given kind *)
+end
 
 
 (** The Data module defines several operations on one dimensional image data *)
@@ -145,8 +156,9 @@ module Kernel: sig
   val cols: t -> int
   (** Returns the number of columns in a kernel *)
 
-  val of_array: float array array -> t
-  (** Create a kernel from an existing 2-dimensional float array *)
+  val of_array: ?norm:bool -> float array array -> t
+  (** Create a kernel from an existing 2-dimensional float array. When [norm] is true,
+      the kernel will be normalized *)
 
   val to_array: t -> float array array
   (** Convert a kernel to a 2-dimensional float array *)

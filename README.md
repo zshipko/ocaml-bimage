@@ -56,7 +56,7 @@ let _ =
     (** Load an image using ImageMagick *)
     let Some a = Magick.read "test/test.jpg" f32 rgb in
 
-    (** Create operation to convert to grayscale and subtract 0.1 *)
+    (** Create an operation to convert to grayscale and subtract 0.1 *)
     let f = Op.(grayscale &- scalar 0.1) in
 
     (** Create a destination image *)

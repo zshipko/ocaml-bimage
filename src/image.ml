@@ -26,7 +26,7 @@ let length {width; height; color; _} = width * height * channels_of_color color
 let convert_to ?(scale = 1.0) k ~dest img =
   let src_k = kind img in
   for i = 0 to length dest - 1 do
-    dest.data.{i} <- of_float k @@ to_float src_k img.data.{i} *. scale
+    dest.data.{i} <- Kind.of_float k @@ Kind.to_float src_k img.data.{i} *. scale
   done
 
 let convert ?(scale = 1.0) k img =
@@ -49,12 +49,12 @@ let at image x y =
 let get image x y c =
   let index = index image x y in
   let kind = kind image in
-  to_float kind image.data.{index + c}
+  Kind.to_float kind image.data.{index + c}
 
 let set image x y c v =
   let index = index image x y in
   let kind = kind image in
-  image.data.{index + c} <- of_float kind v
+  image.data.{index + c} <- Kind.of_float kind v
 
 let each_pixel f img =
   for j = 0 to img.height - 1 do

@@ -17,12 +17,12 @@ module Magick = struct
         let cmd = Printf.sprintf "%s '%s' -depth 8 %s:-" !command filename f in
         let input = Unix.open_process_in cmd in
         let kind = Image.kind img in
-        let fmax = to_float kind (kind_max kind) in
-        let fmin = to_float kind (kind_min kind) in
+        let fmax = Kind.max_f kind in
+        let fmin = Kind.min_f kind in
         for i = 0 to (Image.(img.width *  img.height)  * channels) - 1 do
-          let x = to_float u8 (input_byte input) in
+          let x = Kind.to_float u8 (input_byte input) in
           let y = x *. ((fmax -. fmin) /. 255.) in
-          img.Image.data.{i} <- of_float kind y
+          img.Image.data.{i} <- Kind.of_float kind y
         done;
         close_in input
       in
@@ -49,12 +49,12 @@ module Magick = struct
     let cmd = Printf.sprintf "%s -depth 8 -size %dx%d %s:- '%s'" !command width height f filename in
     let output = Unix.open_process_out cmd in
     let kind = Image.kind img in
-    let fmax = to_float kind (kind_max kind) in
-    let fmin = to_float kind (kind_min kind) in
+    let fmax = Kind.max_f kind in
+    let fmin = Kind.min_f kind in
     for i = 0 to Image.(img.width *  img.height)  * channels - 1 do
-      let x = to_float kind img.Image.data.{i} in
+      let x = Kind.to_float kind img.Image.data.{i} in
       let y = x *. (255. /. (fmax -. fmin)) in
-      output_byte output (of_float u8 y)
+      output_byte output (Kind.of_float u8 y)
     done;
     close_out output
 end

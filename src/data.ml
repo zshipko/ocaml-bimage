@@ -17,7 +17,7 @@ let create kind ?mmap n =
 let random kind n =
   let dest = create kind n in
   for i = 0 to n -1 do
-    dest.{i} <- of_float kind (Random.float (kind_max kind))
+    dest.{i} <- Kind.of_float kind (Random.float (Kind.max kind))
   done;
   dest
 
@@ -42,7 +42,7 @@ let compare a b = compare a b
 let equal a b = a = b
 
 let of_float ?dest t arr =
-  let of_float = of_float t in
+  let of_float = Kind.of_float t in
   let size = length arr in
   let dest = match dest with None -> create t size | Some d -> d in
   for i = 0 to size - 1 do
@@ -51,7 +51,7 @@ let of_float ?dest t arr =
   dest
 
 let to_float ?dest arr =
-  let to_float = to_float (kind arr) in
+  let to_float = Kind.to_float (kind arr) in
   let size = length arr in
   let dest = match dest with None -> create f32 size | Some d -> d in
   for i = 0 to size - 1 do

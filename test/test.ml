@@ -21,20 +21,30 @@ let _ =
     [| -2.0; 0.0; 2.0 |];
     [| -1.0; 0.0; 1.0 |];
   |] in
+  let b = Kernel.of_array [|
+    [| 3.0; 3.0; 3.0 |];
+    [| 3.0; 3.0; 3.0 |];
+    [| 3.0; 3.0; 3.0 |];
+  |] in
   let f = Op.filter_3x3 k in
   let start = Unix.gettimeofday () in
-  let x = Image.filter k dest in
+  let x = Image.filter b dest in
   Printf.printf "DIRECT: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test1.jpg" x;
   let start = Unix.gettimeofday () in
   let () = Op.(eval f x [| dest |]) in
   Printf.printf "OP (filter_3x3): %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test2.jpg" x;
-  let g = Op.filter k in
+  let g = Op.filter_3x3 b in
   let start = Unix.gettimeofday () in
   let () = Op.eval g x [| dest |] in
   Printf.printf "OP (filter): %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test3.jpg" x
+  Magick.write "test3.jpg" x;
+  let h = Op.filter k in
+  let start = Unix.gettimeofday () in
+  let () = Op.eval h x [| dest |] in
+  Printf.printf "OP (filter): %fsec\n" (Unix.gettimeofday () -. start);
+  Magick.write "test4.jpg" x
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

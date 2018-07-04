@@ -37,10 +37,16 @@ type 'a color =
   | Rgb: [`Rgb] color
   | Rgba: [`Rgba] color
   | Channels: int -> 'a color
+(** The color type is used to specify the color model of an image *)
 
 type gray = [`Gray]
+(** 1-channels gray image *)
+
 type rgb = [`Rgb]
+(** 3-channel RGB image *)
+
 type rgba = [`Rgba]
+(** 4-channel RGBA image *)
 
 val gray: gray color
 val rgb: rgb color
@@ -71,7 +77,6 @@ module Kind: sig
   val clamp: ('a, 'b) kind -> float -> float
   (** Converts a float value to a value within the proper range for the given kind *)
 end
-
 
 (** The Data module defines several operations on one dimensional image data *)
 module Data: sig
@@ -217,13 +222,17 @@ module Image: sig
   val set: ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
   (** Set a single channel of the given image at (x, y) *)
 
-  val each_pixel: (int -> int -> ('a, 'b) Data.t -> unit) -> ('a, 'b, 'c) t -> unit
-  (** Iterate over each pixel in an image. The data segment used in the callback is mutable and
-      will write directly to the underlying image data. *)
+  val each_pixel: (int -> int -> ('a, 'b) Data.t -> unit) -> ?x:int -> ?y:int -> ?width:int -> ?height:int -> ('a, 'b, 'c) t -> unit
+  (** Iterate over each pixel in an image, or a rectangle segment of an image specified by [x], [y], [width],
+      and [height]. The data segment used in the callback is mutable and will write directly to the underlying
+      image data. *)
 
   val filter: Kernel.t -> ?dest:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Apply a kernel directly to the provided image. Note that this implementation is much slower
       than `Op.filter`, it is mostly provided for convenience *)
+
+  val avg_in_rect: ('a, 'b, 'c) t -> int -> int -> int -> int -> (float, f32) Data.t
+  (** Get the average pixel value in a rectangular region of an image *)
 end
 
 (** Op is used to define pixel-level operations *)
@@ -264,10 +273,10 @@ module Op: sig
   (** Invert the values in an image *)
 
   val filter_3x3: Kernel.t -> ('a, 'b, 'c) t
-  (** Run a 3x3 kernel over the provided image *)
+  (** Create a filter operation using a 3x3 kernel *)
 
   val filter: Kernel.t -> ('a, 'b, 'c) t
-  (** Run a kernel of any size over the provided image *)
+  (** Create a filter operation *)
 
   val ( &+ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Infix operator for [join] using addition *)
@@ -287,6 +296,7 @@ module Op: sig
   val sobel_x: ('a, 'b, 'c) t
   val sobel_y: ('a, 'b, 'c) t
   val sobel: ('a, 'b, 'c) t
+  (** Sobel operation *)
 end
 
 (** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the

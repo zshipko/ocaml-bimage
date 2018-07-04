@@ -6,13 +6,14 @@ type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
 let kind t = Array1.kind t
 
 let create kind ?mmap n =
-  match mmap with
-  | Some name ->
-      let fd = Unix.openfile name Unix.[O_RDWR; O_CREAT] 0o0655 in
-      let arr = Unix.map_file fd kind Bigarray.C_layout true [| n |] in
-      Bigarray.array1_of_genarray arr
-  | None ->
-      Bigarray.Array1.create kind Bigarray.C_layout n
+  let arr = match mmap with
+    | Some name ->
+        let fd = Unix.openfile name Unix.[O_RDWR; O_CREAT] 0o0655 in
+        let arr = Unix.map_file fd kind Bigarray.C_layout true [| n |] in
+        Bigarray.array1_of_genarray arr
+    | None ->
+        Bigarray.Array1.create kind Bigarray.C_layout n
+  in Array1.fill arr (Kind.of_float kind 0.0); arr
 
 let random kind n =
   let dest = create kind n in

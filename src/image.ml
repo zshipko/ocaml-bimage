@@ -56,12 +56,37 @@ let set image x y c v =
   let kind = kind image in
   image.data.{index + c} <- Kind.of_float kind v
 
-let each_pixel f img =
-  for j = 0 to img.height - 1 do
-    for i = 0 to img.width - 1 do
+let each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
+  let width =
+    match width with
+    | Some w -> min (img.width - x) w
+    | None -> img.width - x
+  in
+  let height =
+    match height with
+    | Some h -> min (img.height - y) h
+    | None -> img.height - y
+  in
+  for j = y to y + height - 1 do
+    for i = x to x + width - 1 do
       let px = at img i j in
       f i j px
     done
   done
 [@@inline]
+
+let avg_in_rect img x y width height =
+  let avg = Data.create f32 (channels img) in
+  let channels = channels img in
+  let size = float_of_int (width * height) in
+  let kind = kind img in
+  each_pixel (fun x y px ->
+    for i = 0 to channels - 1 do
+      avg.{i} <- avg.{i} +. Kind.to_float kind px.{i}
+    done
+  ) ~x ~y ~width ~height img;
+  for i = 0 to channels - 1 do
+    avg.{i} <- avg.{i} /. size
+  done;
+  avg
 

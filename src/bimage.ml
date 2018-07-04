@@ -7,7 +7,19 @@
 include Type
 module Data = Data
 module Kernel = Kernel
-module Image = Image
+module Image = struct
+  include Image
+
+  let filter k ?dest image =
+    let dest =
+      match dest with
+      | Some d -> d
+      | None -> like (kind image) image.color image
+    in
+    let f = Op.filter k in
+    Op.eval f dest [| image |];
+    dest
+end
 module Op = Op
 
 module Magick = Io.Magick

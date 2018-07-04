@@ -15,6 +15,7 @@ depends:
     "jbuilder" {build}
     "bimage"
     "lablgtk"
+    "cairo2"
 ]
 
 depopts: []

@@ -34,10 +34,10 @@ let convert ?(scale = 1.0) k img =
   convert_to ~scale k ~dest img;
   dest
 
-
 let index image x y =
   let channels = channels image in
   y * image.width * channels + channels * x
+[@@inline]
 
 let index_at image offs =
   let length = channels image in
@@ -64,3 +64,4 @@ let each_pixel f img =
     done
   done
 [@@inline]
+

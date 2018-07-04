@@ -139,6 +139,18 @@ module Kernel: sig
   val create: int -> int -> t
   (** [create rows cols] makes a new Kernel with the given dimensions *)
 
+  val rows: t -> int
+  (** Returns the number of rows in a kernel *)
+
+  val cols: t -> int
+  (** Returns the number of columns in a kernel *)
+
+  val of_array: float array array -> t
+  (** Create a kernel from an existing 2-dimensional float array *)
+
+  val to_array: t -> float array array
+  (** Convert a kernel to a 2-dimensional float array *)
+
   val get: t -> int -> int -> float
   (** [get kernel y x] gets the value at (x, y) *)
 
@@ -196,6 +208,10 @@ module Image: sig
   val each_pixel: (int -> int -> ('a, 'b) Data.t -> unit) -> ('a, 'b, 'c) t -> unit
   (** Iterate over each pixel in an image. The data segment used in the callback is mutable and
       will write directly to the underlying image data. *)
+
+  val filter: Kernel.t -> ?dest:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** Apply a kernel directly to the provided image. Note that this implementation is much slower
+      than `Op.filter`, it is mostly provided for convenience *)
 end
 
 (** Op is used to define pixel-level operations *)
@@ -228,6 +244,18 @@ module Op: sig
 
   val scalar: float -> ('a, 'b, 'c) t
   (** Builds an operation returning a single value *)
+
+  val invert_f: ('a, 'b) kind -> float -> float
+  (** Invert a single value *)
+
+  val invert: ('a, 'b, 'c) t
+  (** Invert the values in an image *)
+
+  val filter_3x3: Kernel.t -> ('a, 'b, 'c) t
+  (** Run a 3x3 kernel over the provided image *)
+
+  val filter: Kernel.t -> ('a, 'b, 'c) t
+  (** Run a kernel of any size over the provided image *)
 
   val ( &+ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Infix operator for [join] using addition *)

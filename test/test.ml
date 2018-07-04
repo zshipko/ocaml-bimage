@@ -26,7 +26,7 @@ let _ =
     [| 3.0; 3.0; 3.0 |];
     [| 3.0; 3.0; 3.0 |];
   |] in
-  let f = Op.filter_3x3 k in
+  let f = Op.sobel in
   let start = Unix.gettimeofday () in
   let x = Image.filter b dest in
   Printf.printf "DIRECT: %fsec\n" (Unix.gettimeofday () -. start);

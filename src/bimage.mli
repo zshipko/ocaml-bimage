@@ -283,6 +283,10 @@ module Op: sig
 
   val ( $ ): ('a, 'b, 'c) t -> (float -> float) -> ('a, 'b, 'c) t
   (** Infix operator for [map] *)
+
+  val sobel_x: ('a, 'b, 'c) t
+  val sobel_y: ('a, 'b, 'c) t
+  val sobel: ('a, 'b, 'c) t
 end
 
 (** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the

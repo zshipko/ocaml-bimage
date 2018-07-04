@@ -35,7 +35,8 @@ let eval op output (inputs: ('a, 'b, 'c) Image.t array) =
     for i = 0 to output.width - 1 do
       let p = at output i j in
       for k = 0 to channels - 1 do
-        let x = Kind.of_float kind (op i j k inputs) in
+        let f = Kind.clamp kind (op i j k inputs) in
+        let x = Kind.of_float kind f in
         Bigarray.Array1.unsafe_set p k x
       done
     done
@@ -111,4 +112,20 @@ let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
         done;
         Kind.clamp (kind a) !f
 
+let sobel_x: ('a, 'b, 'c) t = fun x y c inputs ->
+  filter_3x3 (Kernel.of_array [|
+    [| 1.0; 0.0; -1.0 |];
+    [| 2.0; 0.0; -2.0 |];
+    [| 1.0; 0.0; -1.0 |];
+  |]) x y c inputs
+
+let sobel_y: ('a, 'b, 'c) t = fun x y c inputs ->
+  filter_3x3 (Kernel.of_array [|
+    [|  1.0;  2.0;  1.0 |];
+    [|  0.0;  0.0;  0.0 |];
+    [| -1.0; -2.0; -1.0 |];
+  |]) x y c inputs
+
+let sobel x y c inputs =
+  (sobel_x &+ sobel_y) x y c inputs
 

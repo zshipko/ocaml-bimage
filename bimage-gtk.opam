@@ -1,11 +1,11 @@
 opam-version: "1.2"
 maintainer: "Zach Shipko <zachshipko@gmail.com>"
 authors: ["Zach Shipko <zachshipko@gmail.com>"]
-homepage: "https://github.com/zshipko/bimage"
-doc: "https://github.com/zshipko/bimage/doc"
+homepage: "https://github.com/zshipko/vision"
+doc: "https://github.com/zshipko/vision/doc"
 license: "ISC"
-dev-repo: "https://github.com/zshipko/bimage.git"
-bug-reports: "https://github.com/zshipko/bimage/issues"
+dev-repo: "https://github.com/zshipko/vision.git"
+bug-reports: "https://github.com/zshipko/vision/issues"
 tags: []
 
 available: [ ocaml-version >= "4.03.0"]
@@ -13,6 +13,8 @@ available: [ ocaml-version >= "4.03.0"]
 depends:
 [
     "jbuilder" {build}
+    "bimage"
+    "lablgtk"
 ]
 
 depopts: []

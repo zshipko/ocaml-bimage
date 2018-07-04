@@ -1,0 +1,3 @@
+[submodule "src/bimage"]
+	path = src/bimage
+	url = https://github.com/zshipko/bimage

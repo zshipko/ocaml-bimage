@@ -1,0 +1,28 @@
+opam-version: "1.2"
+maintainer: "Zach Shipko <zachshipko@gmail.com>"
+authors: ["Zach Shipko <zachshipko@gmail.com>"]
+homepage: "https://github.com/zshipko/bimage"
+doc: "https://github.com/zshipko/bimage/doc"
+license: "ISC"
+dev-repo: "https://github.com/zshipko/bimage.git"
+bug-reports: "https://github.com/zshipko/bimage/issues"
+tags: []
+
+available: [ ocaml-version >= "4.03.0"]
+
+depends:
+[
+    "jbuilder" {build}
+]
+
+depopts: []
+
+build:
+[
+    ["jbuilder" "build"]
+]
+
+build-test:
+[
+    ["jbuilder" "runtest"]
+]

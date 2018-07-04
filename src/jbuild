@@ -1,0 +1,6 @@
+(jbuild_version 1)
+
+(library
+    ((name bimage)
+     (public_name bimage)
+     (libraries (unix bigarray))))

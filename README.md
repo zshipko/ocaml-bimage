@@ -25,26 +25,26 @@ bimage can be installed with `opam`:
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.
 
-## Example
+## Examples
 
-An example showing how to create an image and how to use `Image.each_pixel`
+An example showing how to create an image and how to use `Image.each_pixel`:
 
 ```ocaml
 open Bimage
 
 let _ =
-    (** Create a new image *)
-    let a = Image.create u8 gray 64 64 in
+(* Create a new image *)
+let a = Image.create u8 gray 64 64 in
 
-    (** Iterate over each pixel *)
-    let _ =
-        Image.each_pixel (fun x y px ->
-            px.{0} <- x + y
-        ) a
-    in
+(* Iterate over each pixel *)
+let _ =
+    Image.each_pixel (fun x y px ->
+        px.{0} <- x + y
+    ) a
+in
 
-    (** Save the image using ImageMagick *)
-    Magick.write "test1.jpg" a
+(* Save the image using ImageMagick *)
+Magick.write "test1.jpg" a
 ```
 
 An example using `Op.t` to run a filter on an image:
@@ -53,20 +53,20 @@ An example using `Op.t` to run a filter on an image:
 open Bimage
 
 let _ =
-    (** Load an image using ImageMagick *)
-    let Some a = Magick.read "test/test.jpg" f32 rgb in
+(* Load an image using ImageMagick *)
+let Some a = Magick.read "test/test.jpg" f32 rgb in
 
-    (** Create an operation to convert to grayscale and subtract 0.1 *)
-    let f = Op.(grayscale &- scalar 0.1) in
+(* Create an operation to convert to grayscale and subtract 0.1 *)
+let f = Op.(grayscale &- scalar 0.1) in
 
-    (** Create a destination image *)
-    let dest = Image.like f32 gray a in
+(* Create a destination image *)
+let dest = Image.like f32 gray a in
 
-    (** Run the operation *)
-    let () = Op.eval f dest [| a |] in
+(* Run the operation *)
+let () = Op.eval f dest [| a |] in
 
-    (** Save the image using ImageMagick *)
-    Magick.write "test2.jpg" a
+(* Save the image using ImageMagick *)
+Magick.write "test2.jpg" a
 ```
 
 ## Documentation
@@ -75,7 +75,7 @@ The documentation and API reference is generated from the source
 interfaces. It can be consulted [online][doc] or via `odig doc
 bimage`.
 
-[doc]: https://github.com/zshipko/bimage/doc
+[doc]: https://zshipko.github.com/ocaml-bimage
 
 ## Tests
 

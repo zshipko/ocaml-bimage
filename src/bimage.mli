@@ -268,6 +268,9 @@ module Image: sig
   val channels: ('a, 'b, 'c) t -> int
   (** Returns the number of channels in an image *)
 
+  val length: ('a, 'b, 'c) t -> int
+  (** Returns the number of values contained in an image *)
+
   val kind: ('a, 'b, 'c) t -> ('a, 'b) kind
   (** Returns the image kind *)
 

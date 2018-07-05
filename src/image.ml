@@ -4,22 +4,27 @@ type ('a, 'b, 'c) t = {
   width: int;
   height: int;
   color: 'c Color.t;
+  step: int;
   data: ('a, 'b) Data.t;
 }
 
-let create ?mmap depth color width height =
-  let data = Data.create ?mmap depth (width * height * channels_of_color color) in
-  {width; height; color; data}
+let create ?mmap kind color width height =
+  let channels = channels_of_color color in
+  let data = Data.create ?mmap kind (width * height * channels) in
+  let step = width * channels in
+  {width; height; color; step; data}
 
 let like depth color image =
   create depth color image.width image.height
 
-let random depth color width height =
-  let data = Data.random depth (width * height * channels_of_color color) in
-  {width; height; color; data}
+let random kind color width height =
+  let channels = channels_of_color color in
+  let data = Data.random kind (width * height * channels) in
+  let step = width * channels in
+  {width; height; color; step; data}
 
 let channels {color; _} = channels_of_color color
-let kind {data; _} = Data.kind data
+let kind {data; _} = Data.kind data [@@inline]
 let shape {width; height; color; _} = width, height, channels_of_color color
 let length {width; height; color; _} = width * height * channels_of_color color
 
@@ -35,12 +40,11 @@ let convert ?(scale = 1.0) k img =
   dest
 
 let index image x y =
-  let channels = channels image in
-  y * image.width * channels + channels * x
+  y * image.step + image.color.Color.channels * x
 [@@inline]
 
 let index_at image offs =
-  let length = channels image in
+  let length = image.color.Color.channels in
   Data.slice image.data ~offs ~length
 
 let at image x y =
@@ -48,13 +52,11 @@ let at image x y =
 
 let get image x y c =
   let index = index image x y in
-  let kind = kind image in
-  Kind.to_float kind image.data.{index + c}
+  Kind.to_float (kind image) image.data.{index + c}
 
 let set image x y c v =
   let index = index image x y in
-  let kind = kind image in
-  image.data.{index + c} <- Kind.of_float kind v
+  image.data.{index + c} <- Kind.of_float (kind image) v
 
 let each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =

@@ -3,7 +3,7 @@ open Type
 
 type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
 
-let kind t = Array1.kind t
+let kind t = Array1.kind t [@@inline]
 
 let create kind ?mmap n =
   let arr = match mmap with
@@ -22,7 +22,7 @@ let random kind n =
   done;
   dest
 
-let length data = Array1.dim data
+let length data = Array1.dim data [@@inline]
 
 let fold2 f a b init =
   let acc = ref init in

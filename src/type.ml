@@ -111,6 +111,10 @@ module Kind = struct
   [@@inline]
 
   let clamp kind f =
-    Pervasives.max (min_f kind) (Pervasives.min (max_f kind) f)
+    let min = min_f kind in
+    let max = max_f kind in
+    if f < min then min
+    else if f > max then max
+    else f
 end
 

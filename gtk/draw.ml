@@ -2,11 +2,10 @@ open Bimage
 
 type t = Cairo.Surface.t
 
-let cairo_format: type a. a color -> Cairo.Image.format = fun color ->
-  match color with
-    | Gray -> A8
-    | Rgb -> Cairo.Image.RGB24
-    | _ -> assert false
+let cairo_format: type a. [gray | rgb] color -> Cairo.Image.format = fun color ->
+  match color.t with
+    | `Gray -> A8
+    | `Rgb -> Cairo.Image.RGB24
 
 let draw f im =
   let width, height, _ = Image.shape im in

@@ -3,7 +3,7 @@ open Type
 type ('a, 'b, 'c) t = {
   width: int;
   height: int;
-  color: 'c color;
+  color: 'c Color.t;
   data: ('a, 'b) Data.t;
 }
 

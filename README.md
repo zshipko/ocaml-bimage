@@ -1,4 +1,4 @@
-bimage — Basic image processing library
+bimage — Image processing library
 -------------------------------------------------------------------------------
 %%VERSION%%
 

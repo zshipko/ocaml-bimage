@@ -1,11 +1,5 @@
 type t = float array array
 
-type edge =
-  | Extend
-  | Wrap
-  | Mirror
-  | Crop
-
 let create rows cols =
   Array.make_matrix rows cols 0.0
 

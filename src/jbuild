@@ -3,4 +3,5 @@
 (library
     ((name bimage)
      (public_name bimage)
+     (ocamlopt_flags (-O3))
      (libraries (unix bigarray))))

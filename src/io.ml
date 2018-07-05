@@ -1,11 +1,10 @@
 open Type
 
 module Magick = struct
-  let pixel_type: type a. a color -> string = function
-    | Gray -> "gray"
-    | Rgb -> "rgb"
-    | Rgba -> "rgba"
-    | _ -> failwith "unsupported"
+  let pixel_type: type a. [< gray|rgb|rgba] Color.t -> string = fun c -> match c.t with
+    | `Gray -> "gray"
+    | `Rgb -> "rgb"
+    | `Rgba -> "rgba"
 
   let command = ref "convert"
 

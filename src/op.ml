@@ -79,7 +79,7 @@ let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   let k22 = Kernel.get kernel 2 2 in
   fun x y c inputs ->
     let a = inputs.(0) in
-    if x = 0 || x >= a.Image.width - 1 || y = 0 || y >= a.Image.height - 1 then 0.0
+    if x = 0 || x >= a.Image.width - 1 || y = 0 || y >= a.Image.height - 1 then get a x y c
     else
       Kind.clamp (kind a)
         (get a (x - 1) (y - 1) c *. k00
@@ -102,7 +102,7 @@ let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   else
     fun x y c inputs ->
       let a = inputs.(0) in
-      if x < c2 || x >= a.Image.width - c2 || y < r2 || y >= a.Image.height - r2 then 0.0
+      if x < c2 || x >= a.Image.width - c2 || y < r2 || y >= a.Image.height - r2 then get a x y c
       else
         let f = ref 0.0 in
         for ky = -r2 to r2 do

@@ -20,26 +20,21 @@ let f64 = Float64
 let c32 = Complex32
 let c64 = Complex64
 
-type 'a color =
-  | Gray: [`Gray] color
-  | Rgb: [`Rgb] color
-  | Rgba: [`Rgba] color
-  | Channels: int -> 'a color
-
-let gray = Gray
-let rgb = Rgb
-let rgba = Rgba
-let channels n = Channels n
-
 type gray = [`Gray]
 type rgb = [`Rgb]
+type yuv = [`Yuv]
+type xyz = [`Xyz]
 type rgba = [`Rgba]
 
-let channels_of_color: type a. a color -> int = function
-  | Gray -> 1
-  | Rgb -> 3
-  | Rgba -> 4
-  | Channels c -> c
+let gray = Color.create ~has_alpha:false ~channels:1 `Gray
+let rgb = Color.create ~has_alpha:false ~channels:3 `Rgb
+let yuv = Color.create ~has_alpha:false ~channels:3 `Yuv
+let xyz = Color.create ~has_alpha:false ~channels:3 `Xyz
+let rgba = Color.create ~has_alpha:false ~channels:4 `Rgba
+
+let channels_of_color: type a. a Color.t -> int =
+  fun {channels; _} ->
+    channels
 [@@inline]
 
 module Kind = struct

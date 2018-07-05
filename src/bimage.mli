@@ -32,28 +32,44 @@ val f64: (float, f64) kind
 val c32: (Complex.t, c32) kind
 val c64: (Complex.t, c64) kind
 
-type 'a color =
-  | Gray: [`Gray] color
-  | Rgb: [`Rgb] color
-  | Rgba: [`Rgba] color
-  | Channels: int -> 'a color
-(** The color type is used to specify the color model of an image *)
+(** Color contains methods for creating and inspecting color types *)
+module Color: sig
+  type 'a t
+  (** Used to specify the color model of an image *)
+
+  val create: has_alpha:bool -> channels:int -> 'a -> 'a t
+  (** Create a new color type *)
+
+  val has_alpha: 'a t -> bool
+  (** Returns true if the color has an alpha channel *)
+
+  val channels: 'a t -> int
+  (** Returns the number of channels for a color *)
+
+  val t: 'a t -> 'a
+  (** Returns the underlying type of a color *)
+end
 
 type gray = [`Gray]
-(** 1-channels gray image *)
+(** 1-channels gray color type *)
 
 type rgb = [`Rgb]
-(** 3-channel RGB image *)
+(** 3-channel RGB color type *)
+
+type xyz = [`Xyz]
+(** 3-channel XYZ color type *)
+
+type yuv = [`Yuv]
+(** 3-channel YUV color type *)
 
 type rgba = [`Rgba]
 (** 4-channel RGBA image *)
 
-val gray: gray color
-val rgb: rgb color
-val rgba: rgba color
-
-val channels_of_color: 'a color -> int
-(** Returns the number of channels for a given color *)
+val gray: gray Color.t
+val rgb: rgb Color.t
+val xyz: xyz Color.t
+val yuv: yuv Color.t
+val rgba: rgba Color.t
 
 module Kind: sig
   val max: ('a, 'b) kind -> 'a
@@ -148,6 +164,26 @@ module Data: sig
   (** Default equality function *)
 end
 
+(** Pixels are 3-channel float vectors used to store image data *)
+module Pixel: sig
+  type t
+
+  val empty: unit -> t
+  (** Create a new pixel with all channels set to 0 *)
+
+  val from_data: ('a, 'b) Data.t -> t
+  (** Create a new pixel from existing image data *)
+
+  val to_data: dest:('a, 'b) Data.t -> t -> unit
+  (** Copy pixel data to existing image data *)
+
+  val to_xyz: t -> t
+  (** Convert pixel from RGB to XYZ *)
+
+  val to_yuv: t -> t
+  (** Convert pixel from RGB to YUV *)
+end
+
 (** Kernels are used for filtering images using convolution *)
 module Kernel: sig
   type t
@@ -186,14 +222,14 @@ module Image: sig
   type ('a, 'b, 'c) t = {
     width: int;
     height: int;
-    color: 'c color;
+    color: 'c Color.t;
     data: ('a, 'b) Data.t;
   }
 
-  val create: ?mmap:string -> ('a, 'b) kind -> 'c color -> int -> int -> ('a, 'b, 'c) t
+  val create: ?mmap:string -> ('a, 'b) kind -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
   (** [create kind color width height] makes a new image with the given [kind], [color] and dimensions *)
 
-  val like: ('a, 'b) kind -> 'c color -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
+  val like: ('a, 'b) kind -> 'c Color.t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
   (** [like kind color img] creates a new image with the same dimensions as [img] with the given [kind] and [color] *)
 
   val channels: ('a, 'b, 'c) t -> int
@@ -302,10 +338,10 @@ end
 (** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the
     command-line *)
 module Magick: sig
-  val read: string -> ('a, 'b) kind -> 'c color -> ('a, 'b, 'c) Image.t option
+  val read: string -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> ('a, 'b, 'c) Image.t option
   (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
 
-  val write: string -> ('a, 'b, 'c) Image.t -> unit
+  val write: string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit
   (** [write filename image] saves an image to [filename] *)
 
   val command: string ref

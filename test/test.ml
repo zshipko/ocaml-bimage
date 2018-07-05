@@ -12,8 +12,8 @@ let unwrap msg = function
 
 let _ =
   let f = Sys.argv.(1) in
-  let im = unwrap "Invalid input file" @@ Magick.read f f32 Rgb in
-  let dest = Image.create f32 Gray im.Image.width im.Image.height in
+  let im = unwrap "Invalid input file" @@ Magick.read f f32 rgb in
+  let dest = Image.create f32 gray im.Image.width im.Image.height in
   let () = Op.(eval grayscale dest [| im |]) in
   Magick.write "test.jpg" dest;
   let k = Kernel.of_array [|

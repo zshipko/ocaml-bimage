@@ -5,7 +5,9 @@
   ---------------------------------------------------------------------------*)
 
 include Type
+module Color = Color
 module Data = Data
+module Pixel = Pixel
 module Kernel = Kernel
 module Image = struct
   include Image

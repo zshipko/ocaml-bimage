@@ -6,20 +6,20 @@
 
 open Bimage
 
-let unwrap msg = function
-  | Some x -> x
-  | None -> failwith msg
+let unwrap = function
+  | Ok x -> x
+  | Error e -> Error.exc e
 
 let _ =
   let f = Sys.argv.(1) in
-  let im = unwrap "Invalid input file" @@ Magick.read f f32 rgb in
+  let im = unwrap  @@ Magick.read f f32 rgb in
   let dest = Image.create f32 gray im.Image.width im.Image.height in
   let () = Op.(eval grayscale dest [| im |]) in
   Magick.write "test.jpg" dest;
   let k = Kernel.of_array [|
-    [| -1.0; 0.0; 1.0 |];
-    [| -2.0; 0.0; 2.0 |];
-    [| -1.0; 0.0; 1.0 |];
+    [| 1.0; 0.0; -1.0 |];
+    [| 2.0; 0.0; -2.0 |];
+    [| 1.0; 0.0; -1.0 |];
   |] in
   let b = Kernel.of_array [|
     [| 3.0; 3.0; 3.0 |];

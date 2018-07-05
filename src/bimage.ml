@@ -5,6 +5,7 @@
   ---------------------------------------------------------------------------*)
 
 include Type
+module Error = Error
 module Color = Color
 module Data = Data
 module Pixel = Pixel

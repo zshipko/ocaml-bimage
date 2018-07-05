@@ -19,4 +19,4 @@ let normalize kernel =
 
 external to_array: t -> float array array = "%identity"
 
-let of_array ?(norm = true) arr = normalize arr
+let of_array ?(norm = true) arr = if norm then normalize arr else arr

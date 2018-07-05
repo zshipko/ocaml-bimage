@@ -2,8 +2,8 @@ open Bimage
 
 type t = Cairo.Surface.t
 
-let cairo_format: type a. [gray | rgb] color -> Cairo.Image.format = fun color ->
-  match color.t with
+let cairo_format: [gray | rgb] Color.t -> Cairo.Image.format = fun color ->
+  match Color.t color with
     | `Gray -> A8
     | `Rgb -> Cairo.Image.RGB24
 

@@ -1,7 +1,7 @@
 open Type
 
 module Magick = struct
-  let pixel_type: type a. [< gray|rgb|rgba] Color.t -> string = fun c -> match c.t with
+  let pixel_type: [< gray|rgb|rgba] Color.t -> string = fun c -> match c.t with
     | `Gray -> "gray"
     | `Rgb -> "rgb"
     | `Rgba -> "rgba"
@@ -10,18 +10,17 @@ module Magick = struct
 
   let read filename t color =
     try
-      let read_image_data t filename img =
+      let read_image_data filename img =
         let f = pixel_type img.Image.color in
         let channels = Image.channels img in
         let cmd = Printf.sprintf "%s '%s' -depth 8 %s:-" !command filename f in
         let input = Unix.open_process_in cmd in
-        let kind = Image.kind img in
-        let fmax = Kind.max_f kind in
-        let fmin = Kind.min_f kind in
+        let fmax = Kind.max_f t in
+        let fmin = Kind.min_f t in
         for i = 0 to (Image.(img.width *  img.height)  * channels) - 1 do
           let x = Kind.to_float u8 (input_byte input) in
           let y = x *. ((fmax -. fmin) /. 255.) in
-          img.Image.data.{i} <- Kind.of_float kind y
+          img.Image.data.{i} <- Kind.of_float t y
         done;
         close_in input
       in
@@ -37,10 +36,10 @@ module Magick = struct
       match List.map int_of_string shape with
       | x::y::[] ->
           let img = Image.create t color x y in
-          let () = read_image_data t filename img in
-          Some img
-      | _ -> None (* Invalid image/shape *)
-    with End_of_file -> None | Failure _ -> None
+          let () = read_image_data filename img in
+          Ok img
+      | _ -> Error (`Invalid_shape)
+    with End_of_file -> Error `Invalid_shape | Failure msg -> Error (`Msg msg)
 
   let write filename img =
     let width, height, channels = Image.shape img in

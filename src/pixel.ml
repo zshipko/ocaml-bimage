@@ -22,6 +22,8 @@ let to_data ~dest (Pixel px) =
     dest.{i} <- Kind.of_float kind px.{i}
   done
 
+let as_data (Pixel px) = px
+
 let to_xyz (Pixel px) =
   let Pixel dest = empty () in
   dest.{0} <- 0.4124564 *. px.{0} +. 0.3575761 *. px.{1} +. 0.1804375 *. px.{2};
@@ -35,6 +37,16 @@ let to_yuv (Pixel px) =
   dest.{1} <- -0.147 *. px.{0} -. 0.289 *. px.{1} +. 0.436 *. px.{2};
   dest.{2} <-  0.615 *. px.{0} -. 0.515 *. px.{1} -. 0.100 *. px.{2};
   Pixel dest
+
+let map_inplace f (Pixel px) = Data.map_inplace f px
+
+let map f (Pixel px) =
+  let dest = Data.copy px in
+  Data.map_inplace f dest;
+  Pixel dest
+
+let fold f (Pixel px) a = Data.fold f px a
+let fold2 f (Pixel px) (Pixel px') a = Data.fold2 f px px' a
 
 let pp fmt (Pixel px) =
   Format.fprintf fmt "Scalar(%f, %f, %f)" px.{0} px.{1} px.{2}

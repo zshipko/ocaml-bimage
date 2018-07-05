@@ -18,13 +18,13 @@ let min: ('a, 'b, 'c) t = fun x y c inputs ->
   let b = inputs.(1) in
   min (get a x y c) (get b x y c)
 
-let grayscale: ('a, 'b, [< `Rgb | `Rgba]) t = fun x y c inputs ->
+let grayscale: ('a, 'b, [< `Rgb | `Rgba]) t = fun x y _c inputs ->
   let a = inputs.(0) in
   (get a x y 0 *. 0.21)
   +. (get a x y 1 *. 0.72)
   +. (get a x y 2 *. 0.07)
 
-let color: ('a, 'b, [`Gray]) t = fun x y c inputs ->
+let color: ('a, 'b, [`Gray]) t = fun x y _c inputs ->
   let a = inputs.(0) in
   get a x y 0
 
@@ -56,7 +56,7 @@ let ( &- ) a b = join (-.) a b
 let ( &* ) a b = join ( *. ) a b
 let ( &/ ) a b = join ( /.) a b
 
-let scalar: float -> ('a, 'b, 'c) t = fun f x y c inputs -> f
+let scalar: float -> ('a, 'b, 'c) t = fun f _x _y _c _inputs -> f
 
 let invert_f kind f =
   Kind.max_f kind -. f
@@ -79,18 +79,16 @@ let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   let k22 = Kernel.get kernel 2 2 in
   fun x y c inputs ->
     let a = inputs.(0) in
-    if x = 0 || x >= a.Image.width - 1 || y = 0 || y >= a.Image.height - 1 then get a x y c
-    else
-      Kind.clamp (kind a)
-        (get a (x - 1) (y - 1) c *. k00
-         +. get a (x - 1) y c *. k10
-         +. get a (x - 1) (y + 1) c *. k20
-         +. get a x (y - 1) c *. k01
-         +. get a x y c *. k11
-         +. get a x (y + 1) c *. k21
-         +. get a (x + 1) (y - 1) c *. k02
-         +. get a (x + 1) y c *. k12
-         +. get a (x + 1) (y + 1) c *. k22)
+    Kind.clamp (kind a)
+      (get a (x - 1) (y - 1) c *. k00
+       +. get a (x - 1) y c *. k10
+       +. get a (x - 1) (y + 1) c *. k20
+       +. get a x (y - 1) c *. k01
+       +. get a x y c *. k11
+       +. get a x (y + 1) c *. k21
+       +. get a (x + 1) (y - 1) c *. k02
+       +. get a (x + 1) y c *. k12
+       +. get a (x + 1) (y + 1) c *. k22)
 
 let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   let rows = Kernel.rows kernel in
@@ -102,30 +100,31 @@ let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   else
     fun x y c inputs ->
       let a = inputs.(0) in
-      if x < c2 || x >= a.Image.width - c2 || y < r2 || y >= a.Image.height - r2 then get a x y c
-      else
-        let f = ref 0.0 in
-        for ky = -r2 to r2 do
-          for kx = -c2 to c2 do
-            f := !f +. (get a (x + kx) (y + ky) c *. Kernel.get kernel (ky + r2) (kx + c2))
-          done
-        done;
-        Kind.clamp (kind a) !f
+      let f = ref 0.0 in
+      for ky = -r2 to r2 do
+        for kx = -c2 to c2 do
+          f := !f +. (get a (x + kx) (y + ky) c *. Kernel.get kernel (ky + r2) (kx + c2))
+        done
+      done;
+      Kind.clamp (kind a) !f
+
+let sobel_x_kernel = Kernel.of_array [|
+  [| 1.0; 0.0; -1.0 |];
+  [| 2.0; 0.0; -2.0 |];
+  [| 1.0; 0.0; -1.0 |];
+|]
+
+let sobel_y_kernel = Kernel.of_array [|
+  [|  1.0;  2.0;  1.0 |];
+  [|  0.0;  0.0;  0.0 |];
+  [| -1.0; -2.0; -1.0 |];
+|]
 
 let sobel_x: ('a, 'b, 'c) t = fun x y c inputs ->
-  filter_3x3 (Kernel.of_array [|
-    [| 1.0; 0.0; -1.0 |];
-    [| 2.0; 0.0; -2.0 |];
-    [| 1.0; 0.0; -1.0 |];
-  |]) x y c inputs
+  filter_3x3 sobel_x_kernel x y c inputs
 
 let sobel_y: ('a, 'b, 'c) t = fun x y c inputs ->
-  filter_3x3 (Kernel.of_array [|
-    [|  1.0;  2.0;  1.0 |];
-    [|  0.0;  0.0;  0.0 |];
-    [| -1.0; -2.0; -1.0 |];
-  |]) x y c inputs
+  filter_3x3 sobel_y_kernel  x y c inputs
 
-let sobel x y c inputs =
-  (sobel_x &+ sobel_y) x y c inputs
+let sobel x y c inputs = (sobel_x &+ sobel_y) x y c inputs [@@inline]
 

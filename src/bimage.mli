@@ -32,6 +32,25 @@ val f64: (float, f64) kind
 val c32: (Complex.t, c32) kind
 val c64: (Complex.t, c64) kind
 
+module Error: sig
+  type t = [
+    | `Invalid_shape
+    | `Msg of string
+  ]
+
+  exception Exc of t
+
+  val exc: t -> 'a
+  (** Raises an [Exc] with the provided [Error.t] *)
+
+  val to_string: t -> string
+  (** Returns a string representation of an [Error.t] *)
+
+  val unwrap: ('a, t) result -> 'a
+  (** A convenience function that returns the [Ok] value of a result if possible, otherwise
+      it raises the [Error] value *)
+end
+
 (** Color contains methods for creating and inspecting color types *)
 module Color: sig
   type 'a t
@@ -143,7 +162,7 @@ module Data: sig
   val convert: ('c, 'd) kind -> ('a -> 'c) -> ('a, 'b) t -> ('c, 'd) t
   (** Convert between [Data.t] types *)
 
-  val convert_to: ('c, 'd) kind -> ('a -> 'c) -> dest:('c, 'd) t -> ('a, 'b) t -> unit
+  val convert_to: ('a -> 'c) -> dest:('c, 'd) t -> ('a, 'b) t -> unit
   (** Convert between [Data.t] types with an existing destination image *)
 
   val of_float: ?dest:('a, 'b) t -> ('a, 'b) kind -> (float, f32) t -> ('a, 'b) t
@@ -174,6 +193,9 @@ module Pixel: sig
   val from_data: ('a, 'b) Data.t -> t
   (** Create a new pixel from existing image data *)
 
+  val as_data: t -> (float, f32) Data.t
+  (** Returns the underlying pixel data *)
+
   val to_data: dest:('a, 'b) Data.t -> t -> unit
   (** Copy pixel data to existing image data *)
 
@@ -182,6 +204,11 @@ module Pixel: sig
 
   val to_yuv: t -> t
   (** Convert pixel from RGB to YUV *)
+
+  val map: (float -> float) -> t -> t
+  val map_inplace: (float -> float) -> t -> unit
+  val fold: (float -> 'a -> 'a) -> t -> 'a -> 'a
+  val fold2: (float -> float -> 'a -> 'a) -> t -> t -> 'a -> 'a
 
   val pp: Format.formatter -> t -> unit
 end
@@ -232,6 +259,9 @@ module Image: sig
   val create: ?mmap:string -> ('a, 'b) kind -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
   (** [create kind color width height] makes a new image with the given [kind], [color] and dimensions *)
 
+  val of_data: 'c Color.t -> int -> int -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
+  (** [of_data color width height] makes a new image from existing image data with the given [kind], [color] and dimensions *)
+
   val like: ('a, 'b) kind -> 'c Color.t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
   (** [like kind color img] creates a new image with the same dimensions as [img] with the given [kind] and [color] *)
 
@@ -244,7 +274,7 @@ module Image: sig
   val shape: ('a, 'b, 'c) t -> int * int * int
   (** Returns the width, height and channels *)
 
-  val convert_to: ?scale:float -> ('d, 'e) kind -> dest:('d, 'e, 'c) t -> ('a, 'b, 'c) t -> unit
+  val convert_to: ?scale:float -> dest:('d, 'e, 'c) t -> ('a, 'b, 'c) t -> unit
   (** Convert an image to an existing image of another kind, optionally using a scale factor *)
 
   val convert: ?scale:float -> ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
@@ -347,7 +377,7 @@ end
 (** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the
     command-line *)
 module Magick: sig
-  val read: string -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> ('a, 'b, 'c) Image.t option
+  val read: string -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Image.t, Error.t) result
   (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
 
   val write: string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit

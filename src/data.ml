@@ -91,7 +91,7 @@ let copy data =
   copy_to ~dest data;
   dest
 
-let convert_to kind fn ~dest data =
+let convert_to fn ~dest data =
   let len = length data in
   for i = 0 to len - 1 do
     dest.{i} <- fn data.{i}

@@ -36,4 +36,7 @@ let to_yuv (Pixel px) =
   dest.{2} <-  0.615 *. px.{0} -. 0.515 *. px.{1} -. 0.100 *. px.{2};
   Pixel dest
 
+let pp fmt (Pixel px) =
+  Format.fprintf fmt "Scalar(%f, %f, %f)" px.{0} px.{1} px.{2}
+
 

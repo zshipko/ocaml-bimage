@@ -182,6 +182,8 @@ module Pixel: sig
 
   val to_yuv: t -> t
   (** Convert pixel from RGB to YUV *)
+
+  val pp: Format.formatter -> t -> unit
 end
 
 (** Kernels are used for filtering images using convolution *)
@@ -258,6 +260,12 @@ module Image: sig
 
   val set: ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
   (** Set a single channel of the given image at (x, y) *)
+
+  val get_pixel: ('a, 'b, 'c) t -> int -> int -> Pixel.t
+  (** [get_pixel image x y] returns a pixel representation of [image] data at ([x], [y]) *)
+
+  val set_pixel: ('a, 'b, 'c) t -> int -> int -> Pixel.t -> unit
+  (** [set_pixel image x y px] sets the value of [image] at ([x], [y]) to [px] *)
 
   val each_pixel: (int -> int -> ('a, 'b) Data.t -> unit) -> ?x:int -> ?y:int -> ?width:int -> ?height:int -> ('a, 'b, 'c) t -> unit
   (** Iterate over each pixel in an image, or a rectangle segment of an image specified by [x], [y], [width],

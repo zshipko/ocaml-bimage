@@ -58,6 +58,13 @@ let set image x y c v =
   let index = index image x y in
   image.data.{index + c} <- Kind.of_float (kind image) v
 
+let get_pixel image x y =
+  at image x y |> Pixel.from_data
+
+let set_pixel image x y px =
+  let dest = at image x y in
+  Pixel.to_data ~dest px
+
 let each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
     match width with

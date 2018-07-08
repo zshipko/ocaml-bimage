@@ -356,6 +356,9 @@ module Op: sig
   val filter: Kernel.t -> ('a, 'b, 'c) t
   (** Create a filter operation *)
 
+  val filter2: (float -> float -> float) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+  (** Create a kernel operation using two kernels *)
+
   val ( &+ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Infix operator for [join] using addition *)
 

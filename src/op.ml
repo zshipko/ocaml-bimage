@@ -108,6 +108,22 @@ let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
       done;
       Kind.clamp (kind a) !f
 
+let filter2: (float -> float -> float ) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t = fun fn kernel kernel2 ->
+  let rows = Kernel.rows kernel in
+  let cols = Kernel.cols kernel in
+  let r2 = rows / 2 in
+  let c2 = cols / 2 in
+  fun x y c inputs ->
+    let a = inputs.(0) in
+    let f = ref 0.0 in
+    for ky = -r2 to r2 do
+      for kx = -c2 to c2 do
+        let v = get a (x + kx) (y + ky) c in
+        f := !f +. fn (v *. Kernel.get kernel (ky + r2) (kx + c2)) (v *. Kernel.get kernel2 (ky + r2) (kx + c2))
+      done
+    done;
+    Kind.clamp (kind a) !f
+
 let sobel_x_kernel = Kernel.of_array [|
   [| 1.0; 0.0; -1.0 |];
   [| 2.0; 0.0; -2.0 |];
@@ -126,5 +142,5 @@ let sobel_x: ('a, 'b, 'c) t = fun x y c inputs ->
 let sobel_y: ('a, 'b, 'c) t = fun x y c inputs ->
   filter_3x3 sobel_y_kernel  x y c inputs
 
-let sobel x y c inputs = (sobel_x &+ sobel_y) x y c inputs [@@inline]
+let sobel x y c inputs = filter2 (+.) sobel_x_kernel sobel_y_kernel x y c inputs [@@inline]
 

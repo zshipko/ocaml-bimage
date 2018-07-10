@@ -338,6 +338,9 @@ module Image: sig
   val avg: ?x:int -> ?y:int -> ?width:int -> ?height:int -> ('a, 'b, 'c) t -> (float, f32) Data.t
   (** Get the average pixel of an image or region of an image *)
 
+  val adjust_brightness: ('a, 'b, 'c) t -> float -> unit
+  (** Adjust the brightness of an image. 0.0 will remove all brightness and 1.0 will keep the image as-is. *)
+
   val rotate_90: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val rotate_180: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val rotate_270: ('a, 'b, 'c) t -> ('a, 'b, 'c) t

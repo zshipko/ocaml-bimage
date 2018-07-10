@@ -31,15 +31,30 @@ let color: ('a, 'b, [`Gray]) t = fun x y _c inputs ->
 let eval op output (inputs: ('a, 'b, 'c) Image.t array) =
   let channels = channels output in
   let kind = kind output in
-  for j = 0 to output.height - 1 do
-    for i = 0 to output.width - 1 do
-      let p = at output i j in
-      for k = 0 to channels - 1 do
-        let f = Kind.clamp kind (op i j k inputs) in
-        let x = Kind.of_float kind f in
-        Bigarray.Array1.unsafe_set p k x
-      done
-    done
+  let of_float = Kind.of_float kind in
+  let clamp = Kind.clamp kind in
+  let x = ref 0 in (* x index *)
+  let y = ref 0 in (* y index *)
+  let c = ref 0 in (* channel index *)
+  for i = 0 to length output - 1 do
+    let f = clamp (op !x !y !c inputs) in
+    Bigarray.Array1.unsafe_set output.data i (of_float f);
+
+    (* Increment channel index *)
+    incr c;
+
+    (* If channel index is greater than the number of channels
+     * then reset channel index to 0 and increment x index *)
+    let () = if !c = channels then
+      let () = c := 0 in
+      incr x
+    in
+
+    (* If x index is greater than the width then reset x index to 0
+     * and increment y index *)
+    if !x = output.width then
+      let () = x := 0 in
+      incr y
   done
 
 let join f a b =
@@ -102,13 +117,14 @@ let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
       let a = inputs.(0) in
       let f = ref 0.0 in
       for ky = -r2 to r2 do
+        let kr = kernel.(ky + r2) in
         for kx = -c2 to c2 do
-          f := !f +. (get a (x + kx) (y + ky) c *. Kernel.get kernel (ky + r2) (kx + c2))
+          f := !f +. (get a (x + kx) (y + ky) c *. kr.(kx + c2))
         done
       done;
-      Kind.clamp (kind a) !f
+      !f
 
-let filter2: (float -> float -> float ) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t = fun fn kernel kernel2 ->
+let join_filter: (float -> float -> float ) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t = fun fn kernel kernel2 ->
   let rows = Kernel.rows kernel in
   let cols = Kernel.cols kernel in
   let r2 = rows / 2 in
@@ -117,30 +133,53 @@ let filter2: (float -> float -> float ) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) 
     let a = inputs.(0) in
     let f = ref 0.0 in
     for ky = -r2 to r2 do
+      let kr = kernel.(ky + r2) in
+      let kr2 = kernel2.(ky + r2) in
       for kx = -c2 to c2 do
         let v = get a (x + kx) (y + ky) c in
-        f := !f +. fn (v *. Kernel.get kernel (ky + r2) (kx + c2)) (v *. Kernel.get kernel2 (ky + r2) (kx + c2))
+        f := !f +. fn (v *. kr.(kx + c2)) (v *. kr2.(kx + c2))
       done
     done;
-    Kind.clamp (kind a) !f
-
-let sobel_x_kernel = Kernel.of_array [|
-  [| 1.0; 0.0; -1.0 |];
-  [| 2.0; 0.0; -2.0 |];
-  [| 1.0; 0.0; -1.0 |];
-|]
-
-let sobel_y_kernel = Kernel.of_array [|
-  [|  1.0;  2.0;  1.0 |];
-  [|  0.0;  0.0;  0.0 |];
-  [| -1.0; -2.0; -1.0 |];
-|]
+    !f
 
 let sobel_x: ('a, 'b, 'c) t = fun x y c inputs ->
-  filter_3x3 sobel_x_kernel x y c inputs
+  filter_3x3 Kernel.sobel_x x y c inputs
 
 let sobel_y: ('a, 'b, 'c) t = fun x y c inputs ->
-  filter_3x3 sobel_y_kernel  x y c inputs
+  filter_3x3 Kernel.sobel_y  x y c inputs
 
-let sobel x y c inputs = filter2 (+.) sobel_x_kernel sobel_y_kernel x y c inputs [@@inline]
+let sobel x y c inputs = join_filter ( +. ) Kernel.sobel_x Kernel.sobel_y x y c inputs [@@inline]
+
+let gaussian ?std n x y z inputs = filter (Kernel.gaussian ?std n) x y z inputs
+
+let transform t =
+  fun x y c inputs ->
+    let x = float_of_int x in
+    let y = float_of_int y in
+    let x', y' = Transform.transform t x y in
+    let x', y' = int_of_float x', int_of_float y' in
+    if x' >= 0 && y' >= 0 && x' < inputs.(0).width && y' < inputs.(0).height then
+      get inputs.(0) x' y' c
+    else 0.
+
+let rotate ?center angle =
+  let r = Transform.rotate ?center angle in
+  transform r
+
+let rotate' angle dw dh =
+  let a = Util.Angle.to_radians angle in
+  fun x y c inputs ->
+    let input = inputs.(0) in
+    let x = x + ((dw - dh) / 2) in
+    let y = y + ((dh - dw) / 2) in
+    let mid_x = float_of_int input.width /. 2. in
+    let mid_y = float_of_int input.height /. 2. in
+    let dx = float_of_int x +. 0.5 -. mid_x in
+    let dy = float_of_int y +. 0.5 -. mid_y in
+    let x' = int_of_float @@ mid_x +. dx *. cos a -. dy *. sin a in
+    let y' = int_of_float @@ mid_y +. dx *. sin a +. dy *. cos a in
+    if x' >= 0 && y' >= 0 && x' < input.width && y' < input.height then
+      get inputs.(0) x' y' c
+    else 0.
+
 

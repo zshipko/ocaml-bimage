@@ -35,6 +35,7 @@ val c64: (Complex.t, c64) kind
 module Error: sig
   type t = [
     | `Invalid_shape
+    | `Invalid_kernel_shape
     | `Msg of string
   ]
 
@@ -49,6 +50,24 @@ module Error: sig
   val unwrap: ('a, t) result -> 'a
   (** A convenience function that returns the [Ok] value of a result if possible, otherwise
       it raises the [Error] value *)
+end
+
+  (** The Angle type is used instead of a float whenever a function expects an angle
+      argument to avoid ambiguity *)
+module Angle: sig
+  type t
+
+  val of_degrees: float -> t
+  (** [of_degrees deg] creates new angle from [deg] degrees *)
+
+  val to_degrees: t -> float
+  (** [to_degrees angle] returns the value of the angle in degrees *)
+
+  val of_radians: float -> t
+  (** [of_radians rad] creates a new angle from [rad] radians *)
+
+  val to_radians: t -> float
+  (** [to_radians angle] returns the value of the angle in radians *)
 end
 
 (** Color contains methods for creating and inspecting color types *)
@@ -244,6 +263,10 @@ module Kernel: sig
 
   val normalize: t -> t
   (** [normalize kernel] returns a kernel where each element has been divided by the sum of all elements *)
+
+  val sobel_x: t
+  val sobel_y: t
+  val gaussian: ?std:float -> int -> t
 end
 
 (** The Image module defines a simple interface for manipulating image data *)
@@ -264,6 +287,9 @@ module Image: sig
 
   val like: ('a, 'b) kind -> 'c Color.t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
   (** [like kind color img] creates a new image with the same dimensions as [img] with the given [kind] and [color] *)
+
+  val copy: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** Makes a copy of an image and underlying image data *)
 
   val channels: ('a, 'b, 'c) t -> int
   (** Returns the number of channels in an image *)
@@ -309,8 +335,18 @@ module Image: sig
   (** Apply a kernel directly to the provided image. Note that this implementation is much slower
       than `Op.filter`, it is mostly provided for convenience *)
 
-  val avg_in_rect: ('a, 'b, 'c) t -> int -> int -> int -> int -> (float, f32) Data.t
-  (** Get the average pixel value in a rectangular region of an image *)
+  val avg: ?x:int -> ?y:int -> ?width:int -> ?height:int -> ('a, 'b, 'c) t -> (float, f32) Data.t
+  (** Get the average pixel of an image or region of an image *)
+
+  val rotate_90: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val rotate_180: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val rotate_270: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+end
+
+module Transform: sig
+  type t = Gg.M3.t
+  val rotate: ?center:(float * float) -> Angle.t -> t
+  val scale: float -> float -> t
 end
 
 (** Op is used to define pixel-level operations *)
@@ -350,14 +386,11 @@ module Op: sig
   val invert: ('a, 'b, 'c) t
   (** Invert the values in an image *)
 
-  val filter_3x3: Kernel.t -> ('a, 'b, 'c) t
-  (** Create a filter operation using a 3x3 kernel *)
-
   val filter: Kernel.t -> ('a, 'b, 'c) t
   (** Create a filter operation *)
 
-  val filter2: (float -> float -> float) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Create a kernel operation using two kernels *)
+  val join_filter: (float -> float -> float) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+  (** Create a kernel operation using two kernels combined using the designated operation *)
 
   val ( &+ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Infix operator for [join] using addition *)
@@ -377,7 +410,13 @@ module Op: sig
   val sobel_x: ('a, 'b, 'c) t
   val sobel_y: ('a, 'b, 'c) t
   val sobel: ('a, 'b, 'c) t
-  (** Sobel operation *)
+  (** Sobel kernel *)
+
+  val gaussian: ?std:float -> int -> ('a, 'b, 'c) t
+  (** Gaussian kernel *)
+
+  val transform: Transform.t -> ('a, 'b, 'c) t
+  (** Apply a transformation *)
 end
 
 (** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the

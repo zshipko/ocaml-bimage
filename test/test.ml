@@ -15,7 +15,7 @@ let _ =
   let im = unwrap  @@ Magick.read f f32 rgb in
   let dest = Image.create f32 gray im.Image.width im.Image.height in
   let () = Op.(eval grayscale dest [| im |]) in
-  Magick.write "test.jpg" dest;
+  Magick.write "test0.jpg" dest;
   let k = Kernel.of_array [|
     [| 1.0; 0.0; -1.0 |];
     [| 2.0; 0.0; -2.0 |];
@@ -29,22 +29,25 @@ let _ =
   let f = Op.sobel in
   let start = Unix.gettimeofday () in
   let x = Image.filter b dest in
-  Printf.printf "DIRECT: %fsec\n" (Unix.gettimeofday () -. start);
+  Printf.printf "blur: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test1.jpg" x;
   let start = Unix.gettimeofday () in
   let () = Op.(eval f x [| dest |]) in
-  Printf.printf "OP (filter_3x3): %fsec\n" (Unix.gettimeofday () -. start);
+  Printf.printf "sobel: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test2.jpg" x;
-  let g = Op.filter_3x3 b in
-  let start = Unix.gettimeofday () in
-  let () = Op.eval g x [| dest |] in
-  Printf.printf "OP (filter): %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test3.jpg" x;
   let h = Op.filter k in
   let start = Unix.gettimeofday () in
   let () = Op.eval h x [| dest |] in
-  Printf.printf "OP (filter): %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test4.jpg" x
+  Printf.printf "sobel x: %fsec\n" (Unix.gettimeofday () -. start);
+  Magick.write "test3.jpg" x;
+  let g = Op.filter (Kernel.gaussian 5)  in
+  let start = Unix.gettimeofday () in
+  let () = Op.eval g x [| dest |] in
+  Printf.printf "gaussian: %fsec\n" (Unix.gettimeofday () -. start);
+  Magick.write "test4.jpg" x;
+  let dest2 = Image.rotate_270 dest in
+  (* 270 = min,min, 90 = max,max, 180=max,min *)
+  Magick.write "test5.jpg" dest2
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

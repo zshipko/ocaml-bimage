@@ -25,6 +25,10 @@ let of_data color width height data =
 let like depth color image =
   create depth color image.width image.height
 
+let copy image =
+  let data = Data.copy image.data in
+  of_data image.color image.width image.height data
+
 let random kind color width height =
   let channels = channels_of_color color in
   let data = Data.random kind (width * height * channels) in
@@ -34,7 +38,7 @@ let random kind color width height =
 let channels {color; _} = channels_of_color color
 let kind {data; _} = Data.kind data [@@inline]
 let shape {width; height; color; _} = width, height, channels_of_color color
-let length {width; height; color; _} = width * height * channels_of_color color
+let length {width; height; color; _} = width * height * channels_of_color color [@@inline]
 
 let convert_to ?(scale = 1.0) ~dest img =
   let dest_k = kind dest in
@@ -94,7 +98,9 @@ let each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
   done
 [@@inline]
 
-let avg_in_rect img x y width height =
+let avg ?(x = 0) ?(y = 0)  ?width ?height img =
+  let width = match width with None -> img.width - x | Some w -> min w (img.width - x) in
+  let height = match height with None -> img.height - y | Some h -> min h (img.width - y) in
   let avg = Data.create f32 (channels img) in
   let channels = channels img in
   let size = float_of_int (width * height) in
@@ -108,4 +114,3 @@ let avg_in_rect img x y width height =
     avg.{i} <- avg.{i} /. size
   done;
   avg
-

@@ -5,11 +5,13 @@
   ---------------------------------------------------------------------------*)
 
 include Type
+module Angle = Util.Angle
 module Error = Error
 module Color = Color
 module Data = Data
 module Pixel = Pixel
 module Kernel = Kernel
+module Transform = Transform
 module Image = struct
   include Image
 
@@ -21,6 +23,39 @@ module Image = struct
     in
     let f = Op.filter k in
     Op.eval f dest [| image |];
+    dest
+
+  type rotate = [`Deg90 | `Deg180 | `Deg270]
+
+  let rotate angle ?center ?dest image =
+    let dest =
+      match dest with
+      | Some d -> d
+      | None -> like (kind image) image.color image
+    in
+    let center = match center with
+      | Some (x, y) -> x, y
+      | None -> float_of_int image.width /. 2., float_of_int image.height /. 2.
+    in
+    Op.(eval (rotate ~center angle) dest [| image |]);
+    dest
+
+  let rotate_90 image =
+    let dest = create (kind image) image.color image.height image.width in
+    let center = float_of_int dest.width /. 2., float_of_int image.height /. 2. in
+    Op.(eval (rotate ~center (Angle.of_degrees 90.))) dest [| image |];
+    dest
+
+  let rotate_180 image =
+    let dest = create (kind image) image.color image.width image.height in
+    let center = float_of_int image.width /. 2., float_of_int image.height /. 2. in
+    Op.(eval (rotate ~center (Angle.of_degrees 180.))) dest [| image |];
+    dest
+
+  let rotate_270 image =
+    let dest = create (kind image) image.color image.height image.width in
+    let center = float_of_int image.width /. 2., float_of_int dest.height /. 2. in
+    Op.(eval (rotate ~center (Angle.of_degrees 270.))) dest [| image |];
     dest
 end
 module Op = Op

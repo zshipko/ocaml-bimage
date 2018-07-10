@@ -114,9 +114,3 @@ let avg ?(x = 0) ?(y = 0)  ?width ?height img =
     avg.{i} <- avg.{i} /. size
   done;
   avg
-
-let adjust_brightness img b =
-  let kind = kind img in
-  for i = 0 to length img - 1 do
-    img.data.{i} <- Kind.of_float kind (Kind.to_float kind img.data.{i} *. b)
-  done

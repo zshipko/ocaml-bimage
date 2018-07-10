@@ -166,20 +166,13 @@ let rotate ?center angle =
   let r = Transform.rotate ?center angle in
   transform r
 
-let rotate' angle dw dh =
-  let a = Util.Angle.to_radians angle in
-  fun x y c inputs ->
-    let input = inputs.(0) in
-    let x = x + ((dw - dh) / 2) in
-    let y = y + ((dh - dw) / 2) in
-    let mid_x = float_of_int input.width /. 2. in
-    let mid_y = float_of_int input.height /. 2. in
-    let dx = float_of_int x +. 0.5 -. mid_x in
-    let dy = float_of_int y +. 0.5 -. mid_y in
-    let x' = int_of_float @@ mid_x +. dx *. cos a -. dy *. sin a in
-    let y' = int_of_float @@ mid_y +. dx *. sin a +. dy *. cos a in
-    if x' >= 0 && y' >= 0 && x' < input.width && y' < input.height then
-      get inputs.(0) x' y' c
-    else 0.
 
+let brightness n x y c inputs =
+  let a = inputs.(0) in
+  get a x y c *. n
 
+let threshold thresh x y c inputs =
+  let a = inputs.(0) in
+  let v = get a x y c in
+  if v < thresh.(c) then 0.0
+  else Kind.max_f (kind a)

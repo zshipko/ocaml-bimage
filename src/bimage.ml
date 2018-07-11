@@ -16,6 +16,7 @@ module Image = struct
   include Image
   include Impl
 end
+module Input = Input
 module Op = Op
 
 module Magick = Magick

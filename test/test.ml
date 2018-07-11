@@ -47,7 +47,7 @@ let _ =
   Magick.write "test4.jpg" x;
   let dest2 = Image.rotate_270 dest in
   Magick.write "test5.jpg" dest2;
-  let grayscale_invert = Op.(grayscale $ invert_f (Image.kind im)) in
+  let grayscale_invert = Op.(grayscale $ invert_f) in
   let dest = Image.like im in
   let start = Unix.gettimeofday () in
   let () = Op.eval grayscale_invert dest [| im |] in

@@ -354,23 +354,25 @@ module Transform: sig
   val scale: float -> float -> t
 end
 
+(** Defines the type used as input to operations *)
+module Input: sig
+  type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
+
+  val get: ('a, 'b, 'c) t -> int -> ('a, 'b, 'c) Image.t
+  (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
+      if the provided index is out of bounds. *)
+
+  val make_output: ?width:int -> ?height:int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) Image.t
+  (** Create an output image width the given width and height if provided, otherwise the generated
+      image will match the first input image in size, kind and color *)
+end
+
 (** Op is used to define pixel-level operations *)
 module Op: sig
   type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
   type ('a, 'b, 'c) f = float ->  ('a, 'b, 'c) t
 
-  (** Defines the type used as input to operations *)
-  module Input: sig
-    type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
 
-    val get: ('a, 'b, 'c) t -> int -> ('a, 'b, 'c) Image.t
-    (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
-        if the provided index is out of bounds. *)
-
-    val make_output: ?width:int -> ?height:int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) Image.t
-    (** Create an output image width the given width and height if provided, otherwise the generated
-        image will match the first input image in size, kind and color *)
-  end
 
   val blend: ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
@@ -396,7 +398,7 @@ module Op: sig
   val apply: ('a, 'b, 'c) f -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** [map f a] builds a new operation of [f(a)] *)
 
-  val scalar: float -> ('a, 'b, 'c) t
+  val scalar: ('a, 'b, 'c) f
   (** Builds an operation returning a single value *)
 
   val scalar_max: ('a, 'b) kind -> ('a, 'b, 'c) t
@@ -405,7 +407,7 @@ module Op: sig
   val scalar_min: ('a, 'b) kind -> ('a, 'b, 'c) t
   (** Builds an operation returning the minimum value for a given kind *)
 
-  val invert_f: ('a, 'b) kind -> ('a, 'b, 'c) f
+  val invert_f: ('a, 'b, 'c) f
   (** Invert a single value *)
 
   val invert: ('a, 'b, 'c) t
@@ -429,6 +431,18 @@ module Op: sig
   val ( &/ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Infix operator for [join] using division *)
 
+  val ( %+ ): Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+  (** Infix operator for [join_filter] using addition *)
+
+  val ( %- ): Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+  (** Infix operator for [join_filter] using subtraction *)
+
+  val ( %* ): Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+  (** Infix operator for [join_filter] using multiplication *)
+
+  val ( %/ ): Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+  (** Infix operator for [join_filter] using division *)
+
   val ( $ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) f -> ('a, 'b, 'c) t
   (** Infix operator for [map] *)
 
@@ -437,8 +451,8 @@ module Op: sig
   val sobel: ('a, 'b, 'c) t
   (** Sobel kernel *)
 
-  val gaussian: ?std:float -> int -> ('a, 'b, 'c) t
-  (** Gaussian kernel *)
+  val gaussian_blur: ?std:float -> int -> ('a, 'b, 'c) t
+  (** Blur using gaussian kernel. The size must be an odd number. *)
 
   val transform: Transform.t -> ('a, 'b, 'c) t
   (** Apply a transformation *)

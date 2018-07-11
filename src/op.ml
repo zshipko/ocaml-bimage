@@ -1,27 +1,13 @@
 open Type
 open Image
 
-module Input = struct
-  type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
-
-  let get inputs i =
-    if i < Array.length inputs then inputs.(i)
-    else Error.exc (`Invalid_input i)
-
-  let make_output ?width ?height inputs =
-    let a = get inputs 0 in
-    let width = match width with None -> a.width | Some w -> w in
-    let height = match height with None -> a.height | Some h -> h in
-    create (kind a) a.color width height
-end
-
 type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
 type ('a, 'b, 'c) f = float -> int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
 
 let blend: ('a, 'b, 'c) t = fun x y c inputs ->
   let a = inputs.(0) in
   let b = inputs.(1) in
-  get a x y c +. get b x y c
+  (get a x y c +. get b x y c) /. 2.
 
 let max: ('a, 'b, 'c) t = fun x y c inputs ->
   let a = inputs.(0) in
@@ -80,18 +66,13 @@ let apply f a =
   fun x y c inputs ->
     f (a x y c inputs) x y c inputs
 
-let ( $ ) a f = apply f a
-let ( &+ ) a b = join (+.) a b
-let ( &- ) a b = join (-.) a b
-let ( &* ) a b = join ( *. ) a b
-let ( &/ ) a b = join ( /.) a b
-
 let scalar: float -> ('a, 'b, 'c) t = fun f _x _y _c _inputs -> f
 let scalar_min: ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t = fun k -> scalar (Kind.min_f k)
 let scalar_max: ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t = fun k -> scalar (Kind.max_f k)
 
-let invert_f kind f = fun x y c inputs ->
-  Kind.max_f kind -. f
+let invert_f f: ('a, 'b, 'c) t = fun _x _y _c inputs ->
+  let kind = Input.get inputs 0 in
+  Kind.max_f (Image.kind kind) -. f
 
 let invert: ('a, 'b, 'c) t = fun x y c inputs ->
   let a = inputs.(0) in
@@ -159,15 +140,25 @@ let join_filter: (float -> float -> float ) -> Kernel.t -> Kernel.t -> ('a, 'b, 
     done;
     !f
 
+let ( $ ) a f = apply f a
+let ( &+ ) a b = join (+.) a b
+let ( &- ) a b = join (-.) a b
+let ( &* ) a b = join ( *. ) a b
+let ( &/ ) a b = join ( /.) a b
+let ( %+ ) a b = join_filter ( +. ) a b
+let ( %- ) a b = join_filter (-.) a b
+let ( %* ) a b = join_filter ( *. ) a b
+let ( %/ ) a b = join_filter ( /.) a b
+
 let sobel_x: ('a, 'b, 'c) t = fun x y c inputs ->
   filter_3x3 Kernel.sobel_x x y c inputs
 
 let sobel_y: ('a, 'b, 'c) t = fun x y c inputs ->
   filter_3x3 Kernel.sobel_y  x y c inputs
 
-let sobel x y c inputs = join_filter ( +. ) Kernel.sobel_x Kernel.sobel_y x y c inputs [@@inline]
+let sobel x y c inputs = (Kernel.sobel_x %+ Kernel.sobel_y) x y c inputs [@@inline]
 
-let gaussian ?std n x y z inputs = filter (Kernel.gaussian ?std n) x y z inputs
+let gaussian_blur ?std n x y z inputs = filter (Kernel.gaussian ?std n) x y z inputs
 
 let transform t =
   fun x y c inputs ->
@@ -189,11 +180,11 @@ let scale x y =
   transform s
 
 let brightness n x y c inputs =
-  let a = inputs.(0) in
+  let a = Input.get inputs 0 in
   get a x y c *. n
 
 let threshold thresh x y c inputs =
-  let a = inputs.(0) in
+  let a = Input.get inputs 0 in
   let v = get a x y c in
   if v < thresh.(c) then 0.0
   else Kind.max_f (kind a)

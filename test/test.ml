@@ -46,7 +46,13 @@ let _ =
   Printf.printf "gaussian: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test4.jpg" x;
   let dest2 = Image.rotate_270 dest in
-  Magick.write "test5.jpg" dest2
+  Magick.write "test5.jpg" dest2;
+  let grayscale_invert = Op.(grayscale $ invert_f (Image.kind im)) in
+  let dest = Image.like (Image.kind im) im.Image.color im in
+  let start = Unix.gettimeofday () in
+  let () = Op.eval grayscale_invert dest [| im |] in
+  Printf.printf "grayscale invert: %fsec\n" (Unix.gettimeofday () -. start);
+  Magick.write "test6.jpg" dest
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

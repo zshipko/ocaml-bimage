@@ -2,6 +2,7 @@ open Type
 open Image
 
 type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
+type ('a, 'b, 'c) f = float -> float
 
 let blend: ('a, 'b, 'c) t = fun x y c inputs ->
   let a = inputs.(0) in
@@ -72,6 +73,8 @@ let ( &* ) a b = join ( *. ) a b
 let ( &/ ) a b = join ( /.) a b
 
 let scalar: float -> ('a, 'b, 'c) t = fun f _x _y _c _inputs -> f
+let scalar_min: ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t = fun k -> scalar (Kind.min_f k)
+let scalar_max: ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t = fun k -> scalar (Kind.max_f k)
 
 let invert_f kind f =
   Kind.max_f kind -. f
@@ -165,7 +168,6 @@ let transform t =
 let rotate ?center angle =
   let r = Transform.rotate ?center angle in
   transform r
-
 
 let brightness n x y c inputs =
   let a = inputs.(0) in

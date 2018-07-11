@@ -355,6 +355,7 @@ end
 (** Op is used to define pixel-level operations *)
 module Op: sig
   type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
+  type ('a, 'b, 'c) f = float -> float
 
   val blend: ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
@@ -383,7 +384,13 @@ module Op: sig
   val scalar: float -> ('a, 'b, 'c) t
   (** Builds an operation returning a single value *)
 
-  val invert_f: ('a, 'b) kind -> float -> float
+  val scalar_max: ('a, 'b) kind -> ('a, 'b, 'c) t
+  (** Builds an operation returning the maximum value for a given kind *)
+
+  val scalar_min: ('a, 'b) kind -> ('a, 'b, 'c) t
+  (** Builds an operation returning the minimum value for a given kind *)
+
+  val invert_f: ('a, 'b) kind -> ('a, 'b, 'c) f
   (** Invert a single value *)
 
   val invert: ('a, 'b, 'c) t

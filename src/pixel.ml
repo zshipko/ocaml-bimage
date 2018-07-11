@@ -24,6 +24,24 @@ let to_data ~dest (Pixel px) =
 
 let as_data (Pixel px) = px
 
+let to_color (Pixel data) =
+  let kind = Data.kind data in
+  let f x = (Kind.to_float kind x +. Kind.min_f kind) /. (Kind.max_f kind  -. Kind.min_f kind) in
+  Gg.Color.v (f data.{0}) (f data.{1}) (f data.{2}) 1.0
+
+let from_color ~dest px =
+  let Pixel dest = dest in
+  let len = Data.length dest in
+  let kind = Data.kind dest in
+  if len >= 1 then
+    dest.{0} <- Kind.of_float kind (Gg.Color.r px);
+  if len >= 2 then
+    dest.{1} <- Kind.of_float kind (Gg.Color.g px);
+  if len >= 3 then
+    dest.{2} <- Kind.of_float kind (Gg.Color.g px);
+  if len >= 4 then
+    dest.{3} <- Kind.of_float kind (Gg.Color.a px)
+
 let to_xyz (Pixel px) =
   let Pixel dest = empty () in
   dest.{0} <- 0.4124564 *. px.{0} +. 0.3575761 *. px.{1} +. 0.1804375 *. px.{2};

@@ -215,6 +215,9 @@ module Pixel: sig
   val as_data: t -> (float, f32) Data.t
   (** Returns the underlying pixel data *)
 
+  val from_color: dest:t -> Gg.color -> unit
+  val to_color: t -> Gg.color
+
   val to_data: dest:('a, 'b) Data.t -> t -> unit
   (** Copy pixel data to existing image data *)
 

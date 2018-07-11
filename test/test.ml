@@ -48,11 +48,15 @@ let _ =
   let dest2 = Image.rotate_270 dest in
   Magick.write "test5.jpg" dest2;
   let grayscale_invert = Op.(grayscale $ invert_f (Image.kind im)) in
-  let dest = Image.like (Image.kind im) im.Image.color im in
+  let dest = Image.like im in
   let start = Unix.gettimeofday () in
   let () = Op.eval grayscale_invert dest [| im |] in
   Printf.printf "grayscale invert: %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test6.jpg" dest
+  Magick.write "test6.jpg" dest;
+  let start = Unix.gettimeofday () in
+  let dest = Image.resize 1000 1111 im in
+  Printf.printf "scale: %fsec\n" (Unix.gettimeofday () -. start);
+  Magick.write "test7.jpg" dest
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

@@ -35,7 +35,8 @@ val c64: (Complex.t, c64) kind
 module Error: sig
   type t = [
     | `Invalid_shape
-    | `Invalid_kernel_shape
+    | `Invalid_kernel_shape of int * int
+    | `Invalid_input of int
     | `Msg of string
   ]
 
@@ -288,8 +289,8 @@ module Image: sig
   val of_data: 'c Color.t -> int -> int -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
   (** [of_data color width height] makes a new image from existing image data with the given [kind], [color] and dimensions *)
 
-  val like: ('a, 'b) kind -> 'c Color.t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
-  (** [like kind color img] creates a new image with the same dimensions as [img] with the given [kind] and [color] *)
+  val like: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** [like img] creates a new image with the same dimensions, color and kind as [img] *)
 
   val copy: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Makes a copy of an image and underlying image data *)
@@ -334,7 +335,7 @@ module Image: sig
       and [height]. The data segment used in the callback is mutable and will write directly to the underlying
       image data. *)
 
-  val filter: Kernel.t -> ?dest:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val filter: Kernel.t -> ?output:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Apply a kernel directly to the provided image. Note that this implementation is much slower
       than `Op.filter`, it is mostly provided for convenience *)
 
@@ -344,6 +345,7 @@ module Image: sig
   val rotate_90: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val rotate_180: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val rotate_270: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val resize: int -> int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 end
 
 module Transform: sig
@@ -355,7 +357,20 @@ end
 (** Op is used to define pixel-level operations *)
 module Op: sig
   type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
-  type ('a, 'b, 'c) f = float -> float
+  type ('a, 'b, 'c) f = float ->  ('a, 'b, 'c) t
+
+  (** Defines the type used as input to operations *)
+  module Input: sig
+    type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
+
+    val get: ('a, 'b, 'c) t -> int -> ('a, 'b, 'c) Image.t
+    (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
+        if the provided index is out of bounds. *)
+
+    val make_output: ?width:int -> ?height:int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) Image.t
+    (** Create an output image width the given width and height if provided, otherwise the generated
+        image will match the first input image in size, kind and color *)
+  end
 
   val blend: ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
@@ -372,14 +387,14 @@ module Op: sig
   val color: ('a, 'b, [`Gray]) t
   (** Convert a grayscale image to color *)
 
-  val eval: ('a, 'b, 'c) t -> ('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
+  val eval: ('a, 'b, 'c) t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
   (** Evaluate an operation *)
 
   val join: (float -> float -> float) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  (** [join f a b] builds a new operation from [f(a, b)] *)
+  (** [join f a b] builds a new operation of [f(a, b)] *)
 
-  val map: ('a, 'b, 'c) t -> (float -> float) -> ('a, 'b, 'c) t
-  (** [map a f] builds a new operation from [f(a)] *)
+  val apply: ('a, 'b, 'c) f -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** [map f a] builds a new operation of [f(a)] *)
 
   val scalar: float -> ('a, 'b, 'c) t
   (** Builds an operation returning a single value *)
@@ -414,7 +429,7 @@ module Op: sig
   val ( &/ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Infix operator for [join] using division *)
 
-  val ( $ ): ('a, 'b, 'c) t -> (float -> float) -> ('a, 'b, 'c) t
+  val ( $ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) f -> ('a, 'b, 'c) t
   (** Infix operator for [map] *)
 
   val sobel_x: ('a, 'b, 'c) t
@@ -427,6 +442,9 @@ module Op: sig
 
   val transform: Transform.t -> ('a, 'b, 'c) t
   (** Apply a transformation *)
+
+  val rotate: ?center:(float * float) -> Angle.t -> ('a, 'b, 'c) t
+  val scale: float -> float -> ('a, 'b, 'c) t
 
   val brightness: float -> ('a, 'b, 'c) t
   (** Adjust the brightness of an image. 0.0 will remove all brightness and 1.0 will keep the image as-is. *)

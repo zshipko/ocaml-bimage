@@ -16,4 +16,4 @@ let rotate ?center angle =
   in
   M3.rot2 ?pt angle
 
-let scale x y = M3.scale2 (P2.v x y)
+let scale x y = M3.scale2 (P2.v (1.0 /. x) (1.0 /. y))

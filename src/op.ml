@@ -1,8 +1,22 @@
 open Type
 open Image
 
+module Input = struct
+  type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
+
+  let get inputs i =
+    if i < Array.length inputs then inputs.(i)
+    else Error.exc (`Invalid_input i)
+
+  let make_output ?width ?height inputs =
+    let a = get inputs 0 in
+    let width = match width with None -> a.width | Some w -> w in
+    let height = match height with None -> a.height | Some h -> h in
+    create (kind a) a.color width height
+end
+
 type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
-type ('a, 'b, 'c) f = float -> float
+type ('a, 'b, 'c) f = float -> int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
 
 let blend: ('a, 'b, 'c) t = fun x y c inputs ->
   let a = inputs.(0) in
@@ -29,7 +43,7 @@ let color: ('a, 'b, [`Gray]) t = fun x y _c inputs ->
   let a = inputs.(0) in
   get a x y 0
 
-let eval op output (inputs: ('a, 'b, 'c) Image.t array) =
+let eval op ~output inputs =
   let channels = channels output in
   let kind = kind output in
   let of_float = Kind.of_float kind in
@@ -62,11 +76,11 @@ let join f a b =
   fun x y c inputs ->
     f (a x y c inputs) (b x y c inputs)
 
-let map a f =
+let apply f a =
   fun x y c inputs ->
-    f (a x y c inputs)
+    f (a x y c inputs) x y c inputs
 
-let ( $ ) a f = map a f
+let ( $ ) a f = apply f a
 let ( &+ ) a b = join (+.) a b
 let ( &- ) a b = join (-.) a b
 let ( &* ) a b = join ( *. ) a b
@@ -76,7 +90,7 @@ let scalar: float -> ('a, 'b, 'c) t = fun f _x _y _c _inputs -> f
 let scalar_min: ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t = fun k -> scalar (Kind.min_f k)
 let scalar_max: ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t = fun k -> scalar (Kind.max_f k)
 
-let invert_f kind f =
+let invert_f kind f = fun x y c inputs ->
   Kind.max_f kind -. f
 
 let invert: ('a, 'b, 'c) t = fun x y c inputs ->
@@ -96,7 +110,7 @@ let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   let k12 = Kernel.get kernel 1 2 in
   let k22 = Kernel.get kernel 2 2 in
   fun x y c inputs ->
-    let a = inputs.(0) in
+    let a = Input.get inputs 0 in
     Kind.clamp (kind a)
       (get a (x - 1) (y - 1) c *. k00
        +. get a (x - 1) y c *. k10
@@ -117,7 +131,7 @@ let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
     filter_3x3 kernel
   else
     fun x y c inputs ->
-      let a = inputs.(0) in
+      let a = Input.get inputs 0 in
       let f = ref 0.0 in
       for ky = -r2 to r2 do
         let kr = kernel.(ky + r2) in
@@ -133,7 +147,7 @@ let join_filter: (float -> float -> float ) -> Kernel.t -> Kernel.t -> ('a, 'b, 
   let r2 = rows / 2 in
   let c2 = cols / 2 in
   fun x y c inputs ->
-    let a = inputs.(0) in
+    let a = Input.get inputs 0 in
     let f = ref 0.0 in
     for ky = -r2 to r2 do
       let kr = kernel.(ky + r2) in
@@ -160,14 +174,19 @@ let transform t =
     let x = float_of_int x in
     let y = float_of_int y in
     let x', y' = Transform.transform t x y in
-    let x', y' = int_of_float x', int_of_float y' in
-    if x' >= 0 && y' >= 0 && x' < inputs.(0).width && y' < inputs.(0).height then
-      get inputs.(0) x' y' c
+    let x0', y0' = int_of_float (ceil x'), int_of_float (ceil y') in
+    let x1', y1' = int_of_float (floor x'), int_of_float (floor y') in
+    if x0' >= 0 && y0' >= 0 && x0' < inputs.(0).width && y0' < inputs.(0).height then
+      (get inputs.(0) x0' y0' c +. get inputs.(0) x1' y1' c) /. 2.
     else 0.
 
 let rotate ?center angle =
   let r = Transform.rotate ?center angle in
   transform r
+
+let scale x y =
+  let s = Transform.scale x y in
+  transform s
 
 let brightness n x y c inputs =
   let a = inputs.(0) in

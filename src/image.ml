@@ -22,8 +22,8 @@ let of_data color width height data =
   else
   {width; height; color; step; data}
 
-let like depth color image =
-  create depth color image.width image.height
+let like image =
+  create (Data.kind image.data) image.color image.width image.height
 
 let copy image =
   let data = Data.copy image.data in
@@ -66,7 +66,7 @@ let at image x y =
 let get image x y c =
   let index = index image x y + c in
   if index < 0 || index >= length image then 0.0
-  else Kind.to_float (kind image) image.data.{index}
+  else Kind.to_float (kind image) (Bigarray.Array1.unsafe_get image.data index)
 
 let set image x y c v =
   let index = index image x y in

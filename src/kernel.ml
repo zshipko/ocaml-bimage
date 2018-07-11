@@ -43,7 +43,7 @@ let sobel_y = of_array [|
 |]
 
 let gaussian ?(std = 1.4) n =
-  if n mod 2 = 0 then Error.exc `Invalid_kernel_shape;
+  if n mod 2 = 0 then Error.exc (`Invalid_kernel_shape (n, n));
   (* A = (1 / (2 * PI * STD ^ 2)) *)
   let std2 = std *. std in
   let a = (1.0 /. (2. *. Util.pi *. std2)) in

@@ -46,14 +46,7 @@ let _ =
   Printf.printf "gaussian: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test4.jpg" x;
   let dest2 = Image.rotate_270 dest in
-  Magick.write "test5.jpg" dest2;
-  let movie = Ffmpeg.load "/home/zach/Downloads/toystory.mp4" in
-  let () = Ffmpeg.skip movie 1000 in
-  match Ffmpeg.next movie with
-  | Some im ->
-    Magick.write "test6.jpg" im;
-  | None -> print_endline "invalid frame";
-  ()
+  Magick.write "test5.jpg" dest2
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

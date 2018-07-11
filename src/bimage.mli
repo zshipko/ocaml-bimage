@@ -439,6 +439,36 @@ module Magick: sig
       if you'd like to use GraphicsMagick then set this to "gm convert" *)
 end
 
+(** Ffmpeg is used to load images from video files. The [ffmpeg] command line tool is required *)
+module Ffmpeg: sig
+  type t
+  (** Video file *)
+
+  val frames: t -> int
+  (** Get the number of frames for a video file *)
+
+  val index: t -> int
+  (** Get the current frame index for a video file *)
+
+  val shape: t -> int * int
+  (** Get the width and height of a video file *)
+
+  val skip: t -> int -> unit
+  (** Skip frames *)
+
+  val set_index: t -> int -> unit
+  (** Set the frame index *)
+
+  val load: string -> t
+  (** Open a video file *)
+
+  val reset: t -> unit
+  (** Reset the frame index to 0 *)
+
+  val next: t -> (int, u8, rgb) Image.t option
+  (** Get the next frame *)
+end
+
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko
 

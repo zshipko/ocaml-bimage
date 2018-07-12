@@ -10,11 +10,38 @@ let unwrap = function
   | Ok x -> x
   | Error e -> Error.exc e
 
+let blend =
+  let open Expr in
+  let open Infix in
+  let a = input 0 x y c +. input 1 x y c /. float 2. in
+  a /. float 2.
+
+let invert_f kind =
+  let open Expr in
+  let open Infix in
+  let max = Kind.max_f kind in
+  float max -. input 0 x y c
+
+let test_expr =
+  let img = Magick.read "test.jpg" u8 rgb |> Error.unwrap in
+  let output = Image.like img in
+  let f = Op.eval (Expr.op @@ invert_f u8) in
+  let start = Unix.gettimeofday () in
+  let () = f ~output [| img; |] in
+  let stop = Unix.gettimeofday () in
+  Printf.printf "OP EXPR: %fsec\n" (stop -. start);
+  Magick.write "test-expr.jpg" output;
+  let start = Unix.gettimeofday () in
+  let () = Op.eval Op.invert ~output [| img; img;|] in
+  let stop = Unix.gettimeofday () in
+  Printf.printf "OP DIRECT: %fsec\n" (stop -. start);
+  Magick.write "test-expr2.jpg" output
+
 let _ =
   let f = Sys.argv.(1) in
   let im = unwrap  @@ Magick.read f f32 rgb in
   let dest = Image.create f32 gray im.Image.width im.Image.height in
-  let () = Op.(eval grayscale dest [| im |]) in
+  let () = Op.(eval grayscale ~output:dest [| im |]) in
   Magick.write "test0.jpg" dest;
   let k = Kernel.of_array [|
     [| 1.0; 0.0; -1.0 |];
@@ -32,17 +59,17 @@ let _ =
   Printf.printf "blur: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test1.jpg" x;
   let start = Unix.gettimeofday () in
-  let () = Op.(eval f x [| dest |]) in
+  let () = Op.(eval f ~output:x [| dest |]) in
   Printf.printf "sobel: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test2.jpg" x;
   let h = Op.filter k in
   let start = Unix.gettimeofday () in
-  let () = Op.eval h x [| dest |] in
+  let () = Op.eval h ~output:x [| dest |] in
   Printf.printf "sobel x: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test3.jpg" x;
   let g = Op.filter (Kernel.gaussian 5)  in
   let start = Unix.gettimeofday () in
-  let () = Op.eval g x [| dest |] in
+  let () = Op.eval g ~output:x [| dest |] in
   Printf.printf "gaussian: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test4.jpg" x;
   let dest2 = Image.rotate_270 dest in
@@ -50,7 +77,7 @@ let _ =
   let grayscale_invert = Op.(grayscale $ invert_f) in
   let dest = Image.like im in
   let start = Unix.gettimeofday () in
-  let () = Op.eval grayscale_invert dest [| im |] in
+  let () = Op.eval grayscale_invert ~output:dest [| im |] in
   Printf.printf "grayscale invert: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test6.jpg" dest;
   let start = Unix.gettimeofday () in

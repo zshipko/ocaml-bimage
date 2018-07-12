@@ -16,10 +16,12 @@ let read filename t color =
       let input = Unix.open_process_in cmd in
       let fmax = Kind.max_f t in
       let fmin = Kind.min_f t in
+      let scale = (fmax -. fmin) /. 255. in
+      let kind = Kind.of_float t in
       for i = 0 to (Image.(img.width *  img.height)  * channels) - 1 do
         let x = Kind.to_float u8 (input_byte input) in
-        let y = x *. ((fmax -. fmin) /. 255.) in
-        img.Image.data.{i} <- Kind.of_float t y
+        let x = x *. scale in
+        img.Image.data.{i} <- kind x
       done;
       close_in input
     in

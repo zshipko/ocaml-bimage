@@ -7,7 +7,6 @@ type _ t =
   | C: int t
   | Int: int -> int t
   | Float: float -> float t
-  | PI: float t
   | Float_of_int: int t -> float t
   | Int_of_float: float t -> int t
   | Fadd: float t * float t -> float t
@@ -37,7 +36,6 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
   | C -> !c
   | Int i -> i
   | Float f -> f
-  | PI -> Util.pi
   | Float_of_int i ->
       let a = compile x y c i inputs in
       float_of_int a
@@ -144,12 +142,16 @@ let fadd a b = Fadd (a, b)
 let fsub a b = Fsub (a, b)
 let fdiv a b = Fdiv (a, b)
 let fmul a b = Fmul (a, b)
+let iadd a b = Iadd (a, b)
+let isub a b = Isub (a, b)
+let idiv a b = Idiv (a, b)
+let imul a b = Imul (a, b)
 let fpow a b = Fpow (a, b)
 let fsqrt a = Fsqrt a
 let fsin a = Fsin a
 let fcos a = Fcos a
 let ftan a = Ftan a
-let pi = PI
+let pi = float Util.pi
 
 module Infix = struct
   let ( + ) a b = Iadd (a, b)
@@ -164,32 +166,5 @@ module Infix = struct
   let sin = fsin
   let cos = fcos
   let tan = ftan
-  let sqrt = sqrt
+  let sqrt = fsqrt
 end
-
-let blend =
-  let open Infix in
-  let a = input 0 x y c +. input 1 x y c /. float 2. in
-  a /. float 2.
-
-let invert_f kind =
-  let open Infix in
-  let max = Type.Kind.max_f kind in
-  float max -. input 0 x y c
-
-let test =
-  let img = Magick.read "test.jpg" u8 rgb |> Error.unwrap in
-  let output = Image.like img in
-  let f = Op.eval (op @@ invert_f u8) in
-  let start = Unix.gettimeofday () in
-  let () = f ~output [| img; |] in
-  let stop = Unix.gettimeofday () in
-  Printf.printf "BLEND EXPR: %fsec\n" (stop -. start);
-  Magick.write "test-expr.jpg" output;
-  let start = Unix.gettimeofday () in
-  let () = Op.eval Op.invert ~output [| img; img;|] in
-  let stop = Unix.gettimeofday () in
-  Printf.printf "BLEND DIRECT: %fsec\n" (stop -. start);
-  Magick.write "test-expr2.jpg" output
-
-

@@ -18,6 +18,7 @@ module Image = struct
 end
 module Input = Input
 module Op = Op
+module Expr = Expr
 
 module Magick = Magick
 module Ffmpeg = Ffmpeg

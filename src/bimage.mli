@@ -372,8 +372,6 @@ module Op: sig
   type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
   type ('a, 'b, 'c) f = float ->  ('a, 'b, 'c) t
 
-
-
   val blend: ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
 
@@ -389,7 +387,7 @@ module Op: sig
   val color: ('a, 'b, [`Gray]) t
   (** Convert a grayscale image to color *)
 
-  val eval: ('a, 'b, 'c) t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
+  val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> ('a, 'b, 'c) t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
   (** Evaluate an operation *)
 
   val join: (float -> float -> float) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
@@ -479,6 +477,53 @@ module Magick: sig
   val command: string ref
   (** [command] contains the command used to call out to ImageMagick/GraphicsMagick. For example,
       if you'd like to use GraphicsMagick then set this to "gm convert" *)
+end
+
+module Expr: sig
+  type 'a t
+
+  val op: float t -> ('a, 'b, 'c) Op.t
+  val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
+
+  val int: int -> int t
+  val float: float -> float t
+  val int_of_float: float t -> int t
+  val float_of_int: int t -> float t
+  val x: int t
+  val y: int t
+  val c: int t
+  val input: int -> int t -> int t -> int t -> float t
+  val fadd: float t -> float t -> float t
+  val fsub: float t -> float t -> float t
+  val fmul: float t -> float t -> float t
+  val fdiv: float t -> float t -> float t
+  val iadd: int t -> int t -> int t
+  val isub: int t -> int t -> int t
+  val imul: int t -> int t -> int t
+  val idiv: int t -> int t -> int t
+
+  val fpow: float t -> float t -> float t
+  val fsqrt: float t -> float t
+  val fsin: float t -> float t
+  val fcos: float t -> float t
+  val ftan: float t -> float t
+  val pi: float t
+
+  module Infix: sig
+    val ( + ): int t -> int t -> int t
+    val ( - ): int t -> int t -> int t
+    val ( * ): int t -> int t -> int t
+    val ( / ): int t -> int t -> int t
+    val ( +. ): float t -> float t -> float t
+    val ( -. ): float t -> float t -> float t
+    val ( *. ): float t -> float t -> float t
+    val ( /. ): float t -> float t -> float t
+    val ( ** ): float t -> float t -> float t
+    val sin: float t -> float t
+    val cos: float t -> float t
+    val tan: float t -> float t
+    val sqrt: float t -> float t
+  end
 end
 
 (** Ffmpeg is used to load images from video files. The [ffmpeg] command line tool is required *)

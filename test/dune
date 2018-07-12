@@ -8,4 +8,4 @@
     (name runtest)
     (package bimage)
     (deps test.exe test.jpg)
-    (action (run ${<} test.jpg)))
+    (action (run %{dep:test.exe} test.jpg)))

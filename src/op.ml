@@ -29,14 +29,11 @@ let color: ('a, 'b, [`Gray]) t = fun x y _c inputs ->
   let a = inputs.(0) in
   get a x y 0
 
-let eval op ~output inputs =
+let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op ~output inputs =
   let channels = channels output in
   let kind = kind output in
   let of_float = Kind.of_float kind in
   let clamp = Kind.clamp kind in
-  let x = ref 0 in (* x index *)
-  let y = ref 0 in (* y index *)
-  let c = ref 0 in (* channel index *)
   for i = 0 to length output - 1 do
     let f = clamp (op !x !y !c inputs) in
     Bigarray.Array1.unsafe_set output.data i (of_float f);

@@ -1,7 +1,0 @@
-(jbuild_version 1)
-
-(library
-    ((name bimage)
-     (public_name bimage)
-     (ocamlopt_flags (-O3))
-     (libraries (unix bigarray gg))))

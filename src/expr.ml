@@ -1,11 +1,12 @@
 open Type
 
 type _ t =
+  | Filter: Kernel.t -> float t
   | Input: int * int t * int t * int t -> float t
   | X: int t
   | Y: int t
   | C: int t
-  | Int: int -> int t
+  | Int: int ->  int t
   | Float: float -> float t
   | Float_of_int: int t -> float t
   | Int_of_float: float t -> int t
@@ -25,12 +26,13 @@ type _ t =
 
 let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a = fun x y c expr inputs ->
   match expr with
-  | Input (index, x', y', c') ->
-    let x' = compile x y c x' inputs in
-    let y' = compile x y c y' inputs in
-    let c' = compile x y c c' inputs in
-    let a = Input.get inputs index in
-    Image.get a x' y' c'
+  | Filter k ->
+      Op.filter k !x !y !c inputs
+  |Input (input, x', y', c') ->
+      let x' = compile x y c x' inputs in
+      let y' = compile x y c y' inputs in
+      let c' = compile c y c c' inputs in
+      Image.get (Input.get inputs input) x' y' c'
   | X -> !x
   | Y -> !y
   | C -> !c
@@ -42,22 +44,32 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
   | Int_of_float f ->
       let a = compile x y c f inputs in
       int_of_float a
+  | Fadd (Filter a, Filter b) ->
+      Op.join_filter ( +. ) a b !x !y !c inputs
   | Fadd (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a +. b
+  | Fsub (Filter a, Filter b) ->
+      Op.join_filter ( -. ) a b !x !y !c inputs
   | Fsub (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a -. b
+  | Fmul (Filter a, Filter b) ->
+      Op.join_filter ( *. ) a b !x !y !c inputs
   | Fmul (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a *. b
+  | Fdiv (Filter a, Filter b) ->
+      Op.join_filter ( /. ) a b !x !y !c inputs
   | Fdiv (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a /. b
+  | Fpow (Filter a, Filter b) ->
+      Op.join_filter ( ** ) a b !x !y !c inputs
   | Fpow (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
@@ -91,7 +103,7 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
       let b = compile x y c b inputs in
       a / b
 
-let op body =
+let f body =
   let x = ref 0 in
   let y = ref 0 in
   let c = ref 0 in
@@ -137,6 +149,7 @@ let float f = Float f
 let x = X
 let y = Y
 let c = C
+let filter k = Filter k
 let input i x y c = Input (i, x, y, c)
 let fadd a b = Fadd (a, b)
 let fsub a b = Fsub (a, b)
@@ -146,25 +159,19 @@ let iadd a b = Iadd (a, b)
 let isub a b = Isub (a, b)
 let idiv a b = Idiv (a, b)
 let imul a b = Imul (a, b)
-let fpow a b = Fpow (a, b)
-let fsqrt a = Fsqrt a
-let fsin a = Fsin a
-let fcos a = Fcos a
-let ftan a = Ftan a
-let pi = float Util.pi
+let pow a b = Fpow (a, b)
+let sqrt a = Fsqrt a
+let sin a = Fsin a
+let cos a = Fcos a
+let tan a = Ftan a
+let pi () = float Util.pi
 
-module Infix = struct
-  let ( + ) a b = Iadd (a, b)
-  let ( - ) a b = Isub (a, b)
-  let ( * ) a b = Imul (a, b)
-  let ( / ) a b = Idiv (a, b)
-  let ( +. ) a b = Fadd (a, b)
-  let ( -. ) a b = Fsub (a, b)
-  let ( *. ) a b = Fmul (a, b)
-  let ( /. ) a b = Fdiv (a, b)
-  let ( ** ) a b = Fpow (a, b)
-  let sin = fsin
-  let cos = fcos
-  let tan = ftan
-  let sqrt = fsqrt
-end
+let ( + ) a b = Iadd (a, b)
+let ( - ) a b = Isub (a, b)
+let ( * ) a b = Imul (a, b)
+let ( / ) a b = Idiv (a, b)
+let ( +. ) a b = Fadd (a, b)
+let ( -. ) a b = Fsub (a, b)
+let ( *. ) a b = Fmul (a, b)
+let ( /. ) a b = Fdiv (a, b)
+let ( ** ) a b = Fpow (a, b)

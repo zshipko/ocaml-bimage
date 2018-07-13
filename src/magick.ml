@@ -42,6 +42,11 @@ let read filename t color =
     | _ -> Error (`Invalid_shape)
   with End_of_file -> Error `Invalid_shape | Failure msg -> Error (`Msg msg)
 
+let read_all filenames kind color =
+  try
+    Ok (Array.map (fun f -> read f kind color |> Error.unwrap) filenames)
+  with Error.Exc err -> Error err
+
 let write filename img =
   let width, height, channels = Image.shape img in
   let f = pixel_type img.Image.color in

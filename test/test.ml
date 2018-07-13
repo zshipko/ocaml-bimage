@@ -12,27 +12,28 @@ let unwrap = function
 
 let blend =
   let open Expr in
-  let open Infix in
-  let a = input 0 x y c +. input 1 x y c /. float 2. in
-  a /. float 2.
+  (input 0 x y c +. input 1 x y c) /. float 2.
 
 let invert_f kind =
   let open Expr in
-  let open Infix in
   let max = Kind.max_f kind in
   float max -. input 0 x y c
+
+let sobel =
+  let open Expr in
+  filter Kernel.sobel_x +. filter Kernel.sobel_y
 
 let test_expr =
   let img = Magick.read "test.jpg" u8 rgb |> Error.unwrap in
   let output = Image.like img in
-  let f = Op.eval (Expr.op @@ invert_f u8) in
+  let f = Op.eval (Expr.f blend) in
   let start = Unix.gettimeofday () in
-  let () = f ~output [| img; |] in
+  let () = f ~output [| img; img |] in
   let stop = Unix.gettimeofday () in
   Printf.printf "OP EXPR: %fsec\n" (stop -. start);
   Magick.write "test-expr.jpg" output;
   let start = Unix.gettimeofday () in
-  let () = Op.eval Op.invert ~output [| img; img;|] in
+  let () = Op.eval Op.blend ~output [| img; img;|] in
   let stop = Unix.gettimeofday () in
   Printf.printf "OP DIRECT: %fsec\n" (stop -. start);
   Magick.write "test-expr2.jpg" output

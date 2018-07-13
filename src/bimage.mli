@@ -465,24 +465,11 @@ module Op: sig
   (** Per-channel threshold -- each entry in the given array is the threshold for the channel with the same index *)
 end
 
-(** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the
-    command-line *)
-module Magick: sig
-  val read: string -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Image.t, Error.t) result
-  (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
-
-  val write: string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit
-  (** [write filename image] saves an image to [filename] *)
-
-  val command: string ref
-  (** [command] contains the command used to call out to ImageMagick/GraphicsMagick. For example,
-      if you'd like to use GraphicsMagick then set this to "gm convert" *)
-end
-
+(** Expr implements an operation combinator which can be used to build operations from low-level functions *)
 module Expr: sig
   type 'a t
 
-  val op: float t -> ('a, 'b, 'c) Op.t
+  val f: float t -> ('a, 'b, 'c) Op.t
   val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
 
   val int: int -> int t
@@ -492,6 +479,7 @@ module Expr: sig
   val x: int t
   val y: int t
   val c: int t
+  val filter: Kernel.t -> float t
   val input: int -> int t -> int t -> int t -> float t
   val fadd: float t -> float t -> float t
   val fsub: float t -> float t -> float t
@@ -501,29 +489,39 @@ module Expr: sig
   val isub: int t -> int t -> int t
   val imul: int t -> int t -> int t
   val idiv: int t -> int t -> int t
+  val pow: float t -> float t -> float t
+  val sqrt: float t -> float t
+  val sin: float t -> float t
+  val cos: float t -> float t
+  val tan: float t -> float t
+  val pi: unit -> float t
 
-  val fpow: float t -> float t -> float t
-  val fsqrt: float t -> float t
-  val fsin: float t -> float t
-  val fcos: float t -> float t
-  val ftan: float t -> float t
-  val pi: float t
+  val ( + ): int t -> int t -> int t
+  val ( - ): int t -> int t -> int t
+  val ( * ): int t -> int t -> int t
+  val ( / ): int t -> int t -> int t
+  val ( +. ): float t -> float t -> float t
+  val ( -. ): float t -> float t -> float t
+  val ( *. ): float t -> float t -> float t
+  val ( /. ): float t -> float t -> float t
+  val ( ** ): float t -> float t -> float t
+end
 
-  module Infix: sig
-    val ( + ): int t -> int t -> int t
-    val ( - ): int t -> int t -> int t
-    val ( * ): int t -> int t -> int t
-    val ( / ): int t -> int t -> int t
-    val ( +. ): float t -> float t -> float t
-    val ( -. ): float t -> float t -> float t
-    val ( *. ): float t -> float t -> float t
-    val ( /. ): float t -> float t -> float t
-    val ( ** ): float t -> float t -> float t
-    val sin: float t -> float t
-    val cos: float t -> float t
-    val tan: float t -> float t
-    val sqrt: float t -> float t
-  end
+(** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the
+    command-line *)
+module Magick: sig
+  val read: string -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Image.t, Error.t) result
+  (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
+
+  val write: string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit
+  (** [write filename image] saves an image to [filename] *)
+
+  val read_all: string array -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Input.t, Error.t) result
+  (** Read multiple images directly into an Input array *)
+
+  val command: string ref
+  (** [command] contains the command used to call out to ImageMagick/GraphicsMagick. For example,
+      if you'd like to use GraphicsMagick then set this to "gm convert" *)
 end
 
 (** Ffmpeg is used to load images from video files. The [ffmpeg] command line tool is required *)
@@ -554,6 +552,10 @@ module Ffmpeg: sig
 
   val next: t -> (int, u8, rgb) Image.t option
   (** Get the next frame *)
+
+  val read_n: t -> int -> (int, u8, rgb) Input.t
+  (** Read multiple images directly into an Input array. The resulting array will not contain the number of frames requested
+      if you've reached the end of the video *)
 end
 
 (*---------------------------------------------------------------------------

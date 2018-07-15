@@ -5,14 +5,15 @@ let pixel_type: [< gray|rgb|rgba] Color.t -> string = fun c -> match c.t with
   | `Rgb -> "rgb"
   | `Rgba -> "rgba"
 
-let command = ref "convert"
+let convert_command = ref "convert"
+let identify_command = ref "identify"
 
 let read filename t color =
   try
     let read_image_data filename img =
       let f = pixel_type img.Image.color in
       let channels = Image.channels img in
-      let cmd = Printf.sprintf "%s '%s' -depth 8 %s:-" !command filename f in
+      let cmd = Printf.sprintf "%s '%s' -depth 8 %s:-" !convert_command filename f in
       let input = Unix.open_process_in cmd in
       let fmax = Kind.max_f t in
       let fmin = Kind.min_f t in
@@ -26,7 +27,7 @@ let read filename t color =
       close_in input
     in
     (* Read image size *)
-    let identify = Unix.open_process_in ("identify " ^ filename) in
+    let identify = Unix.open_process_in (!identify_command ^ " " ^ filename) in
     let s = input_line identify in
     let () = close_in identify in
     let shape =
@@ -50,7 +51,7 @@ let read_all filenames kind color =
 let write filename img =
   let width, height, channels = Image.shape img in
   let f = pixel_type img.Image.color in
-  let cmd = Printf.sprintf "%s -depth 8 -size %dx%d %s:- '%s'" !command width height f filename in
+  let cmd = Printf.sprintf "%s -depth 8 -size %dx%d %s:- '%s'" !convert_command width height f filename in
   let output = Unix.open_process_out cmd in
   let kind = Image.kind img in
   let fmax = Kind.max_f kind in

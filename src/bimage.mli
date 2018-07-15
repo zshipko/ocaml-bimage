@@ -519,9 +519,13 @@ module Magick: sig
   val read_all: string array -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Input.t, Error.t) result
   (** Read multiple images directly into an Input array *)
 
-  val command: string ref
-  (** [command] contains the command used to call out to ImageMagick/GraphicsMagick. For example,
+  val convert_command: string ref
+  (** [convert_command] contains the command used to call out to ImageMagick/GraphicsMagick. For example,
       if you'd like to use GraphicsMagick then set this to "gm convert" *)
+
+  val identify_command: string ref
+  (** [identify_command] contains the command used to get information about image dimensions. It defaults to [itentify]
+   *  but if you'd like to use GraphicsMagick then set this to "gm identify" *)
 end
 
 (** Ffmpeg is used to load images from video files. The [ffmpeg] command line tool is required *)

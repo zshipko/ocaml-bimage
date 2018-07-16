@@ -27,7 +27,8 @@ let read filename t color =
       close_in input
     in
     (* Read image size *)
-    let identify = Unix.open_process_in (!identify_command ^ " " ^ filename) in
+    let cmd = Printf.sprintf "%s '%s'" !identify_command filename in
+    let identify = Unix.open_process_in cmd in
     let s = input_line identify in
     let () = close_in identify in
     let shape =

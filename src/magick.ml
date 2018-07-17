@@ -49,10 +49,11 @@ let read_all filenames kind color =
     Ok (Array.map (fun f -> read f kind color |> Error.unwrap) filenames)
   with Error.Exc err -> Error err
 
-let write filename img =
+let write ?quality filename img =
   let width, height, channels = Image.shape img in
   let f = pixel_type img.Image.color in
-  let cmd = Printf.sprintf "%s -depth 8 -size %dx%d %s:- '%s'" !convert_command width height f filename in
+  let quality = match quality with None -> "" | Some q -> Printf.sprintf "-quality %d" q in
+  let cmd = Printf.sprintf "%s -depth 8 -size %dx%d %s:- %s '%s'" !convert_command width height f quality filename in
   let output = Unix.open_process_out cmd in
   let kind = Image.kind img in
   let fmax = Kind.max_f kind in

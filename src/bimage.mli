@@ -213,14 +213,14 @@ module Pixel: sig
   val from_data: ('a, 'b) Data.t -> t
   (** Create a new pixel from existing image data *)
 
-  val as_data: t -> (float, f32) Data.t
+  val to_data: dest:('a, 'b) Data.t -> t -> unit
+  (** Copy pixel data to existing image data *)
+
+  val data: t -> (float, f32) Data.t
   (** Returns the underlying pixel data *)
 
   val from_color: dest:t -> Gg.color -> unit
   val to_color: t -> Gg.color
-
-  val to_data: dest:('a, 'b) Data.t -> t -> unit
-  (** Copy pixel data to existing image data *)
 
   val to_xyz: t -> t
   (** Convert pixel from RGB to XYZ *)
@@ -513,7 +513,7 @@ module Magick: sig
   val read: string -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Image.t, Error.t) result
   (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
 
-  val write: string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit
+  val write: ?quality:int -> string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit
   (** [write filename image] saves an image to [filename] *)
 
   val read_all: string array -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Input.t, Error.t) result

@@ -21,9 +21,9 @@ let min: ('a, 'b, 'c) t = fun x y c inputs ->
 
 let grayscale: ('a, 'b, [< `Rgb | `Rgba]) t = fun x y _c inputs ->
   let a = inputs.(0) in
-  (get a x y 0 *. 0.21)
-  +. (get a x y 1 *. 0.72)
-  +. (get a x y 2 *. 0.07)
+  get a x y 0 *. 0.21
+  +. get a x y 1 *. 0.72
+  +. get a x y 2 *. 0.07
 
 let color: ('a, 'b, [`Gray]) t = fun x y _c inputs ->
   let a = inputs.(0) in

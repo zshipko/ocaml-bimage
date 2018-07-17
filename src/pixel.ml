@@ -10,7 +10,7 @@ let from_data data =
   let Pixel px = empty () in
   let len = Data.length data in
   let kind = Data.kind data in
-  for i = 0 to 3 do
+  for i = 0 to 2 do
     px.{i} <- Kind.to_float kind data.{i mod len}
   done;
   Pixel px
@@ -18,11 +18,11 @@ let from_data data =
 let to_data ~dest (Pixel px) =
   let len = Data.length dest in
   let kind = Data.kind dest in
-  for i = 0 to min (len - 1) 3 do
+  for i = 0 to min (len - 1) 2 do
     dest.{i} <- Kind.of_float kind px.{i}
   done
 
-let as_data (Pixel px) = px
+let data (Pixel px) = px
 
 let to_color (Pixel data) =
   let kind = Data.kind data in

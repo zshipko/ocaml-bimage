@@ -131,6 +131,12 @@ module Kind: sig
 
   val clamp: ('a, 'b) kind -> float -> float
   (** Converts a float value to a value within the proper range for the given kind *)
+
+  val normalize: ('a, 'b) kind -> float -> float
+  (** Scales a value to the range 0.0-1.0 *)
+
+  val denormalize: ('a, 'b) kind -> float -> float
+  (** Sclaes a value to the range (kind_min-kind_max) *)
 end
 
 (** The Data module defines several operations on one dimensional image data *)

@@ -116,5 +116,15 @@ module Kind = struct
     if f < min then min
     else if f > max then max
     else f
+
+  let normalize kind f =
+    let min = min_f kind in
+    let max = max_f kind in
+    (f -.  min) /. (max -. min)
+
+  let denormalize kind f =
+    let min = min_f kind in
+    let max = max_f kind in
+    f *. (max -. min)
 end
 

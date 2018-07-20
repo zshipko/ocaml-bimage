@@ -15,13 +15,10 @@ let read filename t color =
       let channels = Image.channels img in
       let cmd = Printf.sprintf "%s '%s' -depth 8 %s:-" !convert_command filename f in
       let input = Unix.open_process_in cmd in
-      let fmax = Kind.max_f t in
-      let fmin = Kind.min_f t in
-      let scale = (fmax -. fmin) /. 255. in
       let kind = Kind.of_float t in
       for i = 0 to (Image.(img.width *  img.height)  * channels) - 1 do
         let x = Kind.to_float u8 (input_byte input) in
-        let x = x *. scale in
+        let x = Kind.normalize u8 x in
         img.Image.data.{i} <- kind x
       done;
       close_in input
@@ -56,12 +53,11 @@ let write ?quality filename img =
   let cmd = Printf.sprintf "%s -depth 8 -size %dx%d %s:- %s '%s'" !convert_command width height f quality filename in
   let output = Unix.open_process_out cmd in
   let kind = Image.kind img in
-  let fmax = Kind.max_f kind in
-  let fmin = Kind.min_f kind in
   for i = 0 to Image.(img.width *  img.height)  * channels - 1 do
     let x = Kind.to_float kind img.Image.data.{i} in
-    let y = x *. (255. /. (fmax -. fmin)) in
-    output_byte output (Kind.of_float u8 y)
+    let x = Kind.normalize kind x in
+    let x = Kind.denormalize u8 x in
+    output_byte output (Kind.of_float u8 x)
   done;
   close_out output
 

@@ -35,22 +35,22 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op ~output inputs =
   let of_float = Kind.of_float kind in
   let clamp = Kind.clamp kind in
   for i = 0 to length output - 1 do
-    let f = clamp (op !x !y !c inputs) in
-    Bigarray.Array1.unsafe_set output.data i (of_float f);
+    let f = op !x !y !c inputs in
+    Bigarray.Array1.unsafe_set output.data i (of_float @@ clamp f);
 
     (* Increment channel index *)
     incr c;
 
     (* If channel index is greater than the number of channels
      * then reset channel index to 0 and increment x index *)
-    let () = if !c = channels then
+    let () = if !c >= channels then
       let () = c := 0 in
       incr x
     in
 
     (* If x index is greater than the width then reset x index to 0
      * and increment y index *)
-    if !x = output.width then
+    if !x >= output.width then
       let () = x := 0 in
       incr y
   done
@@ -100,7 +100,7 @@ let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
        +. get a (x + 1) y c *. k12
        +. get a (x + 1) (y + 1) c *. k22)
 
-let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
+let filter kernel =
   let rows = Kernel.rows kernel in
   let cols = Kernel.cols kernel in
   let r2 = rows / 2 in
@@ -119,7 +119,7 @@ let filter: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
       done;
       !f
 
-let join_filter: (float -> float -> float ) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t = fun fn kernel kernel2 ->
+let join_filter fn kernel kernel2 =
   let rows = Kernel.rows kernel in
   let cols = Kernel.cols kernel in
   let r2 = rows / 2 in

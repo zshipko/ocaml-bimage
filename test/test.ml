@@ -6,10 +6,6 @@
 
 open Bimage
 
-let unwrap = function
-  | Ok x -> x
-  | Error e -> Error.exc e
-
 let blend =
   let open Expr in
   (input 0 x y c +. input 1 x y c) /. float 2.
@@ -24,7 +20,7 @@ let sobel =
   filter Kernel.sobel_x +. filter Kernel.sobel_y
 
 let test_expr =
-  let img = Magick.read "test.jpg" u8 rgb |> Error.unwrap in
+  let img = Error.unwrap @@ Magick.read Sys.argv.(1) u8 rgb in
   let output = Image.like img in
   let f = Op.eval (Expr.f blend) in
   let start = Unix.gettimeofday () in
@@ -39,8 +35,7 @@ let test_expr =
   Magick.write "test-expr2.jpg" output
 
 let _ =
-  let f = Sys.argv.(1) in
-  let im = unwrap  @@ Magick.read f f32 rgb in
+  let im = Error.unwrap @@ Magick.read Sys.argv.(1) f32 rgb in
   let dest = Image.create f32 gray im.Image.width im.Image.height in
   let () = Op.(eval grayscale ~output:dest [| im |]) in
   Magick.write "test0.jpg" dest;

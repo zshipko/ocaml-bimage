@@ -38,7 +38,7 @@ let random kind color width height =
 let channels {color; _} = channels_of_color color
 let kind {data; _} = Data.kind data [@@inline]
 let shape {width; height; color; _} = width, height, channels_of_color color
-let length {width; height; color; _} = width * height * channels_of_color color [@@inline]
+let length {step; height; _} = step * height [@@inline]
 
 let convert_to ?(scale = 1.0) ~dest img =
   let dest_k = kind dest in
@@ -57,8 +57,7 @@ let index image x y =
 [@@inline]
 
 let index_at image offs =
-  let length = image.color.Color.channels in
-  Data.slice image.data ~offs ~length
+  Data.slice image.data ~offs ~length:image.color.Color.channels
 
 let at image x y =
   index_at image (index image x y)
@@ -66,7 +65,7 @@ let at image x y =
 let get image x y c =
   let index = index image x y + c in
   if index < 0 || index >= length image then 0.0
-  else Kind.to_float (kind image) (Bigarray.Array1.unsafe_get image.data index)
+  else Kind.to_float (kind image) image.data.{index}
 
 let set image x y c v =
   let index = index image x y in

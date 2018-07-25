@@ -66,6 +66,7 @@ let get image x y c =
   let index = index image x y + c in
   if index < 0 || index >= length image then 0.0
   else Kind.to_float (kind image) image.data.{index}
+[@@inline]
 
 let set image x y c v =
   let index = index image x y in

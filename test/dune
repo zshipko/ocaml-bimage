@@ -1,7 +1,7 @@
 (executables
     (libraries bimage)
     (names test)
-    (ocamlopt_flags -S)
+    (ocamlopt_flags -O3 -S)
     (modules test))
 
 (alias

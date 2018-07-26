@@ -375,8 +375,8 @@ end
 
 (** Op is used to define pixel-level operations *)
 module Op: sig
-  type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
-  type ('a, 'b, 'c) f = float ->  ('a, 'b, 'c) t
+  type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  type ('a, 'b, 'c) f = float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
   val blend: ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
@@ -473,7 +473,29 @@ end
 
 (** Expr implements an operation combinator which can be used to build operations from low-level functions *)
 module Expr: sig
-  type 'a t
+  type _ t =
+    | Filter: Kernel.t -> float t
+    | Input: int * int t * int t * int t -> float t
+    | X: int t
+    | Y: int t
+    | C: int t
+    | Int: int ->  int t
+    | Float: float -> float t
+    | Float_of_int: int t -> float t
+    | Int_of_float: float t -> int t
+    | Fadd: float t * float t -> float t
+    | Fsub: float t * float t -> float t
+    | Fmul: float t * float t -> float t
+    | Fdiv: float t * float t -> float t
+    | Fpow: float t * float t -> float t
+    | Fsqrt: float t -> float t
+    | Fsin: float t -> float t
+    | Fcos: float t -> float t
+    | Ftan: float t -> float t
+    | Iadd: int t * int t -> int t
+    | Isub: int t * int t -> int t
+    | Imul: int t * int t -> int t
+    | Idiv: int t * int t -> int t
 
   val f: float t -> ('a, 'b, 'c) Op.t
   val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit

@@ -1,31 +1,31 @@
 open Type
 open Image
 
-type ('a, 'b, 'c) t = int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
-type ('a, 'b, 'c) f = float -> int -> int -> int -> ('a, 'b, 'c) Image.t array -> float
+type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+type ('a, 'b, 'c) f = float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
-let blend: ('a, 'b, 'c) t = fun x y c inputs ->
+let blend: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
   let b = inputs.(1) in
   (get a x y c +. get b x y c) /. 2.
 
-let max: ('a, 'b, 'c) t = fun x y c inputs ->
+let max: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
   let b = inputs.(1) in
   max (get a x y c) (get b x y c)
 
-let min: ('a, 'b, 'c) t = fun x y c inputs ->
+let min: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
   let b = inputs.(1) in
   min (get a x y c) (get b x y c)
 
-let grayscale: ('a, 'b, [< `Rgb | `Rgba]) t = fun x y _c inputs ->
+let grayscale: ('a, 'b, [< `Rgb | `Rgba]) t = fun inputs x y _c ->
   let a = inputs.(0) in
   get a x y 0 *. 0.21
   +. get a x y 1 *. 0.72
   +. get a x y 2 *. 0.07
 
-let color: ('a, 'b, [`Gray]) t = fun x y _c inputs ->
+let color: ('a, 'b, [`Gray]) t = fun inputs x y _c ->
   let a = inputs.(0) in
   get a x y 0
 
@@ -34,8 +34,9 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op ~output inputs =
   let kind = kind output in
   let of_float = Kind.of_float kind in
   let clamp = Kind.clamp kind in
+  let op = op inputs in
   for i = 0 to length output - 1 do
-    let f = op !x !y !c inputs in
+    let f = op !x !y !c in
     Bigarray.Array1.unsafe_set output.data i (of_float @@ clamp f);
 
     (* Increment channel index *)
@@ -56,22 +57,22 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op ~output inputs =
   done
 
 let join f a b =
-  fun x y c inputs ->
-    f (a x y c inputs) (b x y c inputs)
+  fun inputs x y c ->
+    f (a inputs x y c) (b inputs x y c)
 
 let apply f a =
-  fun x y c inputs ->
-    f (a x y c inputs) x y c inputs
+  fun inputs x y c ->
+    f (a inputs x y c) inputs x y c
 
-let scalar: float -> ('a, 'b, 'c) t = fun f _x _y _c _inputs -> f
+let scalar: float -> ('a, 'b, 'c) t = fun f _inputs _x _y _c -> f
 let scalar_min: ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t = fun k -> scalar (Kind.min_f k)
 let scalar_max: ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t = fun k -> scalar (Kind.max_f k)
 
-let invert_f f: ('a, 'b, 'c) t = fun _x _y _c inputs ->
+let invert_f f: ('a, 'b, 'c) t = fun inputs _x _y _c ->
   let kind = Input.get inputs 0 in
   Kind.max_f (Image.kind kind) -. f
 
-let invert: ('a, 'b, 'c) t = fun x y c inputs ->
+let invert: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
   let kind = kind a in
   if c = 4 then get a x y c
@@ -87,7 +88,7 @@ let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   let k02 = Kernel.get kernel 0 2 in
   let k12 = Kernel.get kernel 1 2 in
   let k22 = Kernel.get kernel 2 2 in
-  fun x y c inputs ->
+  fun inputs x y c ->
     let a = Input.get inputs 0 in
     Kind.clamp (kind a)
       (get a (x - 1) (y - 1) c *. k00
@@ -108,7 +109,7 @@ let filter kernel =
   if rows = 3 && cols = 3 then
     filter_3x3 kernel
   else
-    fun x y c inputs ->
+    fun inputs x y c ->
       let a = Input.get inputs 0 in
       let f = ref 0.0 in
       for ky = -r2 to r2 do
@@ -124,7 +125,7 @@ let join_filter fn kernel kernel2 =
   let cols = Kernel.cols kernel in
   let r2 = rows / 2 in
   let c2 = cols / 2 in
-  fun x y c inputs ->
+  fun inputs x y c ->
     let a = Input.get inputs 0 in
     let f = ref 0.0 in
     for ky = -r2 to r2 do
@@ -147,18 +148,18 @@ let ( %- ) a b = join_filter (-.) a b
 let ( %* ) a b = join_filter ( *. ) a b
 let ( %/ ) a b = join_filter ( /.) a b
 
-let sobel_x: ('a, 'b, 'c) t = fun x y c inputs ->
-  filter_3x3 Kernel.sobel_x x y c inputs
+let sobel_x: ('a, 'b, 'c) t = fun inputs x y c ->
+  filter_3x3 Kernel.sobel_x inputs x y c
 
-let sobel_y: ('a, 'b, 'c) t = fun x y c inputs ->
-  filter_3x3 Kernel.sobel_y  x y c inputs
+let sobel_y: ('a, 'b, 'c) t = fun inputs x y c ->
+  filter_3x3 Kernel.sobel_y  inputs x y c
 
-let sobel x y c inputs = (Kernel.sobel_x %+ Kernel.sobel_y) x y c inputs [@@inline]
+let sobel inputs x y c = (Kernel.sobel_x %+ Kernel.sobel_y) inputs x y c [@@inline]
 
 let gaussian_blur ?std n x y z inputs = filter (Kernel.gaussian ?std n) x y z inputs
 
 let transform t =
-  fun x y c inputs ->
+  fun inputs x y c ->
     let x = float_of_int x in
     let y = float_of_int y in
     let x', y' = Transform.transform t x y in
@@ -176,11 +177,11 @@ let scale x y =
   let s = Transform.scale x y in
   transform s
 
-let brightness n x y c inputs =
+let brightness n inputs x y c =
   let a = Input.get inputs 0 in
   get a x y c *. n
 
-let threshold thresh x y c inputs =
+let threshold thresh inputs x y c =
   let a = Input.get inputs 0 in
   let v = get a x y c in
   if v < thresh.(c) then 0.0

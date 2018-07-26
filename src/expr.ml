@@ -27,7 +27,7 @@ type _ t =
 let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a = fun x y c expr inputs ->
   match expr with
   | Filter k ->
-      Op.filter k !x !y !c inputs
+      Op.filter k inputs !x !y !c
   |Input (input, x', y', c') ->
       let x' = compile x y c x' inputs in
       let y' = compile x y c y' inputs in
@@ -45,31 +45,31 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
       let a = compile x y c f inputs in
       int_of_float a
   | Fadd (Filter a, Filter b) ->
-      Op.join_filter ( +. ) a b !x !y !c inputs
+      Op.join_filter ( +. ) a b inputs !x !y !c
   | Fadd (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a +. b
   | Fsub (Filter a, Filter b) ->
-      Op.join_filter ( -. ) a b !x !y !c inputs
+      Op.join_filter ( -. ) a b inputs !x !y !c
   | Fsub (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a -. b
   | Fmul (Filter a, Filter b) ->
-      Op.join_filter ( *. ) a b !x !y !c inputs
+      Op.join_filter ( *. ) a b inputs !x !y !c
   | Fmul (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a *. b
   | Fdiv (Filter a, Filter b) ->
-      Op.join_filter ( /. ) a b !x !y !c inputs
+      Op.join_filter ( /. ) a b inputs !x !y !c
   | Fdiv (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a /. b
   | Fpow (Filter a, Filter b) ->
-      Op.join_filter ( ** ) a b !x !y !c inputs
+      Op.join_filter ( ** ) a b inputs !x !y !c
   | Fpow (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
@@ -108,7 +108,7 @@ let f body =
   let y = ref 0 in
   let c = ref 0 in
   let f = compile x y c body in
-  fun x' y' c' inputs ->
+  fun inputs x' y' c' ->
     x := x';
     y := y';
     c := c';

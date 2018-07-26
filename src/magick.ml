@@ -19,6 +19,7 @@ let read filename t color =
       for i = 0 to (Image.(img.width *  img.height)  * channels) - 1 do
         let x = Kind.to_float u8 (input_byte input) in
         let x = Kind.normalize u8 x in
+        let x = Kind.denormalize t x in
         img.Image.data.{i} <- kind x
       done;
       close_in input

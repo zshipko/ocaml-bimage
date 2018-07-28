@@ -25,14 +25,12 @@ let read filename t color =
       close_in input
     in
     (* Read image size *)
-    let cmd = Printf.sprintf "%s '%s'" !identify_command filename in
+    let cmd = Printf.sprintf "%s -format \"%%w %%h\" '%s'" !identify_command filename in
     let identify = Unix.open_process_in cmd in
     let s = input_line identify in
     let () = close_in identify in
     let shape =
-      String.split_on_char ' ' s
-      |> fun x -> List.nth x 2
-      |> String.split_on_char 'x'
+      String.split_on_char ' ' (String.trim s)
     in
     match List.map int_of_string shape with
     | x::y::[] ->

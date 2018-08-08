@@ -24,6 +24,53 @@ type _ t =
   | Imul: int t * int t -> int t
   | Idiv: int t * int t -> int t
 
+let rec to_z3: type a. Z3.context -> a t -> Z3.Expr.expr = fun ctx expr ->
+  match expr with
+  | Filter _k -> Z3.Arithmetic.Real.mk_const_s ctx "Kernel"
+  | Input _ -> Z3.Arithmetic.Real.mk_const_s ctx "Input"
+  | X -> Z3.Arithmetic.Real.mk_const_s ctx "X"
+  | Y -> Z3.Arithmetic.Real.mk_const_s ctx "Y"
+  | C -> Z3.Arithmetic.Real.mk_const_s ctx "C"
+  | Int i -> Z3.Arithmetic.Integer.mk_numeral_i ctx i
+  | Float f -> Z3.Arithmetic.Real.mk_const_s ctx (string_of_float f)
+  | Fadd (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_add ctx [a; b]
+  | Fsub (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_sub ctx [a; b]
+  | Fmul (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_mul ctx [a; b]
+  | Fdiv (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_div ctx a b
+  | Fpow (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_power ctx a b
+  | Iadd (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_add ctx [a; b]
+  | Isub (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_sub ctx [a; b]
+  | Imul (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_mul ctx [a; b]
+  | Idiv (a, b) ->
+      let a = to_z3 ctx a in
+      let b = to_z3 ctx b in
+      Z3.Arithmetic.mk_div ctx a b
+  | _ -> failwith "unimplemented"
+
 let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a = fun x y c expr inputs ->
   match expr with
   | Filter k ->

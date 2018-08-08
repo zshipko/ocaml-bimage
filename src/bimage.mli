@@ -497,6 +497,8 @@ module Expr: sig
     | Imul: int t * int t -> int t
     | Idiv: int t * int t -> int t
 
+  val to_z3: Z3.context -> 'a t -> Z3.Expr.expr
+
   val f: float t -> ('a, 'b, 'c) Op.t
   val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
 

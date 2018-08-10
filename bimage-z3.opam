@@ -1,0 +1,26 @@
+opam-version: "1.2"
+maintainer: "Zach Shipko <zachshipko@gmail.com>"
+authors: ["Zach Shipko <zachshipko@gmail.com>"]
+homepage: "https://github.com/zshipko/vision"
+doc: "https://github.com/zshipko/vision/doc"
+license: "ISC"
+dev-repo: "https://github.com/zshipko/vision.git"
+bug-reports: "https://github.com/zshipko/vision/issues"
+tags: []
+
+available: [ ocaml-version >= "4.03.0"]
+
+depends:
+[
+    "jbuilder" {build}
+    "bimage"
+    "z3"
+]
+
+depopts: []
+
+build: [
+    ["jbuilder" "build" "-p" name "-j" jobs]
+]
+
+build-test: ["jbuilder" "runtest" "-p" name]

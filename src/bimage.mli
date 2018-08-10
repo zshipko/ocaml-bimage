@@ -417,6 +417,8 @@ module Op: sig
   val invert: ('a, 'b, 'c) t
   (** Invert the values in an image *)
 
+  val cond: (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool ) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+
   val filter: Kernel.t -> ('a, 'b, 'c) t
   (** Create a filter operation *)
 
@@ -481,6 +483,7 @@ module Expr: sig
     | C: int t
     | Int: int ->  int t
     | Float: float -> float t
+    | Bool: bool -> bool t
     | Float_of_int: int t -> float t
     | Int_of_float: float t -> int t
     | Fadd: float t * float t -> float t
@@ -492,15 +495,23 @@ module Expr: sig
     | Fsin: float t -> float t
     | Fcos: float t -> float t
     | Ftan: float t -> float t
+    | Fmod: float t * float t -> float t
     | Iadd: int t * int t -> int t
     | Isub: int t * int t -> int t
     | Imul: int t * int t -> int t
     | Idiv: int t * int t -> int t
-
-  val to_z3: Z3.context -> 'a t -> Z3.Expr.expr
+    | Imod: int t * int t -> int t
+    | Gt: 'a t * 'a t -> bool t
+    | Eq: 'a t * 'a t -> bool t
+    | Lt: 'a t * 'a t -> bool t
+    | And: bool t * bool t -> bool t
+    | Or: bool t * bool t -> bool t
+    | Not: bool t -> bool t
+    | If: bool t * float t * float t -> float t
 
   val f: float t -> ('a, 'b, 'c) Op.t
   val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
+  val compile: int ref -> int ref -> int ref -> 'a t -> ('a, 'b, 'c) Image.t array -> 'a
 
   val int: int -> int t
   val float: float -> float t

@@ -8,6 +8,7 @@ type _ t =
   | C: int t
   | Int: int ->  int t
   | Float: float -> float t
+  | Bool: bool -> bool t
   | Float_of_int: int t -> float t
   | Int_of_float: float t -> int t
   | Fadd: float t * float t -> float t
@@ -19,57 +20,19 @@ type _ t =
   | Fsin: float t -> float t
   | Fcos: float t -> float t
   | Ftan: float t -> float t
+  | Fmod: float t * float t -> float t
   | Iadd: int t * int t -> int t
   | Isub: int t * int t -> int t
   | Imul: int t * int t -> int t
   | Idiv: int t * int t -> int t
-
-let rec to_z3: type a. Z3.context -> a t -> Z3.Expr.expr = fun ctx expr ->
-  match expr with
-  | Filter _k -> Z3.Arithmetic.Real.mk_const_s ctx "Kernel"
-  | Input _ -> Z3.Arithmetic.Real.mk_const_s ctx "Input"
-  | X -> Z3.Arithmetic.Real.mk_const_s ctx "X"
-  | Y -> Z3.Arithmetic.Real.mk_const_s ctx "Y"
-  | C -> Z3.Arithmetic.Real.mk_const_s ctx "C"
-  | Int i -> Z3.Arithmetic.Integer.mk_numeral_i ctx i
-  | Float f -> Z3.Arithmetic.Real.mk_const_s ctx (string_of_float f)
-  | Fadd (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_add ctx [a; b]
-  | Fsub (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_sub ctx [a; b]
-  | Fmul (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_mul ctx [a; b]
-  | Fdiv (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_div ctx a b
-  | Fpow (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_power ctx a b
-  | Iadd (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_add ctx [a; b]
-  | Isub (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_sub ctx [a; b]
-  | Imul (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_mul ctx [a; b]
-  | Idiv (a, b) ->
-      let a = to_z3 ctx a in
-      let b = to_z3 ctx b in
-      Z3.Arithmetic.mk_div ctx a b
-  | _ -> failwith "unimplemented"
+  | Imod: int t * int t -> int t
+  | Gt: 'a t * 'a t -> bool t
+  | Eq: 'a t * 'a t -> bool t
+  | Lt: 'a t * 'a t -> bool t
+  | And: bool t * bool t -> bool t
+  | Or: bool t * bool t -> bool t
+  | Not: bool t -> bool t
+  | If: bool t * float t * float t -> float t
 
 let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a = fun x y c expr inputs ->
   match expr with
@@ -83,6 +46,7 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
   | X -> !x
   | Y -> !y
   | C -> !c
+  | Bool b -> b
   | Int i -> i
   | Float f -> f
   | Float_of_int i ->
@@ -133,6 +97,10 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
   | Ftan a ->
       let a = compile x y c a inputs in
       tan a
+  | Fmod (a, b) ->
+      let a = compile x y c a inputs in
+      let b = compile x y c b inputs in
+      mod_float a b
   | Iadd (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
@@ -149,6 +117,38 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a / b
+  | Imod (a, b) ->
+      let a = compile x y c a inputs in
+      let b = compile x y c b inputs in
+      a mod b
+  | Gt (a, b) ->
+      let a = compile x y c a inputs in
+      let b = compile x y c b inputs in
+      a > b
+  | Eq (a, b) ->
+      let a = compile x y c a inputs in
+      let b = compile x y c b inputs in
+      a = b
+  | Lt (a, b) ->
+      let a = compile x y c a inputs in
+      let b = compile x y c b inputs in
+      a < b
+  | And (a, b) ->
+      let a = compile x y c a inputs in
+      let b = compile x y c b inputs in
+      a && b
+  | Or (a, b) ->
+      let a = compile x y c a inputs in
+      let b = compile x y c b inputs in
+      a || b
+  | Not a ->
+      let a = compile x y c a inputs in
+      not a
+  | If (cond, a, b) ->
+      let cond = compile x y c cond inputs in
+      if cond then compile x y c a inputs
+      else compile x y c b inputs
+
 
 let f body =
   let x = ref 0 in

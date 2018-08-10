@@ -29,6 +29,13 @@ let color: ('a, 'b, [`Gray]) t = fun inputs x y _c ->
   let a = inputs.(0) in
   get a x y 0
 
+let cond: (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool ) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t = fun cond a b inputs x y c ->
+  if cond inputs x y c then
+    a inputs x y c
+  else
+    b inputs x y c
+
+
 let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op ~output inputs =
   let channels = channels output in
   let kind = kind output in

@@ -1,0 +1,9 @@
+(library
+    (name bimage_z3)
+    (public_name bimage-z3)
+    (modules bimage_z3)
+    (optional)
+    (libraries bimage z3))
+
+
+

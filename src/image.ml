@@ -37,6 +37,7 @@ let random kind color width height =
 
 let channels {color; _} = channels_of_color color
 let kind {data; _} = Data.kind data [@@inline]
+let color {color; _} = color
 let shape {width; height; color; _} = width, height, channels_of_color color
 let length {step; height; _} = step * height [@@inline]
 

@@ -310,6 +310,9 @@ module Image: sig
   val kind: ('a, 'b, 'c) t -> ('a, 'b) kind
   (** Returns the image kind *)
 
+  val color: ('a, 'b, 'c) t -> 'c Color.t
+  (** Returns the image color type *)
+
   val shape: ('a, 'b, 'c) t -> int * int * int
   (** Returns the width, height and channels *)
 

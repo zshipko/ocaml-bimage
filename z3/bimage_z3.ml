@@ -1,6 +1,8 @@
 open Bimage
 open Expr
 
+exception Not_implemented of string
+
 let rec to_z3: type a. Z3.context -> a t -> Z3.Expr.expr = fun ctx expr ->
   match expr with
   | Filter _k -> Z3.FloatingPoint.mk_const_s ctx "Kernel" (Z3.FloatingPoint.mk_sort_64 ctx)
@@ -82,15 +84,16 @@ let rec to_z3: type a. Z3.context -> a t -> Z3.Expr.expr = fun ctx expr ->
       let a = to_z3 ctx a in
       let b = to_z3 ctx b in
       Z3.Boolean.mk_or ctx [a; b]
-  | Fsin _ -> failwith "not implemented"
-  | Fcos _ -> failwith "not implemented"
-  | Ftan _ -> failwith "not implemented"
+
   | Imod (a, b) ->
       let a = to_z3 ctx a in
       let b = to_z3 ctx b in
       Z3.Arithmetic.Integer.mk_mod ctx a b
-  | Fmod _ -> failwith "not implemented"
   | Not b ->
       let b = to_z3 ctx b in
       Z3.Boolean.mk_not ctx b
-  | If _ -> failwith "not implemented"
+  | If _ -> raise (Not_implemented "If")
+  | Fmod _ -> raise (Not_implemented "Fmod")
+  | Fsin _ ->  raise (Not_implemented "Fsin")
+  | Fcos _ -> raise (Not_implemented  "Fcos")
+  | Ftan _ -> raise (Not_implemented  "Ftan")

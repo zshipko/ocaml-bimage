@@ -126,5 +126,11 @@ module Kind = struct
     let min = min_f kind in
     let max = max_f kind in
     f *. (max -. min)
+
+  let convert ~from to_kind f =
+    to_float from f
+    |> normalize from
+    |> denormalize to_kind
+    |> of_float to_kind
 end
 

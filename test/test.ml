@@ -36,7 +36,7 @@ let test_expr =
 
 let _ =
   let im = Error.unwrap @@ Magick.read Sys.argv.(1) f32 rgb in
-  let dest = Image.create f32 gray im.Image.width im.Image.height in
+  let dest = Image.create ~layout:Image.Planar f32 gray im.Image.width im.Image.height in
   let () = Op.(eval grayscale ~output:dest [| im |]) in
   Magick.write "test0.jpg" dest;
   let k = Kernel.of_array [|

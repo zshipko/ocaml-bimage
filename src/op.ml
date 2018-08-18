@@ -7,34 +7,33 @@ type ('a, 'b, 'c) f = float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -
 let blend: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
   let b = inputs.(1) in
-  (get a x y c +. get b x y c) /. 2.
+  (get_f a x y c +. get_f b x y c) /. 2.
 
 let max: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
   let b = inputs.(1) in
-  max (get a x y c) (get b x y c)
+  max (get_f a x y c) (get_f b x y c)
 
 let min: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
   let b = inputs.(1) in
-  min (get a x y c) (get b x y c)
+  min (get_f a x y c) (get_f b x y c)
 
 let grayscale: ('a, 'b, [< `Rgb | `Rgba]) t = fun inputs x y _c ->
   let a = inputs.(0) in
-  get a x y 0 *. 0.21
-  +. get a x y 1 *. 0.72
-  +. get a x y 2 *. 0.07
+  get_f a x y 0 *. 0.21
+  +. get_f a x y 1 *. 0.72
+  +. get_f a x y 2 *. 0.07
 
 let color: ('a, 'b, [`Gray]) t = fun inputs x y _c ->
   let a = inputs.(0) in
-  get a x y 0
+  get_f a x y 0
 
 let cond: (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool ) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t = fun cond a b inputs x y c ->
   if cond inputs x y c then
     a inputs x y c
   else
     b inputs x y c
-
 
 let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op ~output inputs =
   let channels = channels output in
@@ -82,8 +81,8 @@ let invert_f f: ('a, 'b, 'c) t = fun inputs _x _y _c ->
 let invert: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
   let kind = kind a in
-  if c = 4 then get a x y c
-  else Kind.max_f kind -. get a x y c
+  if c = 4 then get_f a x y c
+  else Kind.max_f kind -. get_f a x y c
 
 let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   let k00 = Kernel.get kernel 0 0 in
@@ -97,16 +96,15 @@ let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   let k22 = Kernel.get kernel 2 2 in
   fun inputs x y c ->
     let a = Input.get inputs 0 in
-    Kind.clamp (kind a)
-      (get a (x - 1) (y - 1) c *. k00
-       +. get a (x - 1) y c *. k10
-       +. get a (x - 1) (y + 1) c *. k20
-       +. get a x (y - 1) c *. k01
-       +. get a x y c *. k11
-       +. get a x (y + 1) c *. k21
-       +. get a (x + 1) (y - 1) c *. k02
-       +. get a (x + 1) y c *. k12
-       +. get a (x + 1) (y + 1) c *. k22)
+    (get_f a (x - 1) (y - 1) c *. k00
+     +. get_f a (x - 1) y c *. k10
+     +. get_f a (x - 1) (y + 1) c *. k20
+     +. get_f a x (y - 1) c *. k01
+     +. get_f a x y c *. k11
+     +. get_f a x (y + 1) c *. k21
+     +. get_f a (x + 1) (y - 1) c *. k02
+     +. get_f a (x + 1) y c *. k12
+     +. get_f a (x + 1) (y + 1) c *. k22)
 
 let filter kernel =
   let rows = Kernel.rows kernel in
@@ -122,7 +120,7 @@ let filter kernel =
       for ky = -r2 to r2 do
         let kr = kernel.(ky + r2) in
         for kx = -c2 to c2 do
-          f := !f +. (get a (x + kx) (y + ky) c *. kr.(kx + c2))
+          f := !f +. (get_f a (x + kx) (y + ky) c *. kr.(kx + c2))
         done
       done;
       !f
@@ -139,7 +137,7 @@ let join_filter fn kernel kernel2 =
       let kr = kernel.(ky + r2) in
       let kr2 = kernel2.(ky + r2) in
       for kx = -c2 to c2 do
-        let v = get a (x + kx) (y + ky) c in
+        let v = get_f a (x + kx) (y + ky) c in
         f := !f +. fn (v *. kr.(kx + c2)) (v *. kr2.(kx + c2))
       done
     done;
@@ -173,7 +171,7 @@ let transform t =
     let x0', y0' = int_of_float (ceil x'), int_of_float (ceil y') in
     let x1', y1' = int_of_float (floor x'), int_of_float (floor y') in
     if x0' >= 0 && y0' >= 0 && x0' < inputs.(0).width && y0' < inputs.(0).height then
-      (get inputs.(0) x0' y0' c +. get inputs.(0) x1' y1' c) /. 2.
+      (get_f inputs.(0) x0' y0' c +. get_f inputs.(0) x1' y1' c) /. 2.
     else 0.
 
 let rotate ?center angle =
@@ -186,10 +184,10 @@ let scale x y =
 
 let brightness n inputs x y c =
   let a = Input.get inputs 0 in
-  get a x y c *. n
+  get_f a x y c *. n
 
 let threshold thresh inputs x y c =
   let a = Input.get inputs 0 in
-  let v = get a x y c in
+  let v = get_f a x y c in
   if v < thresh.(c) then 0.0
   else Kind.max_f (kind a)

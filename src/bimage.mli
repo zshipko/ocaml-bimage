@@ -37,6 +37,7 @@ module Error: sig
     | `Invalid_shape
     | `Invalid_kernel_shape of int * int
     | `Invalid_input of int
+    | `Invalid_layout
     | `Msg of string
   ]
 
@@ -137,6 +138,8 @@ module Kind: sig
 
   val denormalize: ('a, 'b) kind -> float -> float
   (** Sclaes a value to the range (kind_min-kind_max) *)
+
+  val convert: from:('a, 'b) kind -> ('c, 'd) kind -> 'a -> 'c
 end
 
 (** The Data module defines several operations on one dimensional image data *)
@@ -209,11 +212,11 @@ module Data: sig
   (** Default equality function *)
 end
 
-(** Pixels are 3-channel float vectors used to store image data *)
+(** Pixels are float vectors used to store normalized image data *)
 module Pixel: sig
   type t
 
-  val empty: unit -> t
+  val empty: int -> t
   (** Create a new pixel with all channels set to 0 *)
 
   val from_data: ('a, 'b) Data.t -> t
@@ -281,28 +284,39 @@ end
 
 (** The Image module defines a simple interface for manipulating image data *)
 module Image: sig
+  type layout =
+    | Planar
+    | Interleaved
+
   type ('a, 'b, 'c) t = {
     width: int;
     height: int;
     color: 'c Color.t;
     step: int;
+    layout: layout;
     data: ('a, 'b) Data.t;
   }
 
-  val create: ?mmap:string -> ('a, 'b) kind -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
+  val create: ?layout:layout -> ?mmap:string -> ('a, 'b) kind -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
   (** [create kind color width height] makes a new image with the given [kind], [color] and dimensions *)
 
-  val of_data: 'c Color.t -> int -> int -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
-  (** [of_data color width height] makes a new image from existing image data with the given [kind], [color] and dimensions *)
+  val of_data: 'c Color.t -> int -> int -> layout -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
+  (** [of_data color width height layout data] makes a new image from existing image data with the given [kind], [color], [layout], and dimensions *)
 
   val like: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** [like img] creates a new image with the same dimensions, color and kind as [img] *)
+
+  val like_with_color: 'd Color.t -> ('a, 'b, 'c) t -> ('a, 'b, 'd) t
+  val like_with_kind: ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
 
   val copy: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Makes a copy of an image and underlying image data *)
 
   val channels: ('a, 'b, 'c) t -> int
   (** Returns the number of channels in an image *)
+
+  val layout: ('a, 'b, 'c) t -> layout
+  (** Returns the image layout type *)
 
   val length: ('a, 'b, 'c) t -> int
   (** Returns the number of values contained in an image *)
@@ -316,28 +330,41 @@ module Image: sig
   val shape: ('a, 'b, 'c) t -> int * int * int
   (** Returns the width, height and channels *)
 
-  val convert_to: ?scale:float -> dest:('d, 'e, 'c) t -> ('a, 'b, 'c) t -> unit
-  (** Convert an image to an existing image of another kind, optionally using a scale factor *)
+  val convert_to: dest:('d, 'e, 'c) t -> ('a, 'b, 'c) t -> unit
+  (** Convert an image to an existing image of another kind *)
 
-  val convert: ?scale:float -> ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
-  (** Convert an image to a new image of another kind, optionally using a scale factor *)
+  val convert: ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
+  (** Convert an image to a new image of another kind *)
 
-  val at: ('a, 'b, 'c) t -> int -> int -> ('a, 'b) Data.t
-  (** [at image x y] returns a [Data.t] with data from (x, y). The data contains one value
-      for each channel of the image *)
+  val get: ('a, 'b, 'c) t -> int -> int -> int -> 'a
+  (** [get image x y c] returns a the value at (x, y, c) *)
 
-  val get: ('a, 'b, 'c) t -> int -> int -> int -> float
-  (** [get image x y c] returns a float representation of the value at (x, y, c). This is
-      equivalent to  [to_float (kind image) (at image x y).{c}] *)
-
-  val set: ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
+  val set: ('a, 'b, 'c) t -> int -> int -> int -> 'a -> unit
   (** Set a single channel of the given image at (x, y) *)
 
-  val get_pixel: ('a, 'b, 'c) t -> int -> int -> Pixel.t
+  val get_f: ('a, 'b, 'c) t -> int -> int -> int -> float
+  (** [get_f image x y c] returns the float value at (x, y, c) *)
+
+  val set_f: ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
+  (** Set a single channel of the given image at (x, y) using a float value *)
+
+  val get_n: ('a, 'b, 'c) t -> int -> int -> int -> float
+  (** [get_f image x y c] returns the normalized float value at (x, y, c) *)
+
+  val set_n: ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
+  (** Set a single channel of the given image at (x, y) using a normalized float value *)
+
+  val get_pixel: ('a, 'b, 'c) t -> ?dest:Pixel.t -> int -> int -> Pixel.t
   (** [get_pixel image x y] returns a pixel representation of [image] data at ([x], [y]) *)
 
   val set_pixel: ('a, 'b, 'c) t -> int -> int -> Pixel.t -> unit
   (** [set_pixel image x y px] sets the value of [image] at ([x], [y]) to [px] *)
+
+  val get_data: ('a, 'b, 'c) t -> ?dest:('a, 'b) Data.t -> int -> int -> ('a, 'b) Data.t
+  (** [get_data image x y] returns [image] data at ([x], [y]) *)
+
+  val set_data: ('a, 'b, 'c) t -> int -> int -> ('a, 'b) Data.t -> unit
+  (** [set_data image x y px] sets the value of [image] at ([x], [y]) to [px] *)
 
   val each_pixel: (int -> int -> ('a, 'b) Data.t -> unit) -> ?x:int -> ?y:int -> ?width:int -> ?height:int -> ('a, 'b, 'c) t -> unit
   (** Iterate over each pixel in an image, or a rectangle segment of an image specified by [x], [y], [width],
@@ -350,6 +377,8 @@ module Image: sig
 
   val avg: ?x:int -> ?y:int -> ?width:int -> ?height:int -> ('a, 'b, 'c) t -> (float, f32) Data.t
   (** Get the average pixel of an image or region of an image *)
+
+  val convert_layout: layout -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 
   val rotate_90: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val rotate_180: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
@@ -376,7 +405,7 @@ module Input: sig
       image will match the first input image in size, kind and color *)
 end
 
-(** Op is used to define pixel-level operations *)
+(** Op is used to define pixel-level operations. These operations are performed on normalized floating-point values *)
 module Op: sig
   type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
   type ('a, 'b, 'c) f = float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
@@ -554,13 +583,13 @@ end
 (** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the
     command-line *)
 module Magick: sig
-  val read: string -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Image.t, Error.t) result
+  val read: string -> ?layout:Image.layout -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Image.t, Error.t) result
   (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
 
   val write: ?quality:int -> string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit
   (** [write filename image] saves an image to [filename] *)
 
-  val read_all: string array -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Input.t, Error.t) result
+  val read_all: string array -> ?layout:Image.layout -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Input.t, Error.t) result
   (** Read multiple images directly into an Input array *)
 
   val convert_command: string ref

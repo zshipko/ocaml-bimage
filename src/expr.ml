@@ -42,7 +42,8 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
       let x' = compile x y c x' inputs in
       let y' = compile x y c y' inputs in
       let c' = compile c y c c' inputs in
-      Image.get (Input.get inputs input) x' y' c'
+      let f: float = Image.get_f (Input.get inputs input) x' y' c' in
+      f
   | X -> !x
   | Y -> !y
   | C -> !c
@@ -150,7 +151,7 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
       else compile x y c b inputs
 
 
-let f body =
+let f body: ('a, 'b, 'c) Op.t =
   let x = ref 0 in
   let y = ref 0 in
   let c = ref 0 in
@@ -170,7 +171,7 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body ~output inputs =
   let op = compile x y c body in
   for i = 0 to length output - 1 do
     let f = clamp @@ op inputs in
-    Bigarray.Array1.unsafe_set output.data i (of_float f);
+    Bigarray.Array1.unsafe_set output.data i (of_float (Kind.normalize kind f));
 
     (* Increment channel index *)
     incr c;

@@ -8,6 +8,7 @@ bimage is an image processing library for OCaml.
 
 - Simple image type based on bigarrays
 - Supports u8, u16, i32, i64, f32, f64, complex32 and complex64 datatypes
+- Multiple layout support (Planar/Interleaved)
 - Composable image operations
 - Image I/O using ImageMagick or GraphicsMagick
 - Optional GTK support using `bimage-gtk`
@@ -38,8 +39,8 @@ let a = Image.create u8 gray 64 64 in
 
 (* Iterate over each pixel *)
 let _ =
-    Image.each_pixel (fun x y px ->
-        px.{0} <- x + y
+    Image.each_pixel (fun x y _px ->
+        set a x y (x + y)
     ) a
 in
 
@@ -56,8 +57,8 @@ let _ =
 (* Load an image using ImageMagick *)
 let Some a = Magick.read "test/test.jpg" f32 rgb in
 
-(* Create an operation to convert to grayscale and subtract 0.1 *)
-let f = Op.(grayscale &- scalar 0.1) in
+(* Create an operation to convert to grayscale and subtract 1.0 *)
+let f = Op.(grayscale &- scalar 1.0) in
 
 (* Create a destination image *)
 let dest = Image.like f32 gray a in

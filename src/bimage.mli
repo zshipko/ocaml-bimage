@@ -308,6 +308,7 @@ module Image: sig
 
   val like_with_color: 'd Color.t -> ('a, 'b, 'c) t -> ('a, 'b, 'd) t
   val like_with_kind: ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
+  val like_with_layout: layout -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 
   val copy: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Makes a copy of an image and underlying image data *)

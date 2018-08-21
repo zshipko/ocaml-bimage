@@ -28,13 +28,16 @@ let of_data color width height layout data =
   {width; height; color; step; layout; data}
 
 let like image =
-  create (Data.kind image.data) image.color image.width image.height
+  create ~layout:image.layout (Data.kind image.data) image.color image.width image.height
 
 let like_with_kind kind image =
-  create kind image.color image.width image.height
+  create ~layout:image.layout kind image.color image.width image.height
 
 let like_with_color color image =
-  create (Data.kind image.data) color image.width image.height
+  create ~layout:image.layout (Data.kind image.data) color image.width image.height
+
+let like_with_layout layout image =
+  create ~layout (Data.kind image.data) image.color image.width image.height
 
 let copy image =
   let data = Data.copy image.data in
@@ -63,7 +66,7 @@ let convert_to ~dest img =
   done
 
 let convert k img =
-  let dest = create k img.color img.width img.height in
+  let dest = create ~layout:img.layout k img.color img.width img.height in
   convert_to ~dest img;
   dest
 
@@ -185,11 +188,3 @@ let convert_layout layout im =
   ) im;
   dest
 
-let to_image buf =
-  let dest = create (Data.kind buf.data) buf.color buf.width buf.height in
-  each_pixel (fun x y px ->
-    for i = 0 to Data.length px - 1 do
-      px.{i} <- buf.data.{index buf x y i}
-    done
-  ) dest;
-  dest

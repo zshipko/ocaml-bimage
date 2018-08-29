@@ -428,7 +428,7 @@ module Op: sig
   val color: ('a, 'b, [`Gray]) t
   (** Convert a grayscale image to color *)
 
-  val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> ('a, 'b, 'c) t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
+  val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> ('a, 'b, 'c) t -> ('a, 'b, 'c, 'd, 'e, 'f) filter
   (** Evaluate an operation *)
 
   val join: (float -> float -> float) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
@@ -545,7 +545,7 @@ module Expr: sig
     | If: bool t * float t * float t -> float t
 
   val f: float t -> ('a, 'b, 'c) Op.t
-  val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
+  val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c, 'd, 'e, 'f) filter
   val compile: int ref -> int ref -> int ref -> 'a t -> ('a, 'b, 'c) Image.t array -> 'a
 
   val int: int -> int t

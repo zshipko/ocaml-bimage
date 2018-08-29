@@ -5,7 +5,7 @@ exception Not_implemented of string
 
 let rec to_z3: type a. Z3.context -> a t -> Z3.Expr.expr = fun ctx expr ->
   match expr with
-  | Filter _k -> Z3.FloatingPoint.mk_const_s ctx "Kernel" (Z3.FloatingPoint.mk_sort_64 ctx)
+  | Kernel _k -> Z3.FloatingPoint.mk_const_s ctx "Kernel" (Z3.FloatingPoint.mk_sort_64 ctx)
   | Input _ -> Z3.FloatingPoint.mk_const_s ctx "Kernel" (Z3.FloatingPoint.mk_sort_64 ctx)
   | X -> Z3.Arithmetic.Integer.mk_const_s ctx "X"
   | Y -> Z3.Arithmetic.Integer.mk_const_s ctx "Y"

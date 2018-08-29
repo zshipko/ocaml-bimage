@@ -372,9 +372,9 @@ module Image: sig
       and [height]. The data segment used in the callback is mutable and will write directly to the underlying
       image data. *)
 
-  val filter: Kernel.t -> ?output:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val kernel: Kernel.t -> ?output:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Apply a kernel directly to the provided image. Note that this implementation is much slower
-      than `Op.filter`, it is mostly provided for convenience *)
+      than `Op.kernel`, it is mostly provided for convenience *)
 
   val avg: ?x:int -> ?y:int -> ?width:int -> ?height:int -> ('a, 'b, 'c) t -> (float, f32) Data.t
   (** Get the average pixel of an image or region of an image *)
@@ -386,6 +386,8 @@ module Image: sig
   val rotate_270: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val resize: int -> int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 end
+
+type ('a, 'b, 'c, 'd, 'e, 'f) filter = output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
 
 module Transform: sig
   type t = Gg.M3.t
@@ -452,10 +454,10 @@ module Op: sig
 
   val cond: (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool ) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 
-  val filter: Kernel.t -> ('a, 'b, 'c) t
-  (** Create a filter operation *)
+  val kernel: Kernel.t -> ('a, 'b, 'c) t
+  (** Create a kernel operation *)
 
-  val join_filter: (float -> float -> float) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+  val join_kernel: (float -> float -> float) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
   (** Create a kernel operation using two kernels combined using the designated operation *)
 
   val ( &+ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
@@ -471,16 +473,16 @@ module Op: sig
   (** Infix operator for [join] using division *)
 
   val ( %+ ): Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Infix operator for [join_filter] using addition *)
+  (** Infix operator for [join_kernel] using addition *)
 
   val ( %- ): Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Infix operator for [join_filter] using subtraction *)
+  (** Infix operator for [join_kernel] using subtraction *)
 
   val ( %* ): Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Infix operator for [join_filter] using multiplication *)
+  (** Infix operator for [join_kernel] using multiplication *)
 
   val ( %/ ): Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Infix operator for [join_filter] using division *)
+  (** Infix operator for [join_kernel] using division *)
 
   val ( $ ): ('a, 'b, 'c) t -> ('a, 'b, 'c) f -> ('a, 'b, 'c) t
   (** Infix operator for [map] *)
@@ -509,7 +511,7 @@ end
 (** Expr implements an operation combinator which can be used to build operations from low-level functions *)
 module Expr: sig
   type _ t =
-    | Filter: Kernel.t -> float t
+    | Kernel: Kernel.t -> float t
     | Input: int * int t * int t * int t -> float t
     | X: int t
     | Y: int t
@@ -553,7 +555,7 @@ module Expr: sig
   val x: int t
   val y: int t
   val c: int t
-  val filter: Kernel.t -> float t
+  val kernel: Kernel.t -> float t
   val input: int -> int t -> int t -> int t -> float t
   val fadd: float t -> float t -> float t
   val fsub: float t -> float t -> float t

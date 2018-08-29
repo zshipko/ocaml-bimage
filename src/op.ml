@@ -3,6 +3,7 @@ open Image
 
 type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 type ('a, 'b, 'c) f = float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+type ('a, 'b, 'c, 'd, 'e, 'f) filter = output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
 
 let blend: ('a, 'b, 'c) t = fun inputs x y c ->
   let a = inputs.(0) in
@@ -35,7 +36,7 @@ let cond: (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool ) -> ('a, 'b,
   else
     b inputs x y c
 
-let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op ~output inputs =
+let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op: ('a, 'b, 'c, 'd, 'e, 'f) filter = fun ~output inputs ->
   let channels = channels output in
   let kind = kind output in
   let of_float = Kind.of_float kind in
@@ -84,7 +85,7 @@ let invert: ('a, 'b, 'c) t = fun inputs x y c ->
   if c = 4 then get_f a x y c
   else Kind.max_f kind -. get_f a x y c
 
-let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
+let kernel_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
   let k00 = Kernel.get kernel 0 0 in
   let k10 = Kernel.get kernel 1 0 in
   let k20 = Kernel.get kernel 2 0 in
@@ -106,13 +107,13 @@ let filter_3x3: Kernel.t -> ('a, 'b, 'c) t = fun kernel ->
      +. get_f a (x + 1) y c *. k12
      +. get_f a (x + 1) (y + 1) c *. k22)
 
-let filter kernel =
+let kernel kernel =
   let rows = Kernel.rows kernel in
   let cols = Kernel.cols kernel in
   let r2 = rows / 2 in
   let c2 = cols / 2 in
   if rows = 3 && cols = 3 then
-    filter_3x3 kernel
+    kernel_3x3 kernel
   else
     fun inputs x y c ->
       let a = Input.get inputs 0 in
@@ -125,7 +126,7 @@ let filter kernel =
       done;
       !f
 
-let join_filter fn kernel kernel2 =
+let join_kernel fn kernel kernel2 =
   let rows = Kernel.rows kernel in
   let cols = Kernel.cols kernel in
   let r2 = rows / 2 in
@@ -148,20 +149,20 @@ let ( &+ ) a b = join (+.) a b
 let ( &- ) a b = join (-.) a b
 let ( &* ) a b = join ( *. ) a b
 let ( &/ ) a b = join ( /.) a b
-let ( %+ ) a b = join_filter ( +. ) a b
-let ( %- ) a b = join_filter (-.) a b
-let ( %* ) a b = join_filter ( *. ) a b
-let ( %/ ) a b = join_filter ( /.) a b
+let ( %+ ) a b = join_kernel ( +. ) a b
+let ( %- ) a b = join_kernel (-.) a b
+let ( %* ) a b = join_kernel ( *. ) a b
+let ( %/ ) a b = join_kernel ( /.) a b
 
 let sobel_x: ('a, 'b, 'c) t = fun inputs x y c ->
-  filter_3x3 Kernel.sobel_x inputs x y c
+  kernel_3x3 Kernel.sobel_x inputs x y c
 
 let sobel_y: ('a, 'b, 'c) t = fun inputs x y c ->
-  filter_3x3 Kernel.sobel_y  inputs x y c
+  kernel_3x3 Kernel.sobel_y  inputs x y c
 
 let sobel inputs x y c = (Kernel.sobel_x %+ Kernel.sobel_y) inputs x y c [@@inline]
 
-let gaussian_blur ?std n x y z inputs = filter (Kernel.gaussian ?std n) x y z inputs
+let gaussian_blur ?std n x y z inputs = kernel (Kernel.gaussian ?std n) x y z inputs
 
 let transform t =
   fun inputs x y c ->

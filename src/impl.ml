@@ -1,13 +1,13 @@
 open Util
 open Image
 
-let filter k ?output image =
+let kernel k ?output image =
   let output =
     match output with
     | Some d -> d
     | None -> like image
   in
-  let f = Op.filter k in
+  let f = Op.kernel k in
   Op.eval f ~output [| image |];
   output
 

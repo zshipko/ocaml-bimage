@@ -1,7 +1,7 @@
 open Type
 
 type _ t =
-  | Filter: Kernel.t -> float t
+  | Kernel: Kernel.t -> float t
   | Input: int * int t * int t * int t -> float t
   | X: int t
   | Y: int t
@@ -36,8 +36,8 @@ type _ t =
 
 let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a = fun x y c expr inputs ->
   match expr with
-  | Filter k ->
-      Op.filter k inputs !x !y !c
+  | Kernel k ->
+      Op.kernel k inputs !x !y !c
   |Input (input, x', y', c') ->
       let x' = compile x y c x' inputs in
       let y' = compile x y c y' inputs in
@@ -56,32 +56,32 @@ let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) In
   | Int_of_float f ->
       let a = compile x y c f inputs in
       int_of_float a
-  | Fadd (Filter a, Filter b) ->
-      Op.join_filter ( +. ) a b inputs !x !y !c
+  | Fadd (Kernel a, Kernel b) ->
+      Op.join_kernel ( +. ) a b inputs !x !y !c
   | Fadd (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a +. b
-  | Fsub (Filter a, Filter b) ->
-      Op.join_filter ( -. ) a b inputs !x !y !c
+  | Fsub (Kernel a, Kernel b) ->
+      Op.join_kernel ( -. ) a b inputs !x !y !c
   | Fsub (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a -. b
-  | Fmul (Filter a, Filter b) ->
-      Op.join_filter ( *. ) a b inputs !x !y !c
+  | Fmul (Kernel a, Kernel b) ->
+      Op.join_kernel ( *. ) a b inputs !x !y !c
   | Fmul (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a *. b
-  | Fdiv (Filter a, Filter b) ->
-      Op.join_filter ( /. ) a b inputs !x !y !c
+  | Fdiv (Kernel a, Kernel b) ->
+      Op.join_kernel ( /. ) a b inputs !x !y !c
   | Fdiv (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
       a /. b
-  | Fpow (Filter a, Filter b) ->
-      Op.join_filter ( ** ) a b inputs !x !y !c
+  | Fpow (Kernel a, Kernel b) ->
+      Op.join_kernel ( ** ) a b inputs !x !y !c
   | Fpow (a, b) ->
       let a = compile x y c a inputs in
       let b = compile x y c b inputs in
@@ -197,7 +197,7 @@ let float f = Float f
 let x = X
 let y = Y
 let c = C
-let filter k = Filter k
+let kernel k = Kernel k
 let input i x y c = Input (i, x, y, c)
 let fadd a b = Fadd (a, b)
 let fsub a b = Fsub (a, b)

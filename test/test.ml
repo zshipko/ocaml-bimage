@@ -17,7 +17,7 @@ let invert_f kind =
 
 let sobel =
   let open Expr in
-  filter Kernel.sobel_x +. filter Kernel.sobel_y
+  kernel Kernel.sobel_x +. kernel Kernel.sobel_y
 
 let test_expr =
   let img = Error.unwrap @@ Magick.read Sys.argv.(1) u8 rgb in
@@ -51,19 +51,19 @@ let _ =
   |] in
   let f = Op.sobel in
   let start = Unix.gettimeofday () in
-  let x = Image.filter b dest in
+  let x = Image.kernel b dest in
   Printf.printf "blur: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test1.jpg" x;
   let start = Unix.gettimeofday () in
   let () = Op.(eval f ~output:x [| dest |]) in
   Printf.printf "sobel: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test2.jpg" x;
-  let h = Op.filter k in
+  let h = Op.kernel k in
   let start = Unix.gettimeofday () in
   let () = Op.eval h ~output:x [| dest |] in
   Printf.printf "sobel x: %fsec\n" (Unix.gettimeofday () -. start);
   Magick.write "test3.jpg" x;
-  let g = Op.filter (Kernel.gaussian 5)  in
+  let g = Op.kernel (Kernel.gaussian 5)  in
   let start = Unix.gettimeofday () in
   let () = Op.eval g ~output:x [| dest |] in
   Printf.printf "gaussian: %fsec\n" (Unix.gettimeofday () -. start);

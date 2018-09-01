@@ -25,12 +25,14 @@ type rgb = [`Rgb]
 type yuv = [`Yuv]
 type xyz = [`Xyz]
 type rgba = [`Rgba]
+type any = [`Any]
 
 let gray = Color.create ~has_alpha:false ~channels:1 `Gray
 let rgb = Color.create ~has_alpha:false ~channels:3 `Rgb
 let yuv = Color.create ~has_alpha:false ~channels:3 `Yuv
 let xyz = Color.create ~has_alpha:false ~channels:3 `Xyz
 let rgba = Color.create ~has_alpha:false ~channels:4 `Rgba
+let channels n = Color.create ~has_alpha:(n = 4) ~channels:n `Any
 
 let channels_of_color: type a. a Color.t -> int =
   fun {channels; _} ->

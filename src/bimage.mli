@@ -105,11 +105,14 @@ type yuv = [`Yuv]
 type rgba = [`Rgba]
 (** 4-channel RGBA image *)
 
+type any = [`Any]
+
 val gray: gray Color.t
 val rgb: rgb Color.t
 val xyz: xyz Color.t
 val yuv: yuv Color.t
 val rgba: rgba Color.t
+val channels: int -> any Color.t
 
 module Kind: sig
   val max: ('a, 'b) kind -> 'a

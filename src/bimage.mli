@@ -296,7 +296,6 @@ module Image: sig
     width: int;
     height: int;
     color: 'c Color.t;
-    step: int;
     layout: layout;
     data: ('a, 'b) Data.t;
   }

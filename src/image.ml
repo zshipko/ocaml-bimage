@@ -8,7 +8,6 @@ type ('a, 'b, 'c) t = {
   width: int;
   height: int;
   color: 'c Color.t;
-  step: int;
   layout: layout;
   data: ('a, 'b) Data.t;
 }
@@ -16,16 +15,14 @@ type ('a, 'b, 'c) t = {
 let create ?(layout = Interleaved) ?mmap kind color width height =
   let channels = channels_of_color color in
   let data = Data.create ?mmap kind (width * height * channels) in
-  let step = width * channels in
-  {width; height; color; step; layout; data}
+  {width; height; color; layout; data}
 
 let of_data color width height layout data =
   let channels = channels_of_color color in
-  let step = width * channels in
-  if step * height <> Data.length data then
+  if width * height * channels <> Data.length data then
     Error.exc `Invalid_shape
   else
-  {width; height; color; step; layout; data}
+  {width; height; color; layout; data}
 
 let like image =
   create ~layout:image.layout (Data.kind image.data) image.color image.width image.height
@@ -46,15 +43,14 @@ let copy image =
 let random ?(layout = Interleaved) kind color width height =
   let channels = channels_of_color color in
   let data = Data.random kind (width * height * channels) in
-  let step = width * channels in
-  {width; height; color; step; layout; data}
+  {width; height; color; layout; data}
 
 let channels {color; _} = channels_of_color color
 let kind {data; _} = Data.kind data [@@inline]
 let color {color; _} = color
 let layout {layout; _} = layout
 let shape {width; height; color; _} = width, height, channels_of_color color
-let length {step; height; _} = step * height [@@inline]
+let length {width; height; color; _} = width * height * Color.channels color [@@inline]
 let empty_pixel image = Pixel.empty (channels image)
 let empty_data image = Data.create (kind image) (channels image)
 
@@ -79,7 +75,7 @@ let of_any_color im color: (('a, 'b, 'c) t, Error.t) result =
 let index image x y c =
   match image.layout with
   | Planar -> image.width * image.height * c + y * image.width + x
-  | Interleaved -> y * image.step + image.color.Color.channels * x
+  | Interleaved -> y * image.width * image.color.Color.channels + image.color.Color.channels * x
 [@@inline]
 
 let index_at image offs =

@@ -38,6 +38,7 @@ module Error: sig
     | `Invalid_kernel_shape of int * int
     | `Invalid_input of int
     | `Invalid_layout
+    | `Invalid_color
     | `Msg of string
   ]
 
@@ -339,6 +340,9 @@ module Image: sig
 
   val convert: ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
   (** Convert an image to a new image of another kind *)
+
+  val of_any_color: ('a, 'b, any) t -> 'c Color.t -> (('a, 'b, 'c) t, Error.t) result
+  (** Convert from [any] color to the given color *)
 
   val get: ('a, 'b, 'c) t -> int -> int -> int -> 'a
   (** [get image x y c] returns a the value at (x, y, c) *)

@@ -70,6 +70,12 @@ let convert k img =
   convert_to ~dest img;
   dest
 
+let of_any_color im color: (('a, 'b, 'c) t, Error.t) result =
+  if Color.channels color = Color.channels im.color then
+    Ok (of_data color im.width im.height im.layout im.data)
+  else
+    Error `Invalid_color
+
 let index image x y c =
   match image.layout with
   | Planar -> image.width * image.height * c + y * image.width + x

@@ -386,6 +386,7 @@ module Image: sig
   (** Get the average pixel of an image or region of an image *)
 
   val convert_layout: layout -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val crop: ('a, 'b, 'c) t -> x:int -> y:int -> width:int -> height:int -> ('a, 'b, 'c) t
 
   val rotate_90: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val rotate_180: ('a, 'b, 'c) t -> ('a, 'b, 'c) t

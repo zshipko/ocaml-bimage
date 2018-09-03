@@ -190,3 +190,12 @@ let convert_layout layout im =
   ) im;
   dest
 
+let crop im ~x ~y ~width ~height =
+  let dest = create ~layout:im.layout (kind im) im.color width height in
+  each_pixel (fun i j _ ->
+    for c = 0 to channels im - 1 do
+      set dest x y c (get im (x + i) (y + j) c)
+    done
+  ) dest;
+  dest
+

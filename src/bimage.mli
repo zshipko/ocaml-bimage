@@ -593,6 +593,9 @@ end
 (** Magick defines image I/O operations using ImageMagick/GraphicsMagick on the
     command-line *)
 module Magick: sig
+  val use_graphicsmagick: unit -> unit
+  (* Use GraphicsMagick instead of ImageMagick *)
+
   val read: string -> ?layout:Image.layout -> ('a, 'b) kind -> ([< gray | rgb | rgba] as 'c) Color.t -> (('a, 'b, 'c) Image.t, Error.t) result
   (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
 

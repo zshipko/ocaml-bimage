@@ -12,6 +12,10 @@ let interlace = function
 let convert_command = ref "convert"
 let identify_command = ref "identify"
 
+let use_graphicsmagick () =
+  convert_command := "gm convert";
+  identify_command := "gm identify"
+
 let read filename ?(layout = Image.Interleaved) t color =
   try
     let read_image_data filename img =

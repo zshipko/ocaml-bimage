@@ -32,7 +32,7 @@ type _ t =
   | And: bool t * bool t -> bool t
   | Or: bool t * bool t -> bool t
   | Not: bool t -> bool t
-  | If: bool t * float t * float t -> float t
+  | If: bool t * 'a t * 'a t -> 'a t
 
 let rec compile: type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a = fun x y c expr inputs ->
   match expr with
@@ -213,6 +213,10 @@ let sin a = Fsin a
 let cos a = Fcos a
 let tan a = Ftan a
 let pi () = float Util.pi
+let and_ a b = And (a, b)
+let or_ a b = Or (a, b)
+let not_ a = Not a
+let if_ cond a b = If (cond, a, b)
 
 let ( + ) a b = Iadd (a, b)
 let ( - ) a b = Isub (a, b)

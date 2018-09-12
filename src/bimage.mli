@@ -549,7 +549,7 @@ module Expr: sig
     | And: bool t * bool t -> bool t
     | Or: bool t * bool t -> bool t
     | Not: bool t -> bool t
-    | If: bool t * float t * float t -> float t
+    | If: bool t * 'a t * 'a t -> 'a t
 
   val f: float t -> ('a, 'b, 'c) Op.t
   val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c, 'd, 'e, 'f) filter
@@ -578,6 +578,10 @@ module Expr: sig
   val cos: float t -> float t
   val tan: float t -> float t
   val pi: unit -> float t
+  val and_: bool t -> bool t -> bool t
+  val or_: bool t -> bool t -> bool t
+  val not_: bool t -> bool t
+  val if_: bool t -> 'a t -> 'a t -> 'a t
 
   val ( + ): int t -> int t -> int t
   val ( - ): int t -> int t -> int t

@@ -45,31 +45,32 @@ let set_index t f =
 let skip t f =
   t.index <- t.index + f
 
-let next t =
+let next ?(create = fun _name ?layout x y  -> Image.create ?layout ?mmap:None Type.u8 Type.rgb x y) ?layout t =
   if t.index >= t.frames then None
   else
     try
-      let open Type in
       let cmd =
         Printf.sprintf
         "ffmpeg  -v error -hide_banner -i %s -vf 'select=gte(n\\,%d)' -vframes 1 -pix_fmt rgb24 -f rawvideo -an -"
         t.filename t.index
       in
       let proc = Unix.open_process_in cmd in
-      let img = Image.create u8 rgb t.width t.height in
-      for i = 0 to Image.length img - 1 do
-        img.data.{i} <- input_byte proc;
-      done;
+      let img = create (Printf.sprintf "%s-%d" t.filename t.index) ?layout t.width t.height in
+      Image.each_pixel (fun x y _px ->
+        for i = 0 to Image.channels img - 1 do
+          Image.set img x y i @@ input_byte proc
+        done
+      ) img;
       close_in proc;
       t.index <- t.index + 1;
       Some img
     with _ -> None
 
-let read_n t n =
+let read_n t ?create n =
   let rec aux n acc =
     match n with
     | 0 -> acc
-    | n -> aux (n - 1) (match next t with Some x -> x :: acc | None -> acc)
+    | n -> aux (n - 1) (match next ?create t with Some x -> x :: acc | None -> acc)
   in aux n []
   |> List.rev
   |> Array.of_list

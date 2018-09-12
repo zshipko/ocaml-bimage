@@ -16,7 +16,7 @@ let use_graphicsmagick () =
   convert_command := "gm convert";
   identify_command := "gm identify"
 
-let read filename ?(layout = Image.Interleaved) t color =
+let read filename ?(create = fun _name -> Image.create ?mmap:None) ?(layout = Image.Interleaved) t color =
   try
     let read_image_data filename img =
       let f = pixel_type img.Image.color in
@@ -43,15 +43,15 @@ let read filename ?(layout = Image.Interleaved) t color =
     in
     match List.map int_of_string shape with
     | x::y::[] ->
-        let img = Image.create ~layout t color x y in
+        let img = create filename ~layout t color x y in
         let () = read_image_data filename img in
         Ok img
     | _ -> Error (`Invalid_shape)
   with End_of_file -> Error `Invalid_shape | Failure msg -> Error (`Msg msg)
 
-let read_all filenames ?layout kind color =
+let read_all filenames ?create ?layout kind color =
   try
-    Ok (Array.map (fun f -> read f ?layout kind color |> Error.unwrap) filenames)
+    Ok (Array.map (fun f -> read f ?create ?layout kind color |> Error.unwrap) filenames)
   with Error.Exc err -> Error err
 
 let write ?quality filename img =

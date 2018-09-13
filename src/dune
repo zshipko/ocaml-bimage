@@ -1,5 +1,4 @@
 (library
     (name bimage)
     (public_name bimage)
-    (ocamlopt_flags -O3 -inline 75)
     (libraries unix bigarray gg))

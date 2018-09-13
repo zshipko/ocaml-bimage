@@ -1,4 +1,5 @@
 open Type
+open Color
 
 let pixel_type: [< gray|rgb|rgba] Color.t -> string = fun c -> match c.t with
   | `Gray -> "gray"

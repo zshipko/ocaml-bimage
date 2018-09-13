@@ -1,5 +1,7 @@
 open Bigarray
 
+type ('a, 'b) kind = ('a, 'b) Bigarray.kind
+
 exception Unsupported
 
 type u8 = int8_unsigned_elt
@@ -19,25 +21,6 @@ let f32 = Float32
 let f64 = Float64
 let c32 = Complex32
 let c64 = Complex64
-
-type gray = [`Gray]
-type rgb = [`Rgb]
-type yuv = [`Yuv]
-type xyz = [`Xyz]
-type rgba = [`Rgba]
-type any = [`Any]
-
-let gray = Color.create ~has_alpha:false ~channels:1 `Gray
-let rgb = Color.create ~has_alpha:false ~channels:3 `Rgb
-let yuv = Color.create ~has_alpha:false ~channels:3 `Yuv
-let xyz = Color.create ~has_alpha:false ~channels:3 `Xyz
-let rgba = Color.create ~has_alpha:false ~channels:4 `Rgba
-let channels n = Color.create ~has_alpha:(n = 4) ~channels:n `Any
-
-let channels_of_color: type a. a Color.t -> int =
-  fun {channels; _} ->
-    channels
-[@@inline]
 
 module Kind = struct
   let max: type a b. (a, b) kind -> a = function

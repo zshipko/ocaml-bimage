@@ -1,4 +1,5 @@
 open Type
+open Color
 
 type layout =
   | Planar

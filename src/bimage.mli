@@ -14,6 +14,8 @@ open Bigarray
 exception Unsupported
 (** Raised when attempting to use Char, Int8_signed, Int16_signed Bigarray types *)
 
+type ('a, 'b) kind = ('a, 'b) Bigarray.kind
+
 type u8 = int8_unsigned_elt
 type u16 = int16_unsigned_elt
 type i32 = int32_elt
@@ -31,6 +33,7 @@ val f32: (float, f32) kind
 val f64: (float, f64) kind
 val c32: (Complex.t, c32) kind
 val c64: (Complex.t, c64) kind
+
 
 module Error: sig
   type t = [
@@ -113,7 +116,7 @@ val rgb: rgb Color.t
 val xyz: xyz Color.t
 val yuv: yuv Color.t
 val rgba: rgba Color.t
-val channels: int -> any Color.t
+val color: int -> any Color.t
 
 module Kind: sig
   val max: ('a, 'b) kind -> 'a

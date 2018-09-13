@@ -12,7 +12,7 @@ available: [ ocaml-version >= "4.03.0"]
 
 depends:
 [
-    "jbuilder" {build}
+    "dune" {build}
     "bimage"
     "z3"
 ]
@@ -20,7 +20,7 @@ depends:
 depopts: []
 
 build: [
-    ["jbuilder" "build" "-p" name "-j" jobs]
+    ["dune" "build" "-p" name "-j" jobs]
 ]
 
-build-test: ["jbuilder" "runtest" "-p" name]
+build-test: ["dune" "runtest" "-p" name]

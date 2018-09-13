@@ -84,4 +84,4 @@ In the distribution sample programs and tests are located in the
 [`test`](test) directory. They can be built and run
 with:
 
-    jbuilder runtest
+    dune runtest

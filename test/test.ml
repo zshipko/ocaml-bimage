@@ -19,67 +19,79 @@ let sobel =
   let open Expr in
   kernel Kernel.sobel_x +. kernel Kernel.sobel_y
 
-let test_expr =
-  let img = Error.unwrap @@ Magick.read Sys.argv.(1) u8 rgb in
-  let output = Image.like img in
-  let f = Op.eval (Expr.f blend) in
+let run name f ~input ~output =
   let start = Unix.gettimeofday () in
-  let () = f ~output [| img; img |] in
+  ignore (f ~output input);
   let stop = Unix.gettimeofday () in
-  Printf.printf "OP EXPR: %fsec\n" (stop -. start);
-  Magick.write "test-expr.jpg" output;
-  let start = Unix.gettimeofday () in
-  let () = Op.eval Op.blend ~output [| img; img;|] in
-  let stop = Unix.gettimeofday () in
-  Printf.printf "OP DIRECT: %fsec\n" (stop -. start);
-  Magick.write "test-expr2.jpg" output
+  Printf.printf "%s: %fsec\n" name (stop -. start);
+  Magick.write ("test-" ^ name ^ ".jpg") output
 
-let _ =
-  let im = Error.unwrap @@ Magick.read Sys.argv.(1) f32 rgb in
-  let dest = Image.create ~layout:Image.Planar f32 gray im.Image.width im.Image.height in
-  let () = Op.(eval grayscale ~output:dest [| im |]) in
-  Magick.write "test0.jpg" dest;
-  let k = Kernel.of_array [|
-    [| 1.0; 0.0; -1.0 |];
-    [| 2.0; 0.0; -2.0 |];
-    [| 1.0; 0.0; -1.0 |];
-  |] in
+let test_write ~output input =
+  Image.copy_to ~dest:output input
+
+let test_invert ~output input =
+  Op.(eval invert) ~output [| input |]
+
+let test_expr ~output input =
+  let f = Op.eval (Expr.f blend) in
+  f ~output [| input; input |]
+
+let test_expr_direct ~output input =
+  Op.eval Op.blend ~output [| input; input|]
+
+let test_grayscale ~output input =
+  Op.(eval grayscale ~output [| input |])
+
+let test_blur ~output input =
   let b = Kernel.of_array [|
     [| 3.0; 3.0; 3.0 |];
     [| 3.0; 3.0; 3.0 |];
     [| 3.0; 3.0; 3.0 |];
   |] in
-  let f = Op.sobel in
-  let start = Unix.gettimeofday () in
-  let x = Image.kernel b dest in
-  Printf.printf "blur: %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test1.jpg" x;
-  let start = Unix.gettimeofday () in
-  let () = Op.(eval f ~output:x [| dest |]) in
-  Printf.printf "sobel: %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test2.jpg" x;
+  Image.kernel b ~output input
+
+let test_sobel ~output input =
+  Op.(eval Op.sobel ~output [| input |])
+
+let test_sobel_x ~output input =
+  let k = Kernel.of_array [|
+    [| 1.0; 0.0; -1.0 |];
+    [| 2.0; 0.0; -2.0 |];
+    [| 1.0; 0.0; -1.0 |];
+  |] in
   let h = Op.kernel k in
-  let start = Unix.gettimeofday () in
-  let () = Op.eval h ~output:x [| dest |] in
-  Printf.printf "sobel x: %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test3.jpg" x;
-  let g = Op.kernel (Kernel.gaussian 5)  in
-  let start = Unix.gettimeofday () in
-  let () = Op.eval g ~output:x [| dest |] in
-  Printf.printf "gaussian: %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test4.jpg" x;
-  let dest2 = Image.rotate_270 dest in
-  Magick.write "test5.jpg" dest2;
+  Op.eval h ~output [| input |]
+
+let test_gausssian_blur ~output input =
+  Op.eval (Op.gaussian_blur 3) ~output [| input |]
+
+let test_rotate_270 ~output input =
+  let tmp = Image.rotate_270 input in
+  Image.copy_to ~dest:output tmp
+
+let test_grayscale_invert ~output input =
   let grayscale_invert = Op.(grayscale $ invert_f) in
-  let dest = Image.like im in
-  let start = Unix.gettimeofday () in
-  let () = Op.eval grayscale_invert ~output:dest [| im |] in
-  Printf.printf "grayscale invert: %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test6.jpg" dest;
-  let start = Unix.gettimeofday () in
-  let dest = Image.resize 1000 1111 im in
-  Printf.printf "scale: %fsec\n" (Unix.gettimeofday () -. start);
-  Magick.write "test7.jpg" dest
+  Op.eval grayscale_invert ~output[| input |]
+
+let test_scale ~output input =
+  Op.(eval (scale 0.5 1.5)) ~output [| input |]
+
+let input = Error.unwrap @@ Magick.read Sys.argv.(1) u8 rgb
+let output = Image.like input
+
+let _ =
+  run "write" test_write ~input ~output;
+  run "invert" test_invert ~input ~output;
+  run "expr" test_expr ~input ~output;
+  run "expr-direct" test_expr_direct ~input ~output;
+  run "grayscale" test_grayscale ~input ~output:(Image.like_with_color gray input);
+  run "blur" test_blur ~input ~output;
+  run "sobel" test_sobel ~input ~output;
+  run "sobel_x" test_sobel_x ~input ~output;
+  run "gaussian-blur" test_gausssian_blur ~input ~output;
+  run "rotate-270" test_rotate_270 ~input ~output:(Image.create ~layout:input.Image.layout u8 rgb input.Image.height input.Image.width);
+  run "grayscale-invert" test_grayscale_invert ~input ~output;
+  run "scale" test_scale ~input ~output
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

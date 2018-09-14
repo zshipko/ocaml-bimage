@@ -37,7 +37,7 @@ let cond: (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool ) -> ('a, 'b,
     b inputs x y c
 
 let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op: ('a, 'b, 'c, 'd, 'e, 'f) filter = fun ~output inputs ->
-  let channels = channels output in
+  let width, height, channels = shape output in
   let kind = kind output in
   let of_float = Kind.of_float kind in
   let clamp = Kind.clamp kind in
@@ -46,21 +46,30 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op: ('a, 'b, 'c, 'd, 'e, 'f) fil
     let f = op !x !y !c in
     Bigarray.Array1.unsafe_set output.data i (of_float @@ clamp f);
 
-    (* Increment channel index *)
-    incr c;
-
-    (* If channel index is greater than the number of channels
-     * then reset channel index to 0 and increment x index *)
-    let () = if !c >= channels then
-      let () = c := 0 in
-      incr x
-    in
-
-    (* If x index is greater than the width then reset x index to 0
-     * and increment y index *)
-    if !x >= output.width then
-      let () = x := 0 in
-      incr y
+    match output.layout with
+    | Image.Interleaved ->
+      (* Increment channel index *)
+      incr c;
+      (* If channel index is greater than the number of channels
+       * then reset channel index to 0 and increment x index *)
+      let () = if !c >= channels then
+        let () = c := 0 in
+        incr x
+      in
+      (* If x index is greater than the width then reset x index to 0
+       * and increment y index *)
+      if !x >= output.width then
+        let () = x := 0 in
+        incr y
+    | Image.Planar ->
+      incr x;
+      let () = if !x >= width then
+        let () = x := 0 in
+        incr y
+      in
+      if !y >= height then
+        let () = y := 0 in
+        incr c
   done
 
 let join f a b =

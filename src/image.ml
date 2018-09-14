@@ -41,6 +41,9 @@ let copy image =
   let data = Data.copy image.data in
   of_data image.color image.width image.height image.layout data
 
+let copy_to ~dest src =
+  Data.copy_to ~dest:dest.data src.data
+
 let random ?(layout = Interleaved) kind color width height =
   let channels = channels_of_color color in
   let data = Data.random kind (width * height * channels) in
@@ -76,7 +79,7 @@ let of_any_color im color: (('a, 'b, 'c) t, Error.t) result =
 let index image x y c =
   match image.layout with
   | Planar -> image.width * image.height * c + y * image.width + x
-  | Interleaved -> y * image.width * image.color.Color.channels + image.color.Color.channels * x
+  | Interleaved -> y * image.width * image.color.Color.channels + image.color.Color.channels * x + c
 [@@inline]
 
 let index_at image offs =

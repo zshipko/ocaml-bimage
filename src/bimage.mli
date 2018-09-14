@@ -319,6 +319,9 @@ module Image: sig
   val copy: ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Makes a copy of an image and underlying image data *)
 
+  val copy_to: dest:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> unit
+  (** Copy pixels from one image to another *)
+
   val channels: ('a, 'b, 'c) t -> int
   (** Returns the number of channels in an image *)
 

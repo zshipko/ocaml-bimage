@@ -17,13 +17,18 @@ let use_graphicsmagick () =
   convert_command := "gm convert";
   identify_command := "gm identify"
 
-let read filename ?(create = fun _name -> Image.create ?mmap:None) ?(layout = Image.Interleaved) t color =
+let read filename ?format ?(create = fun _name -> Image.create ?mmap:None) ?(layout = Image.Interleaved) t color =
+  let format =
+    match format with
+    | Some f -> f
+    | None -> Filename.extension filename |> fun s -> String.sub s 1 (String.length s - 1)
+  in
   try
     let read_image_data filename img =
       let f = pixel_type img.Image.color in
       let channels = Image.channels img in
       let interlace = interlace layout in
-      let cmd = Printf.sprintf "%s '%s' -depth 8 -interlace %s %s:-" !convert_command filename interlace f in
+      let cmd = Printf.sprintf "%s %s:'%s' -depth 8 -interlace %s %s:-" !convert_command format filename interlace f in
       let input = Unix.open_process_in cmd in
       let kind = Kind.of_float t in
       for i = 0 to (Image.(img.width *  img.height)  * channels) - 1 do
@@ -50,16 +55,21 @@ let read filename ?(create = fun _name -> Image.create ?mmap:None) ?(layout = Im
     | _ -> Error (`Invalid_shape)
   with End_of_file -> Error `Invalid_shape | Failure msg -> Error (`Msg msg)
 
-let read_all filenames ?create ?layout kind color =
+let read_all filenames ?format ?create ?layout kind color =
   try
-    Ok (Array.map (fun f -> read f ?create ?layout kind color |> Error.unwrap) filenames)
+    Ok (Array.map (fun f -> read f ?format ?create ?layout kind color |> Error.unwrap) filenames)
   with Error.Exc err -> Error err
 
-let write ?quality filename img =
+let write ?quality filename ?format img =
+  let format =
+    match format with
+    | Some f -> f
+    | None -> Filename.extension filename |> fun s -> String.sub s 1 (String.length s - 1)
+  in
   let width, height, channels = Image.shape img in
   let f = pixel_type img.Image.color in
   let quality = match quality with None -> "" | Some q -> Printf.sprintf "-quality %d" q in
-  let cmd = Printf.sprintf "%s -depth 8 -interlace %s -size %dx%d %s:- %s '%s'" !convert_command (interlace img.layout) width height f quality filename in
+  let cmd = Printf.sprintf "%s -depth 8 -interlace %s -size %dx%d %s:- %s %s:'%s'" !convert_command (interlace img.layout) width height f quality format filename in
   let output = Unix.open_process_out cmd in
   let kind = Image.kind img in
   for i = 0 to Image.(img.width *  img.height)  * channels - 1 do

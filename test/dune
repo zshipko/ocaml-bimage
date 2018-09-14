@@ -1,11 +1,12 @@
 (executables
-    (libraries bimage alcotest)
+    (libraries bimage)
     (names test)
-    (ocamlopt_flags -O3 -S)
     (modules test))
 
 (alias
     (name runtest)
     (package bimage)
-    (deps test.exe test.jpg)
-    (action (run %{dep:test.exe} test.jpg)))
+    (deps test.exe test.jpg
+        (glob_files tests/*.png)
+    )
+    (action (run %{dep:test.exe})))

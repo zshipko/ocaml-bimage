@@ -608,6 +608,7 @@ module Magick: sig
 
   val read:
     string ->
+    ?format:string ->
     ?create:(string -> ?layout:Image.layout -> ('a, 'b) kind -> 'c Color.t -> int -> int -> ('a, 'b, 'c) Image.t) ->
     ?layout:Image.layout ->
     ('a, 'b) kind ->
@@ -615,11 +616,12 @@ module Magick: sig
     (('a, 'b, 'c) Image.t, Error.t) result
   (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
 
-  val write: ?quality:int -> string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit
+  val write: ?quality:int -> string -> ?format:string -> ('a, 'b, [< gray | rgb | rgba]) Image.t -> unit
   (** [write filename image] saves an image to [filename] *)
 
   val read_all:
     string array ->
+    ?format:string ->
     ?create:(string -> ?layout:Image.layout -> ('a, 'b) kind -> 'c Color.t -> int -> int -> ('a, 'b, 'c) Image.t) ->
     ?layout:Image.layout ->
     ('a, 'b) kind ->

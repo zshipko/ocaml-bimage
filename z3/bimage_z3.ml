@@ -3,15 +3,25 @@ open Expr
 
 exception Not_implemented of string
 
-let rec to_z3: type a. Z3.context -> a t -> Z3.Expr.expr = fun ctx expr ->
+let rec to_z3 : type a. Z3.context -> a t -> Z3.Expr.expr =
+ fun ctx expr ->
   match expr with
-  | Kernel _k -> Z3.FloatingPoint.mk_const_s ctx "Kernel" (Z3.FloatingPoint.mk_sort_64 ctx)
-  | Input _ -> Z3.FloatingPoint.mk_const_s ctx "Kernel" (Z3.FloatingPoint.mk_sort_64 ctx)
-  | X -> Z3.Arithmetic.Integer.mk_const_s ctx "X"
-  | Y -> Z3.Arithmetic.Integer.mk_const_s ctx "Y"
-  | C -> Z3.Arithmetic.Integer.mk_const_s ctx "C"
-  | Int i -> Z3.Arithmetic.Integer.mk_numeral_i ctx i
-  | Float f -> Z3.FloatingPoint.mk_numeral_f ctx f (Z3.FloatingPoint.mk_sort_64 ctx)
+  | Kernel _k ->
+      Z3.FloatingPoint.mk_const_s ctx "Kernel"
+        (Z3.FloatingPoint.mk_sort_64 ctx)
+  | Input _ ->
+      Z3.FloatingPoint.mk_const_s ctx "Kernel"
+        (Z3.FloatingPoint.mk_sort_64 ctx)
+  | X ->
+      Z3.Arithmetic.Integer.mk_const_s ctx "X"
+  | Y ->
+      Z3.Arithmetic.Integer.mk_const_s ctx "Y"
+  | C ->
+      Z3.Arithmetic.Integer.mk_const_s ctx "C"
+  | Int i ->
+      Z3.Arithmetic.Integer.mk_numeral_i ctx i
+  | Float f ->
+      Z3.FloatingPoint.mk_numeral_f ctx f (Z3.FloatingPoint.mk_sort_64 ctx)
   | Float_of_int _ as i ->
       let a = compile (ref 0) (ref 0) (ref 0) i [||] in
       Z3.FloatingPoint.mk_numeral_f ctx a (Z3.FloatingPoint.mk_sort_64 ctx)
@@ -84,7 +94,6 @@ let rec to_z3: type a. Z3.context -> a t -> Z3.Expr.expr = fun ctx expr ->
       let a = to_z3 ctx a in
       let b = to_z3 ctx b in
       Z3.Boolean.mk_or ctx [a; b]
-
   | Imod (a, b) ->
       let a = to_z3 ctx a in
       let b = to_z3 ctx b in
@@ -92,8 +101,13 @@ let rec to_z3: type a. Z3.context -> a t -> Z3.Expr.expr = fun ctx expr ->
   | Not b ->
       let b = to_z3 ctx b in
       Z3.Boolean.mk_not ctx b
-  | If _ -> raise (Not_implemented "If")
-  | Fmod _ -> raise (Not_implemented "Fmod")
-  | Fsin _ ->  raise (Not_implemented "Fsin")
-  | Fcos _ -> raise (Not_implemented  "Fcos")
-  | Ftan _ -> raise (Not_implemented  "Ftan")
+  | If _ ->
+      raise (Not_implemented "If")
+  | Fmod _ ->
+      raise (Not_implemented "Fmod")
+  | Fsin _ ->
+      raise (Not_implemented "Fsin")
+  | Fcos _ ->
+      raise (Not_implemented "Fcos")
+  | Ftan _ ->
+      raise (Not_implemented "Ftan")

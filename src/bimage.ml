@@ -13,10 +13,12 @@ module Data = Data
 module Pixel = Pixel
 module Kernel = Kernel
 module Transform = Transform
+
 module Image = struct
   include Image
   include Impl
 end
+
 module Input = Input
 module Op = Op
 module Expr = Expr

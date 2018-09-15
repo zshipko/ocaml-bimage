@@ -557,9 +557,9 @@ module Expr: sig
     | Not: bool t -> bool t
     | If: bool t * 'a t * 'a t -> 'a t
 
-  val f: float t -> ('a, 'b, 'c) Op.t
+  val f: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t
   val eval: ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c, 'd, 'e, 'f) filter
-  val compile: int ref -> int ref -> int ref -> 'a t -> ('a, 'b, 'c) Image.t array -> 'a
+  val prepare: int ref -> int ref -> int ref -> 'a t -> ('a, 'b, 'c) Image.t array -> 'a
 
   val int: int -> int t
   val float: float -> float t

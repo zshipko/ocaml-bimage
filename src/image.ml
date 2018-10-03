@@ -151,7 +151,7 @@ let get_pixel image ?dest x y =
         Pixel.empty c
   in
   for i = 0 to c - 1 do
-    Bigarray.Array1.set px i (get_f image x y i)
+    Bigarray.Array1.set px i (get_n image x y i)
   done;
   Pixel.Pixel px
 
@@ -159,7 +159,7 @@ let get_pixel image ?dest x y =
 let set_pixel image x y (Pixel.Pixel px) =
   let c = channels image in
   for i = 0 to c - 1 do
-    set_f image x y i (Bigarray.Array1.get px i)
+    set_n image x y i (Bigarray.Array1.get px i)
   done
 
 
@@ -185,7 +185,7 @@ let set_data image x y px =
   done
 
 
-let[@inline] each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
+let[@inline] for_each f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
     match width with
     | Some w ->
@@ -228,7 +228,7 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let channels = channels img in
   let size = float_of_int (width * height) in
   let kind = kind img in
-  each_pixel
+  for_each
     (fun _x _y px ->
       for i = 0 to channels - 1 do
         Bigarray.Array1.set avg i
@@ -245,7 +245,7 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
 let convert_layout layout im =
   let width, height, _ = shape im in
   let dest = create ~layout (kind im) (color im) width height in
-  each_pixel
+  for_each
     (fun x y px ->
       for i = 0 to Data.length px - 1 do
         Bigarray.Array1.set dest.data (index dest x y i)
@@ -257,7 +257,7 @@ let convert_layout layout im =
 
 let crop im ~x ~y ~width ~height =
   let dest = create ~layout:im.layout (kind im) im.color width height in
-  each_pixel
+  for_each
     (fun i j _ ->
       for c = 0 to channels im - 1 do
         set dest x y c (get im (x + i) (y + j) c)

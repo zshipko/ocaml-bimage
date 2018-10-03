@@ -28,7 +28,7 @@ instructions.
 
 ## Examples
 
-An example showing how to create an image and how to use `Image.each_pixel`:
+An example showing how to create an image and how to use `Image.for_each`:
 
 ```ocaml
 open Bimage
@@ -39,7 +39,7 @@ let a = Image.create u8 gray 64 64 in
 
 (* Iterate over each pixel *)
 let _ =
-    Image.each_pixel (fun x y _px ->
+    Image.for_each (fun x y _px ->
         set a x y (x + y)
     ) a
 in

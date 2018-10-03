@@ -19,7 +19,7 @@ let image_eq a b =
     check "image: same width" w w';
     check "image: same height" h h';
     check "image: same channels" c c';
-    Image.each_pixel (fun x y px ->
+    Image.for_each (fun x y px ->
       for i = 0 to c - 1 do
         check (Printf.sprintf "image: pixel %dx%d" x y) px.{i} (Image.get b x y i)
       done

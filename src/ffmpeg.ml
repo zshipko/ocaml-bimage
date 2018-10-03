@@ -68,7 +68,7 @@ let next
           (Printf.sprintf "%s-%d" t.filename t.index)
           ?layout t.width t.height
       in
-      Image.each_pixel
+      Image.for_each
         (fun x y _px ->
           for i = 0 to Image.channels img - 1 do
             Image.set img x y i @@ input_byte proc

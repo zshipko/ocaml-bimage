@@ -414,7 +414,7 @@ module Image : sig
   val set_data : ('a, 'b, 'c) t -> int -> int -> ('a, 'b) Data.t -> unit
   (** [set_data image x y px] sets the value of [image] at ([x], [y]) to [px] *)
 
-  val each_pixel :
+  val for_each :
        (int -> int -> ('a, 'b) Data.t -> unit)
     -> ?x:int
     -> ?y:int

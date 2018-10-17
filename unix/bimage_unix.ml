@@ -1,4 +1,5 @@
 module Magick = Magick
 module Ffmpeg = Ffmpeg
-module Data = Data
-module Image = Image
+module Data_unix = Data
+module Image_unix = Image
+

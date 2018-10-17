@@ -5,6 +5,7 @@
   ---------------------------------------------------------------------------*)
 
 open Bimage
+open Bimage_unix
 
 exception Assert of string
 let check name a b = if a = b then () else raise (Assert name)

@@ -10,8 +10,8 @@ bimage is an image processing library for OCaml.
 - Supports u8, u16, i32, i64, f32, f64, complex32 and complex64 datatypes
 - Multiple layout support (Planar/Interleaved)
 - Composable image operations
-- Image I/O using ImageMagick or GraphicsMagick
-- Optional GTK support using `bimage-gtk`
+- Image I/O using ImageMagick or GraphicsMagick in (`bimage-unix`)
+- Optional GTK support (`bimage-gtk`)
 
 bimage is distributed under the ISC license.
 
@@ -21,7 +21,11 @@ Homepage: https://github.com/zshipko/bimage
 
 bimage can be installed with `opam`:
 
-    opam pin add git+https://github.com/zshipko/ocaml-bimage
+    opam pin add bimage https://github.com/zshipko/ocaml-bimage.git
+
+Additionally, `bimage-unix`, which provides `ImageMagick` and `FFmpeg` bindings, can be installed by running:
+
+    opam pin add bimage-unix https://github.com/zshipko/ocaml-bimage.git
 
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.
@@ -45,13 +49,14 @@ let _ =
 in
 
 (* Save the image using ImageMagick *)
-Magick.write "test1.jpg" a
+Bimage_unix.Magick.write "test1.jpg" a
 ```
 
 An example using `Op.t` to run a filter on an image:
 
 ```ocaml
 open Bimage
+open Bimage_unix
 
 let _ =
 (* Load an image using ImageMagick *)

@@ -106,10 +106,11 @@ module Ffmpeg : sig
       if you've reached the end of the video *)
 end
 
-module Data: sig
+module Data_unix: sig
   val create_mmap: ('a, 'b) kind -> filename:string -> int -> ('a, 'b) Data.t
 end
 
-module Image: sig
+module Image_unix: sig
   val create_mmap: ?layout:Image.layout -> ('a, 'b) kind -> 'c Color.t -> filename:string -> int -> int -> ('a, 'b, 'c) Image.t
 end
+

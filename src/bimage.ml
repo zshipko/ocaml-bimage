@@ -25,9 +25,6 @@ module Expr = Expr
 
 type ('a, 'b, 'c, 'd, 'e, 'f) filter = ('a, 'b, 'c, 'd, 'e, 'f) Op.filter
 
-module Magick = Magick
-module Ffmpeg = Ffmpeg
-
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko
 

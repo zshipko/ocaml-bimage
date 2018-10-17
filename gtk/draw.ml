@@ -15,6 +15,6 @@ let draw f im =
   let width, height, _ = Image.shape im in
   let image =
     Cairo.Image.(
-      create_for_data8 im.Image.data (cairo_format im.Image.color) width height)
+      create_for_data8 im.Image.data (cairo_format im.Image.color) ~w:width ~h:height)
   in
   f image

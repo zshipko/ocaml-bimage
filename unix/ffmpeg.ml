@@ -1,3 +1,5 @@
+open Bimage
+
 type t =
   { filename : string
   ; width : int
@@ -52,7 +54,7 @@ let skip t f = t.index <- t.index + f
 let next
     ?(create =
       fun _name ?layout x y ->
-        Image.create ?layout ?mmap:None Type.u8 Color.rgb x y) ?layout t =
+        Image.create ?layout u8 Bimage.rgb x y) ?layout t =
   if t.index >= t.frames then None
   else
     try

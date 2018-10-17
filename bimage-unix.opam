@@ -1,0 +1,25 @@
+opam-version: "1.2"
+maintainer: "Zach Shipko <zachshipko@gmail.com>"
+authors: ["Zach Shipko <zachshipko@gmail.com>"]
+homepage: "https://github.com/zshipko/bimage"
+doc: "https://zshipko.github.io/ocaml-bimage/doc"
+license: "ISC"
+dev-repo: "https://github.com/zshipko/ocaml-bimage.git"
+bug-reports: "https://github.com/zshipko/ocaml-bimage/issues"
+tags: ["image processing"]
+
+available: [ ocaml-version >= "4.03.0"]
+
+depends:
+[
+    "dune" {build}
+    "bimage"
+]
+
+depopts: []
+
+build: [
+    ["dune" "build" "-p" name "-j" jobs]
+]
+
+build-test: ["dune" "runtest" "-p" name]

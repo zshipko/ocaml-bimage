@@ -12,9 +12,9 @@ type ('a, 'b, 'c) t =
   ; layout : layout
   ; data : ('a, 'b) Data.t }
 
-let create ?(layout = Interleaved) ?mmap kind color width height =
+let create ?(layout = Interleaved) kind color width height =
   let channels = channels_of_color color in
-  let data = Data.create ?mmap kind (width * height * channels) in
+  let data = Data.create kind (width * height * channels) in
   {width; height; color; layout; data}
 
 

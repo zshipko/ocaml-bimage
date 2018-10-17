@@ -1,9 +1,8 @@
-open Type
-open Color
+open Bimage
 
 let pixel_type : [< gray | rgb | rgba] Color.t -> string =
  fun c ->
-  match c.t with
+  match Color.t c with
   | `Gray ->
       "gray"
   | `Rgb ->
@@ -28,7 +27,7 @@ let use_graphicsmagick () =
   identify_command := "gm identify"
 
 
-let read filename ?format ?(create = fun _name -> Image.create ?mmap:None)
+let read filename ?format ?(create = fun _name -> Image.create)
     ?(layout = Image.Interleaved) t color =
   let format =
     match format with

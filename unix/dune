@@ -1,0 +1,4 @@
+(library
+    (name bimage_unix)
+    (public_name bimage-unix)
+    (libraries unix bimage))

@@ -5,8 +5,8 @@ env:
   global:
     - PINS="bimage.dev:. bimage-unix.dev:. bimage-gtk.dev:."
   matrix:
-    - OCAML_VERSION=4.06 PACKAGE="bimage.dev" TESTS=true
-    - OCAML_VERSION=4.07 PACKAGE="bimage.dev" TESTS=true
+    - OCAML_VERSION=4.06 PACKAGE="bimage.dev" TESTS=false
+    - OCAML_VERSION=4.07 PACKAGE="bimage.dev" TESTS=false
     - OCAML_VERSION=4.06 PACKAGE="bimage-unix.dev" TESTS=true
     - OCAML_VERSION=4.07 PACKAGE="bimage-unix.dev" TESTS=true
     - OCAML_VERSION=4.06 PACKAGE="bimage-gtk.dev" TESTS=false

@@ -1,7 +1,7 @@
 opam-version: "2.0"
 maintainer: "Zach Shipko <zachshipko@gmail.com>"
 authors: ["Zach Shipko <zachshipko@gmail.com>"]
-homepage: "https://github.com/zshipko/bimage"
+homepage: "https://github.com/zshipko/ocaml-bimage"
 doc: "https://zshipko.github.io/ocaml-bimage/doc"
 license: "ISC"
 dev-repo: "git://github.com:zshipko/ocaml-bimage.git"

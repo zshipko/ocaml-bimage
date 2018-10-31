@@ -22,3 +22,12 @@ build: [
     ["dune" "runtest" "-p" name] {with-test}
 ]
 
+
+synopsis: """
+bimage-gtk allows images to be displayed in GTK windows
+"""
+
+description: """
+An image processing library for OCaml providing efficient, composable operations.
+Additionally, bimage supports most types supported by Bigarray.
+"""

@@ -17,3 +17,12 @@ depends:
 build: [
     ["dune" "build" "-p" name "-j" jobs]
 ]
+
+synopsis: """
+A simple, efficient image-processing library
+"""
+
+description: """
+An image processing library for OCaml providing efficient, composable operations.
+Additionally, bimage supports most types supported by Bigarray.
+"""

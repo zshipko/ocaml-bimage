@@ -88,10 +88,15 @@ module Angle : sig
   (** [to_radians angle] returns the value of the angle in radians *)
 end
 
+(** Point is a 2 element float tuple used to perform calculations on (x, y) coordinates *)
 module Point: sig
   type t = float * float
+
   val x: t -> float
+  (** [x pt] extracts the x coordinate *)
+
   val y: t -> float
+  (** [y pt] extracts the y coordinate *)
 end
 
 (** Color contains methods for creating and inspecting color types *)
@@ -127,18 +132,25 @@ type yuv = [`Yuv]
 (** 4-channel RGBA image *)
 type rgba = [`Rgba]
 
+(** Any color image *)
 type any = [`Any]
 
+(** Gray color *)
 val gray : gray Color.t
 
+(** RGB color *)
 val rgb : rgb Color.t
 
+(** XYZ color *)
 val xyz : xyz Color.t
 
+(** YUV color *)
 val yuv : yuv Color.t
 
+(** RGBA color *)
 val rgba : rgba Color.t
 
+(** Generic color *)
 val color : int -> any Color.t
 
 module Kind : sig
@@ -265,12 +277,17 @@ module Pixel : sig
   (** Convert pixel from RGB to YUV *)
 
   val map : (float -> float) -> t -> t
+  (** [map f x] executes [f] for each value in [x], returning a new Pixel.t *)
 
   val map_inplace : (float -> float) -> t -> unit
+  (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
+   *  index *)
 
   val fold : (float -> 'a -> 'a) -> t -> 'a -> 'a
+  (** Reduction over a pixel *)
 
   val fold2 : (float -> float -> 'a -> 'a) -> t -> t -> 'a -> 'a
+  (** Reduction over two pixels *)
 
   val pp : Format.formatter -> t -> unit
 end
@@ -308,10 +325,13 @@ module Kernel : sig
   (** [normalize kernel] returns a kernel where each element has been divided by the sum of all elements *)
 
   val sobel_x : t
+  (** Sobel kernel in the X direction onlu *)
 
   val sobel_y : t
+  (** Sobel kernel in the Y direction only *)
 
   val gaussian : ?std:float -> int -> t
+  (** [gassian n] generates a new [n]x[n] gaussian kernel *)
 end
 
 (** The Image module defines a simple interface for manipulating image data *)
@@ -319,6 +339,7 @@ module Image : sig
   type layout =
     | Planar
     | Interleaved
+  (** Image pixel layout. Planar is [RRRGGGBBB] and Interleaved is [RGBRGBRGB] *)
 
   type ('a, 'b, 'c) t =
     { width : int
@@ -326,6 +347,7 @@ module Image : sig
     ; color : 'c Color.t
     ; layout : layout
     ; data : ('a, 'b) Data.t }
+  (** Image type *)
 
   val create :
        ?layout:layout
@@ -441,6 +463,7 @@ module Image : sig
   (** Get the average pixel of an image or region of an image *)
 
   val convert_layout : layout -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** Convert an image to the given layout *)
 
   val crop :
        ('a, 'b, 'c) t
@@ -449,14 +472,19 @@ module Image : sig
     -> width:int
     -> height:int
     -> ('a, 'b, 'c) t
+  (** Extract the sub-image specified by the given dimensions *)
 
   val rotate_90 : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** Rotate an image 90 degrees *)
 
   val rotate_180 : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** Rotate an image 180 degrees *)
 
   val rotate_270 : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** Rotate an image 270 degrees *)
 
   val resize : int -> int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  (** Scale an image to the given size *)
 end
 
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =
@@ -562,6 +590,7 @@ module Op : sig
     -> ('a, 'b, 'c) t
     -> ('a, 'b, 'c) t
     -> ('a, 'b, 'c) t
+  (** Conditional operation *)
 
   val kernel : Kernel.t -> ('a, 'b, 'c) t
   (** Create a kernel operation *)
@@ -598,8 +627,10 @@ module Op : sig
   (** Infix operator for [map] *)
 
   val sobel_x : ('a, 'b, 'c) t
+  (** Sobel in the X direction *)
 
   val sobel_y : ('a, 'b, 'c) t
+  (** Sobel in the Y direction *)
 
   val sobel : ('a, 'b, 'c) t
   (** Sobel kernel *)
@@ -611,8 +642,10 @@ module Op : sig
   (** Apply a transformation *)
 
   val rotate : ?center:float * float -> Angle.t -> ('a, 'b, 'c) t
+  (** Rotation operation *)
 
   val scale : float -> float -> ('a, 'b, 'c) t
+  (** Scale an image by the given amount *)
 
   val brightness : float -> ('a, 'b, 'c) t
   (** Adjust the brightness of an image. 0.0 will remove all brightness and 1.0 will keep the image as-is. *)
@@ -666,13 +699,13 @@ module Expr : sig
     -> ?c:int ref
     -> float t
     -> ('a, 'b, 'c, 'd, 'e, 'f) filter
-
-  val prepare :
-    int ref -> int ref -> int ref -> 'a t -> ('a, 'b, 'c) Image.t array -> 'a
+  (** Convert an [Expr] to a filter *)
 
   val int : int -> int t
+  (** Create an int [Expr] *)
 
   val float : float -> float t
+  (** Create a float [Expr] *)
 
   val int_of_float : float t -> int t
 
@@ -725,22 +758,31 @@ module Expr : sig
   val if_ : bool t -> 'a t -> 'a t -> 'a t
 
   val ( + ) : int t -> int t -> int t
+  (** Integer addition *)
 
   val ( - ) : int t -> int t -> int t
+  (** Integer subtraction *)
 
   val ( * ) : int t -> int t -> int t
+  (** Integer multiplacation *)
 
   val ( / ) : int t -> int t -> int t
+  (** Integer division *)
 
   val ( +. ) : float t -> float t -> float t
+  (** Float addition *)
 
   val ( -. ) : float t -> float t -> float t
+  (** Float subtraction *)
 
   val ( *. ) : float t -> float t -> float t
+  (** Float multiplication *)
 
   val ( /. ) : float t -> float t -> float t
+  (** Float division *)
 
   val ( ** ) : float t -> float t -> float t
+  (** Pow *)
 end
 
 (*---------------------------------------------------------------------------

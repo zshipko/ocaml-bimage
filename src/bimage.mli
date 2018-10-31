@@ -252,10 +252,6 @@ module Pixel : sig
   val data : t -> (float, f32) Data.t
   (** Returns the underlying pixel data *)
 
-  val from_color : dest:t -> Gg.color -> unit
-
-  val to_color : t -> Gg.color
-
   val to_xyz : t -> t
   (** Convert pixel from RGB to XYZ *)
 
@@ -461,10 +457,31 @@ type ('a, 'b, 'c, 'd, 'e, 'f) filter =
   output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
 
 module Transform : sig
-  type t = Gg.M3.t
+  type t
 
+  val v:
+    float -> float -> float ->
+    float -> float -> float ->
+    float -> float -> float -> t
+
+  module Point: sig
+    val transform: t -> float * float -> float * float
+  end
+
+
+  val neg: t -> t
+  val add: t -> t -> t
+  val sub: t -> t -> t
+  val mul: t -> t -> t
+  val div: t -> t -> t
+  val mmul: t -> t -> t
+  val smul: t -> float -> t
+  val transpose: t -> t
+  val det: t -> float
+  val inv: t -> t
+
+  val translate: float -> float -> t
   val rotate : ?center:float * float -> Angle.t -> t
-
   val scale : float -> float -> t
 end
 

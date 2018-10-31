@@ -1,5 +1,3 @@
-open Gg
-
 let pi = 4. *. atan 1.
 
 let e = 2.71828
@@ -15,6 +13,3 @@ module Angle = struct
 
   external to_radians : t -> float = "%identity"
 end
-
-module Point = P2
-module Box = Box2

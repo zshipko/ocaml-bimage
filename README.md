@@ -21,11 +21,11 @@ Homepage: https://github.com/zshipko/bimage
 
 bimage can be installed with `opam`:
 
-    opam pin add bimage https://github.com/zshipko/ocaml-bimage.git
+    opam install bimage
 
 Additionally, `bimage-unix`, which provides `ImageMagick` and `FFmpeg` bindings, can be installed by running:
 
-    opam pin add bimage-unix https://github.com/zshipko/ocaml-bimage.git
+    opam install bimage-unix
 
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.

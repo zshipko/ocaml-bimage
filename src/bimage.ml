@@ -6,7 +6,7 @@
 
 include Type
 include Color
-module Angle = Util.Angle
+include Util
 module Error = Error
 module Color = Color
 module Data = Data

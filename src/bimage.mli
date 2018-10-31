@@ -88,6 +88,12 @@ module Angle : sig
   (** [to_radians angle] returns the value of the angle in radians *)
 end
 
+module Point: sig
+  type t = float * float
+  val x: t -> float
+  val y: t -> float
+end
+
 (** Color contains methods for creating and inspecting color types *)
 module Color : sig
   (** Used to specify the color model of an image *)
@@ -464,11 +470,6 @@ module Transform : sig
     float -> float -> float ->
     float -> float -> float -> t
 
-  module Point: sig
-    val transform: t -> float * float -> float * float
-  end
-
-
   val neg: t -> t
   val add: t -> t -> t
   val sub: t -> t -> t
@@ -481,8 +482,9 @@ module Transform : sig
   val inv: t -> t
 
   val translate: float -> float -> t
-  val rotate : ?center:float * float -> Angle.t -> t
+  val rotate : ?center:Point.t -> Angle.t -> t
   val scale : float -> float -> t
+  val transform : t -> Point.t -> Point.t
 end
 
 (** Defines the type used as input to operations *)

@@ -12,9 +12,6 @@ let v e00 e01 e02 e10 e11 e12 e20 e21 e22 =
 module Point = struct
   type t = float * float
 
-  let transform m p =
-    (m.e00 *. fst p +. m.e01 *. snd p +. m.e02,
-     m.e10 *. fst p +. m.e11 *. snd p +. m.e12)
 end
 
 let id = v 1. 0. 0. 0. 1. 0. 0. 0. 1.
@@ -118,10 +115,9 @@ let scale2 s =
     0.      (snd s) 0.
     0.      0.      1.
 
-
-let transform t x y =
-  let pt = Point.transform t (x, y) in
-  (fst pt, snd pt)
+let transform m p =
+  (m.e00 *. fst p +. m.e01 *. snd p +. m.e02,
+   m.e10 *. fst p +. m.e11 *. snd p +. m.e12)
 
 let translate x y =
   move2 (x, y)

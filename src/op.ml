@@ -216,7 +216,7 @@ let gaussian_blur ?std n x y z inputs =
 let transform t inputs x y c =
   let x = float_of_int x in
   let y = float_of_int y in
-  let x', y' = Transform.transform t x y in
+  let x', y' = Transform.transform t (x, y) in
   let x0', y0' = (int_of_float (ceil x'), int_of_float (ceil y')) in
   let x1', y1' = (int_of_float (floor x'), int_of_float (floor y')) in
   if x0' >= 0 && y0' >= 0 && x0' < inputs.(0).width && y0' < inputs.(0).height

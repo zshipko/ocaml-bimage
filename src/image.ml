@@ -97,11 +97,11 @@ let of_any_color im color : (('a, 'b, 'c) t, Error.t) result =
 let[@inline] index image x y c =
   match image.layout with
   | Planar ->
-      (image.width * image.height * c) + (y * image.width) + x
+    (image.width * image.height * c) + (y * image.width) + x
   | Interleaved ->
-      (y * image.width * image.color.Color.channels)
-      + (image.color.Color.channels * x)
-      + c
+    (y * image.width * image.color.Color.channels)
+    + (image.color.Color.channels * x)
+    + c
 
 
 let index_at image offs =
@@ -146,9 +146,9 @@ let get_pixel image ?dest x y =
   let (Pixel.Pixel px) =
     match dest with
     | Some px ->
-        px
+      px
     | None ->
-        Pixel.empty c
+      Pixel.empty c
   in
   for i = 0 to c - 1 do
     Bigarray.Array1.set px i (get_n image x y i)
@@ -168,9 +168,9 @@ let get_data image ?dest x y =
   let px =
     match dest with
     | Some px ->
-        px
+      px
     | None ->
-        Data.create (kind image) c
+      Data.create (kind image) c
   in
   for i = 0 to c - 1 do
     Bigarray.Array1.set px i (get image x y i)
@@ -189,16 +189,16 @@ let[@inline] for_each f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
     match width with
     | Some w ->
-        min (img.width - x) w
+      min (img.width - x) w
     | None ->
-        img.width - x
+      img.width - x
   in
   let height =
     match height with
     | Some h ->
-        min (img.height - y) h
+      min (img.height - y) h
     | None ->
-        img.height - y
+      img.height - y
   in
   let px = empty_data img in
   for j = y to y + height - 1 do
@@ -213,16 +213,16 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
     match width with
     | None ->
-        img.width - x
+      img.width - x
     | Some w ->
-        min w (img.width - x)
+      min w (img.width - x)
   in
   let height =
     match height with
     | None ->
-        img.height - y
+      img.height - y
     | Some h ->
-        min h (img.width - y)
+      min h (img.width - y)
   in
   let avg = Data.create f32 (channels img) in
   let channels = channels img in
@@ -230,11 +230,11 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let kind = kind img in
   for_each
     (fun _x _y px ->
-      for i = 0 to channels - 1 do
-        Bigarray.Array1.set avg i
-          ( Bigarray.Array1.get avg i
-          +. Kind.to_float kind (Bigarray.Array1.get px i) )
-      done )
+       for i = 0 to channels - 1 do
+         Bigarray.Array1.set avg i
+           ( Bigarray.Array1.get avg i
+             +. Kind.to_float kind (Bigarray.Array1.get px i) )
+       done )
     ~x ~y ~width ~height img;
   for i = 0 to channels - 1 do
     Bigarray.Array1.set avg i (Bigarray.Array1.get avg i /. size)
@@ -247,10 +247,10 @@ let convert_layout layout im =
   let dest = create ~layout (kind im) (color im) width height in
   for_each
     (fun x y px ->
-      for i = 0 to Data.length px - 1 do
-        Bigarray.Array1.set dest.data (index dest x y i)
-          (Bigarray.Array1.get px i)
-      done )
+       for i = 0 to Data.length px - 1 do
+         Bigarray.Array1.set dest.data (index dest x y i)
+           (Bigarray.Array1.get px i)
+       done )
     im;
   dest
 
@@ -259,8 +259,22 @@ let crop im ~x ~y ~width ~height =
   let dest = create ~layout:im.layout (kind im) im.color width height in
   for_each
     (fun i j _ ->
-      for c = 0 to channels im - 1 do
-        set dest x y c (get im (x + i) (y + j) c)
-      done )
+       for c = 0 to channels im - 1 do
+         set dest x y c (get im (x + i) (y + j) c)
+       done )
     dest;
   dest
+
+let mean_std ?(channel = 0) image =
+  let kind = kind image in
+  let x1 = ref 0. in
+  let x2 = ref 0. in
+  for_each (fun _x _y px ->
+    let f = Kind.to_float kind px.{channel} in
+    x1 := !x1 +. f;
+    x2 := !x2 +. (f *. f)
+  ) image;
+  let len = length image |> float_of_int in
+  let mean = !x1 /. len in
+  let std = sqrt ((!x2 /. len) -. (mean *. mean)) in
+  mean, std

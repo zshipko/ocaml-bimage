@@ -485,6 +485,9 @@ module Image : sig
 
   val resize : int -> int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Scale an image to the given size *)
+
+  val mean_std: ?channel:int -> ('a, 'b, 'c) t -> float * float
+  (** Calculate the mean and standard deviation of an image *)
 end
 
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =

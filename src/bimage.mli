@@ -794,6 +794,14 @@ module Expr : sig
   (** Pow *)
 end
 
+module Hash: sig
+  type t
+  val phash: ('a, 'b, 'c) Image.t -> t
+  val equal: t -> t -> bool
+  val to_string: t -> string
+  val to_int64: t -> int64
+end
+
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko
 

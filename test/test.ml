@@ -46,8 +46,8 @@ let test name f ~input ~output =
     ignore (f ~output input);
     let stop = Unix.gettimeofday () in
     Printf.printf "%s: %fsec\n" name (stop -. start);
-    image_eq output name;
-    Magick.write ("test-" ^ name ^ ".png") output
+    Magick.write ("test-" ^ name ^ ".png") output;
+    image_eq output name
 
 let test_write ~output input =
   Image.copy_to ~dest:output input

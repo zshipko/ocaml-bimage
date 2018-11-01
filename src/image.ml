@@ -17,6 +17,12 @@ let create ?(layout = Interleaved) kind color width height =
   let data = Data.create kind (width * height * channels) in
   {width; height; color; layout; data}
 
+let compare a b =
+  Data.compare a.data b.data
+
+let equal a b =
+  Data.equal a.data b.data
+
 
 let of_data color width height layout data =
   let channels = channels_of_color color in

@@ -261,6 +261,9 @@ module Pixel : sig
   val empty : int -> t
   (** Create a new pixel with all channels set to 0 *)
 
+  val compare : t -> t -> int
+  val equal : t -> t -> bool
+
   val from_data : ('a, 'b) Data.t -> t
   (** Create a new pixel from existing image data *)
 
@@ -357,6 +360,9 @@ module Image : sig
     -> int
     -> ('a, 'b, 'c) t
   (** [create kind color width height] makes a new image with the given [kind], [color] and dimensions *)
+
+  val compare: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> int
+  val equal: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> bool
 
   val of_data :
     'c Color.t -> int -> int -> layout -> ('a, 'b) Data.t -> ('a, 'b, 'c) t

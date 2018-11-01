@@ -44,7 +44,7 @@ let hash a = Hashtbl.hash a
 
 let compare a b = compare a b
 
-let equal a b = a = b
+let equal a b = compare a b = 0
 
 let of_float ?dest t arr =
   let of_float = Kind.of_float t in

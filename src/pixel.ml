@@ -6,6 +6,11 @@ let empty n =
   let p = Data.create f32 n in
   Pixel p
 
+let compare (Pixel a) (Pixel b) =
+  Data.compare a b
+
+let equal (Pixel a) (Pixel b) =
+  Data.equal a b
 
 let from_data data =
   let len = Data.length data in

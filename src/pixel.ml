@@ -34,7 +34,7 @@ let to_data ~dest (Pixel px) =
 
 let data (Pixel px) = px
 
-let to_xyz (Pixel px) =
+let rgb_to_xyz (Pixel px) =
   let (Pixel dest) = empty 3 in
   Bigarray.Array1.set dest 0
     ( (0.4124564 *. Bigarray.Array1.get px 0)
@@ -51,7 +51,7 @@ let to_xyz (Pixel px) =
   Pixel dest
 
 
-let to_yuv (Pixel px) =
+let rgb_to_yuv (Pixel px) =
   let (Pixel dest) = empty 3 in
   Bigarray.Array1.set dest 0
     ( (0.299 *. Bigarray.Array1.get px 0)

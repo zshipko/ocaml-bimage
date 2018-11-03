@@ -1,5 +1,7 @@
 type t = Int64.t
 
+module Set = Set.Make(Int64)
+
 let bit_set number n b =
   let open Int64 in
   if b then logor number (shift_left one n)

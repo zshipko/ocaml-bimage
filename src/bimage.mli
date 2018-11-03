@@ -273,10 +273,10 @@ module Pixel : sig
   val data : t -> (float, f32) Data.t
   (** Returns the underlying pixel data *)
 
-  val to_xyz : t -> t
+  val rgb_to_xyz : t -> t
   (** Convert pixel from RGB to XYZ *)
 
-  val to_yuv : t -> t
+  val rgb_to_yuv : t -> t
   (** Convert pixel from RGB to YUV *)
 
   val map : (float -> float) -> t -> t
@@ -342,7 +342,7 @@ module Image : sig
   type layout =
     | Planar
     | Interleaved
-  (** Image pixel layout. Planar is [RRRGGGBBB] and Interleaved is [RGBRGBRGB] *)
+    (** Image pixel layout. Planar is [RRRGGGBBB] and Interleaved is [RGBRGBRGB] *)
 
   type ('a, 'b, 'c) t =
     { width : int
@@ -353,7 +353,7 @@ module Image : sig
   (** Image type *)
 
   val create :
-       ?layout:layout
+    ?layout:layout
     -> ('a, 'b) kind
     -> 'c Color.t
     -> int
@@ -443,7 +443,7 @@ module Image : sig
   (** [set_data image x y px] sets the value of [image] at ([x], [y]) to [px] *)
 
   val for_each :
-       (int -> int -> ('a, 'b) Data.t -> unit)
+    (int -> int -> ('a, 'b) Data.t -> unit)
     -> ?x:int
     -> ?y:int
     -> ?width:int
@@ -460,7 +460,7 @@ module Image : sig
       than `Op.kernel`, it is mostly provided for convenience *)
 
   val avg :
-       ?x:int
+    ?x:int
     -> ?y:int
     -> ?width:int
     -> ?height:int
@@ -472,7 +472,7 @@ module Image : sig
   (** Convert an image to the given layout *)
 
   val crop :
-       ('a, 'b, 'c) t
+    ('a, 'b, 'c) t
     -> x:int
     -> y:int
     -> width:int
@@ -534,8 +534,8 @@ module Input : sig
 
   val make_output :
     ?width:int -> ?height:int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) Image.t
-  (** Create an output image width the given width and height if provided, otherwise the generated
-      image will match the first input image in size, kind and color *)
+    (** Create an output image width the given width and height if provided, otherwise the generated
+        image will match the first input image in size, kind and color *)
 end
 
 (** Op is used to define pixel-level operations. These operations are performed on normalized floating-point values *)
@@ -562,7 +562,7 @@ module Op : sig
   (** Convert a grayscale image to color *)
 
   val eval :
-       ?x:int ref
+    ?x:int ref
     -> ?y:int ref
     -> ?c:int ref
     -> ('a, 'b, 'c) t
@@ -570,7 +570,7 @@ module Op : sig
   (** Evaluate an operation *)
 
   val join :
-       (float -> float -> float)
+    (float -> float -> float)
     -> ('a, 'b, 'c) t
     -> ('a, 'b, 'c) t
     -> ('a, 'b, 'c) t
@@ -595,7 +595,7 @@ module Op : sig
   (** Invert the values in an image *)
 
   val cond :
-       (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool)
+    (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool)
     -> ('a, 'b, 'c) t
     -> ('a, 'b, 'c) t
     -> ('a, 'b, 'c) t
@@ -703,7 +703,7 @@ module Expr : sig
     ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t
 
   val eval :
-       ?x:int ref
+    ?x:int ref
     -> ?y:int ref
     -> ?c:int ref
     -> float t
@@ -796,6 +796,7 @@ end
 
 module Hash: sig
   type t
+  module Set: Set.S with type elt = t
   val phash: ('a, 'b, 'c) Image.t -> t
   val equal: t -> t -> bool
   val to_string: t -> string

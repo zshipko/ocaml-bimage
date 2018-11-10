@@ -286,6 +286,13 @@ module Pixel : sig
   (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
    *  index *)
 
+  val map2 : (float -> float -> float) -> t -> t -> t
+  (** [map f x] executes [f] for each value in [x], returning a new Pixel.t *)
+
+  val map2_inplace : (float -> float -> float) -> t -> t -> unit
+  (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
+   *  index *)
+
   val fold : (float -> 'a -> 'a) -> t -> 'a -> 'a
   (** Reduction over a pixel *)
 
@@ -454,6 +461,15 @@ module Image : sig
       and [height]. The data segment used in the callback is mutable and will write directly to the underlying
       image data. *)
 
+  val for_each_pixel :
+    (int -> int -> Pixel.t -> unit)
+    -> ?x:int
+    -> ?y:int
+    -> ?width:int
+    -> ?height:int
+    -> ('a, 'b, 'c) t
+    -> unit
+
   val kernel :
     Kernel.t -> ?output:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Apply a kernel directly to the provided image. Note that this implementation is much slower
@@ -494,6 +510,11 @@ module Image : sig
 
   val mean_std: ?channel:int -> ('a, 'b, 'c) t -> float * float
   (** Calculate the mean and standard deviation of an image *)
+
+  val fold: ('a -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
+  val fold2: ('a -> 'e -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
+  val fold_data: (int -> int -> ('a, 'b) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
+  val fold_data2: (int -> int -> ('a, 'b) Data.t -> ('e, 'f) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
 end
 
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =

@@ -74,6 +74,14 @@ let map f (Pixel px) =
   let dest = Data.copy px in
   Data.map_inplace f dest; Pixel dest
 
+let map2_inplace f (Pixel a) (Pixel b) =
+  Data.map2_inplace f a b
+
+let map2 f (Pixel a) (Pixel b) =
+  let dest = Data.copy a in
+  Data.map2_inplace f dest b;
+  Pixel dest
+
 
 let fold f (Pixel px) a = Data.fold f px a
 

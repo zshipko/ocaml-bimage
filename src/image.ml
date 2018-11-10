@@ -190,6 +190,28 @@ let set_data image x y px =
     set image x y i (Bigarray.Array1.get px i)
   done
 
+let[@inline] for_each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
+  let width =
+    match width with
+    | Some w ->
+      min (img.width - x) w
+    | None ->
+      img.width - x
+  in
+  let height =
+    match height with
+    | Some h ->
+      min (img.height - y) h
+    | None ->
+      img.height - y
+  in
+  let px = empty_pixel img in
+  for j = y to y + height - 1 do
+    for i = x to x + width - 1 do
+      let px = get_pixel img ~dest:px i j in
+      f i j px
+    done
+  done
 
 let[@inline] for_each f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
@@ -284,3 +306,23 @@ let mean_std ?(channel = 0) image =
   let mean = !x1 /. len in
   let std = sqrt ((!x2 /. len) -. (mean *. mean)) in
   mean, std
+
+let fold f image init =
+  Data.fold f image.data init
+
+let fold2 f a b init =
+  Data.fold2 f a.data b.data init
+
+let fold_data f image init =
+  let acc = ref init in
+  for_each (fun x y px ->
+    acc := f x y px !acc
+  ) image;
+  !acc
+
+let fold_data2 f a b init =
+  let acc = ref init in
+  for_each (fun x y px ->
+    let px' = get_data b x y in
+    acc := f x y px px' !acc) a;
+  !acc

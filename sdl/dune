@@ -1,0 +1,8 @@
+(library
+    (name bimage_sdl)
+    (public_name bimage-sdl)
+    (modules bimage_sdl)
+    (libraries bimage tsdl))
+
+
+

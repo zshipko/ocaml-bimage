@@ -10,7 +10,6 @@ let pixel_type : [< gray | rgb | rgba] Color.t -> string =
   | `Rgba ->
       "rgba"
 
-
 let interlace = function
   | Image.Planar ->
       "Plane"
@@ -73,7 +72,7 @@ let read filename ?format ?(create = fun _name -> Image.create)
         Error `Invalid_shape
   with
   | End_of_file ->
-      Error `Invalid_shape
+      Error (`Msg "end of file")
   | Failure msg ->
       Error (`Msg msg)
 

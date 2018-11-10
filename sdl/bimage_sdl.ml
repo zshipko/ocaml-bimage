@@ -59,7 +59,10 @@ let create ?title flags image =
       | Error e -> Error e)
   | Error e -> Error e
 
-let update window image =
+let update ?image window =
+  let Image image = match image with
+  | Some image -> Image image
+  | None -> window.image in
   let w, _, c = Image.shape image in
   Sdl.update_texture window.sdl_texture None image.Image.data (w * c)
 

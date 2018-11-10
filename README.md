@@ -10,8 +10,8 @@ bimage is an image processing library for OCaml.
 - Supports u8, u16, i32, i64, f32, f64, complex32 and complex64 datatypes
 - Multiple layout support (Planar/Interleaved)
 - Composable image operations
-- Image I/O using ImageMagick or GraphicsMagick in (`bimage-unix`)
-- Optional GTK support (`bimage-gtk`)
+- Image I/O using ImageMagick/GraphicsMagick and FFmpeg in (`bimage-unix`)
+- Support for displaying images using GTK (`bimage-gtk`) or SDL (`bimage-sdl`)
 
 bimage is distributed under the ISC license.
 

@@ -23,7 +23,7 @@ build: [
 
 
 synopsis: """
-bimage-gtk allows images to be displayed using SDL
+Bimage_gtk allows images to be displayed using SDL
 """
 
 description: """

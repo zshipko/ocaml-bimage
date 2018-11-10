@@ -515,6 +515,10 @@ module Image : sig
   val fold2: ('a -> 'e -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
   val fold_data: (int -> int -> ('a, 'b) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
   val fold_data2: (int -> int -> ('a, 'b) Data.t -> ('e, 'f) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
+  val map_inplace: ('a -> 'a) -> ('a, 'b, 'c) t -> unit
+  val map: ('a -> 'a) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val map2_inplace: ('a -> 'd -> 'a) -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> unit
+  val map2: ('a -> 'd -> 'a) -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
 end
 
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =

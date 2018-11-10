@@ -190,6 +190,22 @@ let set_data image x y px =
     set image x y i (Bigarray.Array1.get px i)
   done
 
+let map_inplace f img =
+  Data.map_inplace f img.data
+
+let map2_inplace f a b =
+  Data.map2_inplace f a.data b.data
+
+let map f img =
+  let dest = copy img in
+  map_inplace f dest;
+  dest
+
+let map2 f img b =
+  let dest = copy img in
+  map2_inplace f dest b;
+  dest
+
 let[@inline] for_each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
     match width with

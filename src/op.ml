@@ -178,6 +178,31 @@ let join_kernel fn kernel kernel2 =
     done;
     !f
 
+let combine_kernels kernel kernel2 =
+  let r2 = Kernel.rows kernel / 2 in
+  let c2 = Kernel.cols kernel / 2 in
+  let r2' = Kernel.rows kernel2 / 2 in
+  let c2' = Kernel.cols kernel2 / 2 in
+  fun inputs x y c ->
+    let a = Input.get inputs 0 in
+    let f = ref 0.0 in
+    for ky = -r2 to r2 do
+      let kr = kernel.(ky + r2) in
+      for kx = -c2 to c2 do
+        let v = get_f a (x + kx) (y + ky) c in
+        f := !f +. v *. kr.(kx + c2)
+      done
+    done;
+    for ky = -r2' to r2' do
+      let kr = kernel2.(ky + r2') in
+      for kx = -c2' to c2' do
+        let v = get_f a (x + kx) (y + ky) c in
+        f := !f +. v *. kr.(kx + c2')
+      done
+    done;
+    !f
+
+
 
 let ( $ ) a f = apply f a
 
@@ -206,7 +231,7 @@ let sobel_y : ('a, 'b, 'c) t =
 
 
 let[@inline] sobel inputs x y c =
-  (Kernel.sobel_x %+ Kernel.sobel_y) inputs x y c
+  combine_kernels Kernel.sobel_x Kernel.sobel_y inputs x y c
 
 
 let gaussian_blur ?std n x y z inputs =

@@ -633,6 +633,8 @@ module Op : sig
     (float -> float -> float) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
   (** Create a kernel operation using two kernels combined using the designated operation *)
 
+  val combine_kernels : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+
   val ( &+ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Infix operator for [join] using addition *)
 

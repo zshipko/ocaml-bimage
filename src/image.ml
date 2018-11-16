@@ -75,6 +75,8 @@ let shape {width; height; color; _} = (width, height, channels_of_color color)
 let[@inline] length {width; height; color; _} =
   width * height * Color.channels color
 
+let data {data;_} = data
+
 
 let empty_pixel image = Pixel.empty (channels image)
 
@@ -342,3 +344,4 @@ let fold_data2 f a b init =
     let px' = get_data b x y in
     acc := f x y px px' !acc) a;
   !acc
+

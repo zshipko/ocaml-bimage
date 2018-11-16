@@ -374,6 +374,8 @@ module Image : sig
   val compare: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> int
   val equal: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> bool
 
+  val data: ('a, 'b, 'c) t -> ('a, 'b) Data.t
+
   val of_data :
     'c Color.t -> int -> int -> layout -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
   (** [of_data color width height layout data] makes a new image from existing image data with the given [kind], [color], [layout], and dimensions *)

@@ -261,6 +261,9 @@ module Pixel : sig
   val empty : int -> t
   (** Create a new pixel with all channels set to 0 *)
 
+  val length : t -> int
+  (** Get the number of channels in a pixel *)
+
   val compare : t -> t -> int
   val equal : t -> t -> bool
 

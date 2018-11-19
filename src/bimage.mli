@@ -123,6 +123,8 @@ type gray = [`Gray]
 (** 3-channel RGB color type *)
 type rgb = [`Rgb]
 
+type rgb_packed = [`Rgb_packed]
+
 (** 3-channel XYZ color type *)
 type xyz = [`Xyz]
 
@@ -140,6 +142,9 @@ val gray : gray Color.t
 
 (** RGB color *)
 val rgb : rgb Color.t
+
+(** RGB packed into a signle channel *)
+val rgb_packed : rgb_packed Color.t
 
 (** XYZ color *)
 val xyz : xyz Color.t

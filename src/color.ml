@@ -15,6 +15,8 @@ type gray = [`Gray]
 
 type rgb = [`Rgb]
 
+type rgb_packed = [`Rgb_packed]
+
 type yuv = [`Yuv]
 
 type xyz = [`Xyz]
@@ -32,6 +34,8 @@ let yuv = create ~has_alpha:false ~channels:3 `Yuv
 let xyz = create ~has_alpha:false ~channels:3 `Xyz
 
 let rgba = create ~has_alpha:false ~channels:4 `Rgba
+
+let rgb_packed = create ~has_alpha:false ~channels:1 `Rgb_packed
 
 let color n = create ~has_alpha:(n = 4) ~channels:n `Any
 

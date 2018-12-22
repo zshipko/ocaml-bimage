@@ -3,7 +3,7 @@ install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/ma
 script: bash -ex .travis-opam.sh
 env:
   global:
-    - PINS="bimage.dev:. bimage-unix.dev:. bimage-gtk.dev:."
+    - PINS="bimage.dev:. bimage-unix.dev:. bimage-gtk.dev:. bimage-sdl.dev:."
   matrix:
     - OCAML_VERSION=4.06 PACKAGE="bimage.dev" TESTS=false
     - OCAML_VERSION=4.07 PACKAGE="bimage.dev" TESTS=false
@@ -11,4 +11,6 @@ env:
     - OCAML_VERSION=4.07 PACKAGE="bimage-unix.dev" TESTS=true
     - OCAML_VERSION=4.06 PACKAGE="bimage-gtk.dev" TESTS=false
     - OCAML_VERSION=4.07 PACKAGE="bimage-gtk.dev" TESTS=false
+    - OCAML_VERSION=4.06 PACKAGE="bimage-sdl.dev" TESTS=false
+    - OCAML_VERSION=4.07 PACKAGE="bimage-sdl.dev" TESTS=false
 

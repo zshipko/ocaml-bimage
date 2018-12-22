@@ -1,6 +1,12 @@
 language: c
 install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/master/.travis-opam.sh
 script: bash -ex .travis-opam.sh
+apt:
+    packages:
+    - libsdl2-dev
+    - libffi-dev
+    - pkg-config
+    - m4
 env:
   global:
     - PINS="bimage.dev:. bimage-unix.dev:. bimage-gtk.dev:. bimage-sdl.dev:."

@@ -47,7 +47,9 @@ let test name f ~input ~output =
     let stop = Unix.gettimeofday () in
     Printf.printf "%s: %fsec\n" name (stop -. start);
     write ("test-" ^ name ^ ".png") output |> Error.unwrap;
-    image_eq output name
+    image_eq output name;
+    Gc.full_major ();
+    Gc.minor ()
 
 let test_write ~output input =
   Image.copy_to ~dest:output input

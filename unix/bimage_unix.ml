@@ -15,6 +15,8 @@ external _stbi_write_png: unit -> unit = "stbi_write_png"
 external _stbi_write_jpg: unit -> unit = "stbi_write_jpg"
 external _stbi_write_hdr: unit -> unit = "stbi_write_hdr"
 
+let free = foreign "free" (ptr void @-> returning void)
+
 let stbi_load_u8 =
   foreign ~release_runtime_lock:true "stbi_load"
     (string @-> ptr int @-> ptr int @-> ptr int @-> int @-> returning (ptr uint8_t))
@@ -37,9 +39,10 @@ let read f a b c color filename =
   if is_null data then Error (`Msg (Printf.sprintf "unable to open image: %s" filename))
   else
     let data = coerce  (ptr a) (ptr b) data in
-    let data = Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data in
-    Ok (Bimage.Image.of_data color (!@width) (!@height) Bimage.Image.Interleaved data)
-
+    let data' = Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data in
+    let im = Bimage.Image.of_data color (!@width) (!@height) Bimage.Image.Interleaved data' in
+    let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
+    Ok im
 
 let read_u8 color filename =
   read stbi_load_u8 uint8_t int Bimage.u8 color filename
@@ -104,13 +107,13 @@ let write_hdr filename image =
 let write filename image =
   match Filename.extension filename |> String.lowercase_ascii with
   | ".png" ->
-      let tmp = Bimage.Image.convert Bimage.u8 image in
-      write_png filename tmp
+    let tmp = Bimage.Image.convert Bimage.u8 image in
+    write_png filename tmp
   | ".jpeg" | ".jpg" ->
-      let tmp = Bimage.Image.convert Bimage.u8 image in
-      write_jpg filename tmp
+    let tmp = Bimage.Image.convert Bimage.u8 image in
+    write_jpg filename tmp
   | ".hdr" ->
-      let tmp = Bimage.Image.convert Bimage.f32 image in
-      write_hdr filename tmp
+    let tmp = Bimage.Image.convert Bimage.f32 image in
+    write_hdr filename tmp
   | ext -> Error (`Msg (Printf.sprintf "invalid file extension for writing image: %s" ext))
 

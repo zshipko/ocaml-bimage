@@ -14,7 +14,7 @@ let only_generate_images = try Unix.getenv "ONLY_GENERATE_IMAGES" = "1" with _ -
 
 let image_eq a b =
   if not only_generate_images then
-    let b = Magick.read ~format:"png" ("tests/test-" ^ b ^ ".png") u8 (Image.color a) |> Error.unwrap in
+    let b = read_u8 (Image.color a) ("tests/test-" ^ b ^ ".png") |> Error.unwrap in
     let w, h, c = Image.shape a in
     let w', h', c' = Image.shape b in
     check "image: same width" w w';
@@ -46,7 +46,7 @@ let test name f ~input ~output =
     ignore (f ~output input);
     let stop = Unix.gettimeofday () in
     Printf.printf "%s: %fsec\n" name (stop -. start);
-    Magick.write ("test-" ^ name ^ ".png") output;
+    write ("test-" ^ name ^ ".png") output |> Error.unwrap;
     image_eq output name
 
 let test_write ~output input =
@@ -100,7 +100,7 @@ let test_resize ~output input =
   let im = Image.resize 123 456 input in
   Image.copy_to ~dest:output im
 
-let input = Error.unwrap @@ Magick.read "test.jpg" u8 rgb
+let input = Error.unwrap @@ read_u8 rgb "test.jpg"
 let output = Image.like input
 
 let tests = [

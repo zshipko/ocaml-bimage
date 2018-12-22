@@ -26,8 +26,8 @@ let use_graphicsmagick () =
   identify_command := "gm identify"
 
 
-let read filename ?format ?(create = fun _name -> Image.create)
-    ?(layout = Image.Interleaved) t color =
+let read ?(create = fun _name -> Image.create)
+    ?(layout = Image.Interleaved) t color ?format filename =
   let format =
     match format with
     | Some f ->
@@ -77,16 +77,16 @@ let read filename ?format ?(create = fun _name -> Image.create)
       Error (`Msg msg)
 
 
-let read_all filenames ?format ?create ?layout kind color =
+let read_all ?create ?layout kind color ?format  filenames =
   try
     Ok
       (Array.map
-         (fun f -> read f ?format ?create ?layout kind color |> Error.unwrap)
+         (fun f -> read?create ?layout kind color ?format f |> Error.unwrap)
          filenames)
   with Error.Exc err -> Error err
 
 
-let write ?quality filename ?format img =
+let write ?quality ?format filename img =
   let format =
     match format with
     | Some f ->

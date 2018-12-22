@@ -1,6 +1,7 @@
 (library
     (name bimage_gtk)
     (public_name bimage-gtk)
+    (optional true)
     (modules bimage_gtk window draw)
     (libraries bimage lablgtk2 cairo2))
 

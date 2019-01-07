@@ -529,6 +529,13 @@ module Image : sig
   val map: ('a -> 'a) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val map2_inplace: ('a -> 'd -> 'a) -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> unit
   val map2: ('a -> 'd -> 'a) -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
+
+  module Diff: sig
+    type diff
+    val apply: diff -> ('a, 'b, 'c) t -> unit
+  end
+
+  val diff: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> Diff.diff
 end
 
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =

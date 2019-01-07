@@ -316,10 +316,10 @@ let mean_std ?(channel = 0) image =
   let x1 = ref 0. in
   let x2 = ref 0. in
   for_each (fun _x _y px ->
-    let f = Kind.to_float kind px.{channel} in
-    x1 := !x1 +. f;
-    x2 := !x2 +. (f *. f)
-  ) image;
+      let f = Kind.to_float kind px.{channel} in
+      x1 := !x1 +. f;
+      x2 := !x2 +. (f *. f)
+    ) image;
   let len = length image |> float_of_int in
   let mean = !x1 /. len in
   let std = sqrt ((!x2 /. len) -. (mean *. mean)) in
@@ -334,14 +334,41 @@ let fold2 f a b init =
 let fold_data f image init =
   let acc = ref init in
   for_each (fun x y px ->
-    acc := f x y px !acc
-  ) image;
+      acc := f x y px !acc
+    ) image;
   !acc
 
 let fold_data2 f a b init =
   let acc = ref init in
   for_each (fun x y px ->
-    let px' = get_data b x y in
-    acc := f x y px px' !acc) a;
+      let px' = get_data b x y in
+      acc := f x y px px' !acc) a;
   !acc
+
+module Diff = struct
+  type diff = (int * int * int, float) Hashtbl.t
+
+  let apply diff image =
+    Hashtbl.iter (fun (x, y, c) v ->
+        let v' = get_n image x y c in
+        set_n image x y c (v' +. v)
+    ) diff
+
+  let length x = Hashtbl.length x
+end
+
+let diff a b =
+  let dest = Hashtbl.create 8 in
+  let kind = kind a in
+  for_each (fun x y px ->
+      let pxb = get_data b x y in
+      for i = 0 to channels a do
+        let a = Kind.to_float kind px.{i} |> Kind.normalize kind in
+        let b = Kind.to_float kind pxb.{i} |> Kind.normalize kind in
+        if a <> b then
+          Hashtbl.replace dest (x, y, i) (a -. b)
+      done
+    ) a;
+  dest
+
 

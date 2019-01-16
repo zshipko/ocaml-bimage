@@ -17,9 +17,7 @@ let reset t = t.index <- 0
 
 let get_num_frames filename =
   let cmd =
-    "ffprobe -v error -hide_banner -count_frames -select_streams v:0 \
-     -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 "
-    ^ filename
+    "ffmpeg -i " ^ filename ^ " -map 0:v:0 -c copy -f null -y /dev/null"
   in
   let proc = Unix.open_process_in cmd in
   let frames = input_line proc in
@@ -40,7 +38,6 @@ let get_size filename =
       (int_of_string x, int_of_string y)
   | _ ->
       Error.exc `Invalid_shape
-
 
 let load filename =
   let width, height = get_size filename in
@@ -119,6 +116,7 @@ let create ?(stdout = Unix.stdout) ?(stderr = Unix.stderr) ?(framerate = 30) fil
     string_of_int framerate;
     "-i";
     "-";
+    filename
   |] ic stdout stderr in
   {filename; pid; width; height; pipe = oc}
 

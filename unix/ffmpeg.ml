@@ -17,7 +17,7 @@ let reset t = t.index <- 0
 
 let get_num_frames filename =
   let cmd =
-    "ffmpeg -i " ^ filename ^ " -map 0:v:0 -c copy -f null -y /dev/null"
+    "ffmpeg -i " ^ filename ^ " -map 0:v:0 -c copy -f null -y /dev/null 2>&1 | grep frame= | tail -n 1 | awk '{ print $2 }'"
   in
   let proc = Unix.open_process_in cmd in
   let frames = input_line proc in
@@ -101,10 +101,10 @@ type output =
   ; width: int
   ; height: int }
 
-
 let create ?(stdout = Unix.stdout) ?(stderr = Unix.stderr) ?(framerate = 30) filename width height =
   let (ic, oc) = Unix.pipe () in
   let pid = Unix.create_process "ffmpeg" [|
+    "ffmpeg";
     "-y";
     "-f";
     "rawvideo";
@@ -119,6 +119,12 @@ let create ?(stdout = Unix.stdout) ?(stderr = Unix.stderr) ?(framerate = 30) fil
     filename
   |] ic stdout stderr in
   {filename; pid; width; height; pipe = oc}
+
+let finish output =
+  Unix.close output.pipe
+
+let kill output =
+  Unix.kill Sys.sigint output.pid
 
 external write_u8_bigarray: Unix.file_descr -> (int, u8) Data.t -> unit = "write_u8_bigarray"
 

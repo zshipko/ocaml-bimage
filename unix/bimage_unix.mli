@@ -99,6 +99,8 @@ module Ffmpeg : sig
   val write_frame :
     output -> (int, u8, rgb) Image.t -> unit
 
+  val finish : output -> unit
+  val kill : output -> unit
 
   val reset : input -> unit
   (** Reset the frame index to 0 *)

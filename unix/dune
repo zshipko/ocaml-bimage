@@ -1,5 +1,5 @@
 (library
     (name bimage_unix)
     (public_name bimage-unix)
-    (c_names stb)
+    (c_names stb ffmpeg_stubs)
     (libraries unix ctypes.foreign bimage))

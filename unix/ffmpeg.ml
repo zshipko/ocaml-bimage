@@ -1,6 +1,6 @@
 open Bimage
 
-type t =
+type input =
   { filename : string
   ; width : int
   ; height : int
@@ -96,3 +96,34 @@ let read_n t ?create n =
               acc )
   in
   aux n [] |> List.rev |> Array.of_list
+
+type output =
+  { filename: string
+  ; pid: int
+  ; pipe: Unix.file_descr
+  ; width: int
+  ; height: int }
+
+
+let create ?(stdout = Unix.stdout) ?(stderr = Unix.stderr) ?(framerate = 30) filename width height =
+  let (ic, oc) = Unix.pipe () in
+  let pid = Unix.create_process "ffmpeg" [|
+    "-y";
+    "-f";
+    "rawvideo";
+    "-pixel_format";
+    "rgb24";
+    "-video_size";
+    Printf.sprintf "%dx%d" width height;
+    "-framerate";
+    string_of_int framerate;
+    "-i";
+    "-";
+  |] ic stdout stderr in
+  {filename; pid; width; height; pipe = oc}
+
+external write_u8_bigarray: Unix.file_descr -> (int, u8) Data.t -> unit = "write_u8_bigarray"
+
+let write_frame output image =
+  write_u8_bigarray output.pipe (Image.data image)
+

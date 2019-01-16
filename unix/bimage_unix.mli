@@ -68,27 +68,39 @@ end
 (** Ffmpeg is used to load images from video files. The [ffmpeg] command line tool is required *)
 module Ffmpeg : sig
   (** Video file *)
-  type t
+  type input
+  type output
 
-  val frames : t -> int
+  val frames : input -> int
   (** Get the number of frames for a video file *)
 
-  val index : t -> int
+  val index : input -> int
   (** Get the current frame index for a video file *)
 
-  val shape : t -> int * int
+  val shape : input -> int * int
   (** Get the width and height of a video file *)
 
-  val skip : t -> int -> unit
+  val skip : input -> int -> unit
   (** Skip frames *)
 
-  val set_index : t -> int -> unit
+  val set_index : input -> int -> unit
   (** Set the frame index *)
 
-  val load : string -> t
+  val load : string -> input
   (** Open a video file *)
 
-  val reset : t -> unit
+  val create :
+    ?stdout:Unix.file_descr ->
+    ?stderr:Unix.file_descr ->
+    ?framerate:int ->
+    string ->
+    int -> int -> output
+
+  val write_frame :
+    output -> (int, u8, rgb) Image.t -> unit
+
+
+  val reset : input -> unit
   (** Reset the frame index to 0 *)
 
   val next :
@@ -98,13 +110,13 @@ module Ffmpeg : sig
                 -> int
                 -> (int, u8, rgb) Image.t)
     -> ?layout:Image.layout
-    -> t
+    -> input
     -> (int, u8, rgb) Image.t option
 
   (** Get the next frame *)
 
   val read_n :
-       t
+       input
     -> ?create:(   string
                 -> ?layout:Image.layout
                 -> int

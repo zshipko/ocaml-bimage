@@ -17,7 +17,7 @@ let reset t = t.index <- 0
 
 let get_num_frames filename =
   let cmd =
-    "ffmpeg -i " ^ filename ^ " -map 0:v:0 -c copy -f null -y /dev/null 2>&1 | grep frame= | tail -n 1 | awk '{ print $2 }'"
+    "ffmpeg -i \"" ^ filename ^ "\" -map 0:v:0 -c copy -f null -y /dev/null 2>&1 | grep frame= | tail -n 1 | sed -n -e 's/^.*frame=//p' | awk '{ print $1 }'"
   in
   let proc = Unix.open_process_in cmd in
   let frames = input_line proc in
@@ -27,17 +27,17 @@ let get_num_frames filename =
 let get_size filename =
   let cmd =
     "ffprobe -v error -select_streams v:0 -show_entries stream=width,height \
-     -of csv=s=x:p=0 "
-    ^ filename
+     -of csv=s=x:p=0 \""
+    ^ filename ^ "\""
   in
   let proc = Unix.open_process_in cmd in
   let size = input_line proc in
   let shape = String.split_on_char 'x' size in
   match shape with
   | x :: y :: _ ->
-      (int_of_string x, int_of_string y)
+    (int_of_string x, int_of_string y)
   | _ ->
-      Error.exc `Invalid_shape
+    Error.exc `Invalid_shape
 
 let load filename =
   let width, height = get_size filename in
@@ -69,9 +69,9 @@ let next
       in
       Image.for_each
         (fun x y _px ->
-          for i = 0 to Image.channels img - 1 do
-            Image.set img x y i @@ input_byte proc
-          done )
+           for i = 0 to Image.channels img - 1 do
+             Image.set img x y i @@ input_byte proc
+           done )
         img;
       close_in proc;
       t.index <- t.index + 1;
@@ -83,51 +83,49 @@ let read_n t ?create n =
   let rec aux n acc =
     match n with
     | 0 ->
-        acc
+      acc
     | n ->
-        aux (n - 1)
-          ( match next ?create t with
+      aux (n - 1)
+        ( match next ?create t with
           | Some x ->
-              x :: acc
+            x :: acc
           | None ->
-              acc )
+            acc )
   in
   aux n [] |> List.rev |> Array.of_list
 
 type output =
   { filename: string
-  ; pid: int
-  ; pipe: Unix.file_descr
+  ; pipe: out_channel
   ; width: int
   ; height: int }
 
-let create ?(stdout = Unix.stdout) ?(stderr = Unix.stderr) ?(framerate = 30) filename width height =
-  let (ic, oc) = Unix.pipe () in
-  let pid = Unix.create_process "ffmpeg" [|
-    "ffmpeg";
-    "-y";
-    "-f";
-    "rawvideo";
-    "-pixel_format";
-    "rgb24";
-    "-video_size";
-    Printf.sprintf "%dx%d" width height;
-    "-framerate";
-    string_of_int framerate;
-    "-i";
-    "-";
-    filename
-  |] ic stdout stderr in
-  {filename; pid; width; height; pipe = oc}
+let create ?(framerate = 30) filename width height =
+  let oc = Unix.open_process_out (String.concat " " [
+      "ffmpeg";
+      "-v"; "error";
+      "-y";
+      "-f";
+      "rawvideo";
+      "-pixel_format";
+      "rgb24";
+      "-video_size";
+      Printf.sprintf "%dx%d" width height;
+      "-framerate";
+      string_of_int framerate;
+      "-i";
+      "-";
+      "\"" ^ filename ^ "\""
+    ]) in
+  {filename; width; height; pipe = oc}
 
 let finish output =
-  Unix.close output.pipe
-
-let kill output =
-  Unix.kill Sys.sigint output.pid
-
-external write_u8_bigarray: Unix.file_descr -> (int, u8) Data.t -> unit = "write_u8_bigarray"
+  close_out output.pipe
 
 let write_frame output image =
-  write_u8_bigarray output.pipe (Image.data image)
+  let data = Image.data image in
+  for i = 0 to Data.length data - 1 do
+    output_byte output.pipe data.{i}
+  done;
+  flush output.pipe
 

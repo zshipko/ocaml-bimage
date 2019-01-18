@@ -90,8 +90,6 @@ module Ffmpeg : sig
   (** Open a video file *)
 
   val create :
-    ?stdout:Unix.file_descr ->
-    ?stderr:Unix.file_descr ->
     ?framerate:int ->
     string ->
     int -> int -> output
@@ -100,7 +98,6 @@ module Ffmpeg : sig
     output -> (int, u8, rgb) Image.t -> unit
 
   val finish : output -> unit
-  val kill : output -> unit
 
   val reset : input -> unit
   (** Reset the frame index to 0 *)

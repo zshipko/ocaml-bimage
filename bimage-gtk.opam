@@ -10,11 +10,11 @@ tags: ["image processing" "gtk"]
 
 depends:
 [
-    "dune" {build}
     "ocaml" {>= "4.03.0"}
-    "bimage"
-    "lablgtk"
-    "cairo2"
+    "dune" {build}
+    "bimage" {>= "0.1"}
+    "lablgtk" {>= "2.18"}
+    "cairo2" {>= "0.6"}
 ]
 
 build: [

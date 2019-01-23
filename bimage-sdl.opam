@@ -10,10 +10,10 @@ tags: ["image processing" "gtk"]
 
 depends:
 [
-    "dune" {build}
     "ocaml" {>= "4.03.0"}
-    "bimage"
-    "tsdl"
+    "dune" {build}
+    "bimage" {>= "0.1"}
+    "tsdl" {>= "0.9"}
 ]
 
 build: [

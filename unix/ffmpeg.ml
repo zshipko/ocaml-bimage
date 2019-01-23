@@ -57,7 +57,7 @@ let next
     try
       let cmd =
         Printf.sprintf
-          "ffmpeg  -v error -hide_banner -i %s -vf 'select=gte(n\\,%d)' \
+          "ffmpeg  -v error -hide_banner -i \"%s\" -vf 'select=gte(n\\,%d)' \
            -vframes 1 -pix_fmt rgb24 -f rawvideo -an -"
           t.filename t.index
       in

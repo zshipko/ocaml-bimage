@@ -3,7 +3,7 @@
     (public_name bimage-gtk)
     (optional true)
     (modules bimage_gtk window draw)
-    (libraries bimage lablgtk2 cairo2))
+    (libraries bimage lablgtk3 cairo2))
 
 
 

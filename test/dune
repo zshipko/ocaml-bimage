@@ -5,7 +5,7 @@
 
 (alias
     (name runtest)
-    (package bimage)
+    (package bimage-unix)
     (deps test.exe test.jpg
         (glob_files tests/*.png)
     )

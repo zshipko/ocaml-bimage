@@ -13,7 +13,7 @@ depends:
     "ocaml" {>= "4.03.0"}
     "dune" {build}
     "bimage" {>= "0.1"}
-    "lablgtk3" {>= "2.18"}
+    "lablgtk3" {>= "3.0.beta6"}
     "cairo2" {>= "0.6"}
 ]
 

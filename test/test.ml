@@ -102,6 +102,11 @@ let test_resize ~output input =
   let im = Image.resize 123 456 input in
   Image.copy_to ~dest:output im
 
+let test_crop ~output input =
+  let im = Image.crop ~x:240 ~y:120 ~width:200 ~height:400 input in
+  Image.copy_to ~dest:output im
+
+
 let input = Error.unwrap @@ read_u8 rgb "test.jpg"
 let output = Image.like input
 
@@ -118,6 +123,7 @@ let tests = [
   test "invert" test_invert ~input ~output;
   test "blend" test_blend ~input ~output;
   test "grayscale" test_grayscale ~input ~output:(Image.like_with_color gray input);
+  test "crop" test_crop ~input ~output:(Image.create ~layout:input.Image.layout u8 rgb 200 400);
 ]
 
 let () =

@@ -306,7 +306,7 @@ let crop im ~x ~y ~width ~height =
   for_each
     (fun i j _ ->
        for c = 0 to channels im - 1 do
-         set dest x y c (get im (x + i) (y + j) c)
+         set dest i j c (get im (x + i) (y + j) c)
        done )
     dest;
   dest

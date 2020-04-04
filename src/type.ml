@@ -37,6 +37,28 @@ let c32 = Complex32
 let c64 = Complex64
 
 module Kind = struct
+  let name : type a b. (a, b) kind -> string = function
+    | Int8_unsigned -> "u8"
+    | Int16_unsigned -> "u16"
+    | Int32 -> "i32"
+    | Int64 -> "i64"
+    | Float32 -> "f32"
+    | Float64 -> "f64"
+    | Complex32 -> "c32"
+    | Complex64 -> "c64"
+    | _ -> raise Unsupported
+
+  let depth: type a b. (a, b) kind -> int = function
+    | Int8_unsigned -> 8
+    | Int16_unsigned -> 16
+    | Int32 -> 32
+    | Int64 -> 64
+    | Float32 -> 32
+    | Float64 -> 32
+    | Complex32 -> 32
+    | Complex64 -> 64
+    | _ -> raise Unsupported
+
   let[@inline] max : type a b. (a, b) kind -> a = function
     | Int8_unsigned ->
         255

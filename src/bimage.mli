@@ -159,6 +159,12 @@ val rgba : rgba Color.t
 val color : int -> any Color.t
 
 module Kind : sig
+  val name: ('a, 'b) kind -> string
+  (** [name k] returns the name of a given kind *)
+
+  val depth: ('a, 'b) kind -> int
+  (** returns the number of bits for a given kind *)
+
   val max : ('a, 'b) kind -> 'a
   (** [max k] returns the maximum normalized value for [k] *)
 

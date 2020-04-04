@@ -42,16 +42,15 @@ let read ?(create = fun _name -> Image.create)
       let channels = Image.channels img in
       let interlace = interlace layout in
       let cmd =
-        Printf.sprintf "%s %s:'%s' -depth 8 -interlace %s %s:-"
+        Printf.sprintf "%s %s:'%s' -interlace %s -depth 8 %s:-"
           !convert_command format filename interlace f
       in
       let input = Unix.open_process_in cmd in
-      let kind = Kind.of_float t in
       for i = 0 to (Image.(img.width * img.height) * channels) - 1 do
         let x = Kind.to_float u8 (input_byte input) in
         let x = Kind.normalize u8 x in
         let x = Kind.denormalize t x in
-        Bigarray.Array1.set img.Image.data i (kind x)
+        Bigarray.Array1.set img.Image.data i (Kind.of_float t x)
       done;
       close_in input
     in
@@ -104,17 +103,19 @@ let write ?quality ?format filename img =
     | Some q ->
         Printf.sprintf "-quality %d" q
   in
+  let kind = Image.kind img in
+  let _depth = Kind.depth kind in
   let cmd =
-    Printf.sprintf "%s -depth 8 -interlace %s -size %dx%d %s:- %s %s:'%s'"
-      !convert_command (interlace img.layout) width height f quality format
+    Printf.sprintf "%s -interlace %s -size %dx%d -depth 8 %s:- %s %s:'%s'"
+      !convert_command (interlace img.layout) width height f quality  format
       filename
   in
   let output = Unix.open_process_out cmd in
-  let kind = Image.kind img in
   for i = 0 to (Image.(img.width * img.height) * channels) - 1 do
     let x = Kind.to_float kind (Bigarray.Array1.get img.Image.data i) in
     let x = Kind.normalize kind x in
     let x = Kind.denormalize u8 x in
-    output_byte output (Kind.of_float u8 x)
+    let x = Kind.of_float u8 x in
+    output_byte output x
   done;
   close_out output

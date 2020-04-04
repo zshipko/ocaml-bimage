@@ -14,7 +14,7 @@ let only_generate_images = try Unix.getenv "ONLY_GENERATE_IMAGES" = "1" with _ -
 
 let image_eq a b =
   if not only_generate_images then
-    let b = read_u8 (Image.color a) ("tests/test-" ^ b ^ ".png") |> Error.unwrap in
+    let b = Stb.read_u8 (Image.color a) ("tests/test-" ^ b ^ ".png") |> Error.unwrap in
     let w, h, c = Image.shape a in
     let w', h', c' = Image.shape b in
     check "image: same width" w w';
@@ -46,7 +46,7 @@ let test name f ~input ~output =
     ignore (f ~output input);
     let stop = Unix.gettimeofday () in
     Printf.printf "%s: %fsec\n" name (stop -. start);
-    write ("test-" ^ name ^ ".png") output |> Error.unwrap;
+    Stb.write ("test-" ^ name ^ ".png") output |> Error.unwrap;
     image_eq output name;
     Gc.full_major ();
     Gc.minor ()
@@ -107,7 +107,7 @@ let test_crop ~output input =
   Image.copy_to ~dest:output im
 
 
-let input = Error.unwrap @@ read_u8 rgb "test.jpg"
+let input = Error.unwrap @@ Stb.read_u8 rgb "test.jpg"
 let output = Image.like input
 
 let tests = [
@@ -139,7 +139,10 @@ let () =
     with exc ->
       Printexc.to_string exc |> Printf.printf "\tError: %s\n%!"
   ) tests;
-  Printf.printf "\n\n-----\nTotal: %d\n\tPassed: %d\n\tFailed: %d\n%!" !total !passed (!total - !passed)
+  Printf.printf "\n\n-----\nTotal: %d\n\tPassed: %d\n\tFailed: %d\n%!" !total !passed (!total - !passed);
+  try
+    Test_magick.run ()
+  with ex -> Printf.eprintf "Magick Error: %s" (Printexc.to_string ex)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

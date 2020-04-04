@@ -14,7 +14,9 @@ module Point = struct
 
 end
 
-let id = v 1. 0. 0. 0. 1. 0. 0. 0. 1.
+let id = v 1. 0. 0.
+           0. 1. 0.
+           0. 0. 1.
 
 (* Functions *)
 

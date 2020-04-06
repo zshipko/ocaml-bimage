@@ -23,7 +23,7 @@ build: [
 ]
 
 synopsis: """
-Bimage_unix provides methods for encoding/decoding images in many formats using ImageMagick/Ffmpeg/stb_image
+Bimage_unix provides methods for encoding/decoding images in many formats using ImageMagick/stb_image
 """
 
 description: """

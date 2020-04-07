@@ -98,6 +98,14 @@ let test_grayscale_invert ~output input =
   let grayscale_invert = Op.(grayscale $ invert_f) in
   Op.eval grayscale_invert ~output[| input |]
 
+let test_grayscale_invert2 ~output input =
+  let a = input in
+  let kind = Image.kind input in
+  let grayscale = Expr.func (Expr.input 0 X Y C) (fun x y _c _ -> (Image.get_f a x y 0 *. 0.21) +. (Image.get_f a x y 1 *. 0.72) +. (Image.get_f a x y 2 *. 0.07)) in
+  let grayscale_invert = Expr.func grayscale (fun _x _y _c value -> (Kind.max_f kind) -. value) |> Expr.f in
+  Op.eval grayscale_invert ~output [| input |]
+
+
 let test_resize ~output input =
   let im = Image.resize 123 456 input in
   Image.copy_to ~dest:output im
@@ -114,6 +122,7 @@ let tests = [
   test "write" test_write ~input ~output;
   test "blend-expr" test_blend_expr ~input ~output;
   test "grayscale-invert" test_grayscale_invert ~input ~output;
+  test "grayscale-invert2" test_grayscale_invert2 ~input ~output;
   test "blur" test_blur ~input ~output;
   test "sobel" test_sobel ~input ~output;
   test "sobel_x" test_sobel_x ~input ~output;

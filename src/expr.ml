@@ -31,6 +31,7 @@ type _ t =
   | Or : bool t * bool t -> bool t
   | Not : bool t -> bool t
   | If : bool t * 'a t * 'a t -> 'a t
+  | Func : float t * (int -> int -> int -> float -> float) -> float t
 
 let rec prepare : type a.
     int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
@@ -154,7 +155,12 @@ let rec prepare : type a.
   | If (cond, a, b) ->
       let cond = prepare x y c cond inputs in
       if cond then prepare x y c a inputs else prepare x y c b inputs
-
+  | Func (f, func) ->
+      let x' = prepare x y c X inputs in
+      let y' = prepare x y c Y inputs in
+      let c' = prepare x y c C inputs in
+      let f = prepare  x y c f inputs in
+      func x' y' c' f
 
 let f ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body : ('a, 'b, 'c) Op.t =
   let f = prepare x y c body in
@@ -184,6 +190,8 @@ let y = Y
 let c = C
 
 let kernel k = Kernel k
+
+let func i f = Func (i, f)
 
 let input i x y c = Input (i, x, y, c)
 

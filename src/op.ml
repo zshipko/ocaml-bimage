@@ -56,7 +56,7 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op :
  fun ~output inputs ->
   let width, height, channels = shape output in
   let kind = kind output in
-  let of_float = Kind.of_float kind in
+  let of_float f = Kind.of_float kind f in
   let clamp = Kind.clamp kind in
   let op = op inputs in
   for i = 0 to length output - 1 do

@@ -748,6 +748,7 @@ module Expr : sig
     | Or : bool t * bool t -> bool t
     | Not : bool t -> bool t
     | If : bool t * 'a t * 'a t -> 'a t
+    | Func : float t * (int -> int -> int -> float -> float) -> float t
 
   val f :
     ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t
@@ -777,6 +778,8 @@ module Expr : sig
   val c : int t
 
   val kernel : Kernel.t -> float t
+
+  val func : float t -> (int -> int -> int -> float -> float) -> float t
 
   val input : int -> int t -> int t -> int t -> float t
 

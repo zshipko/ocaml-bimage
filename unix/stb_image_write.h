@@ -160,11 +160,7 @@ LICENSE
 #ifdef __cplusplus
 #define STBIWDEF  extern "C"
 #else
-#ifdef _WIN32
-#define STBIWDEF extern __declspec(dllexport)
-#else
-#define STBIWDEF extern
-#endif
+#define STBIWDEF  extern
 #endif
 #endif
 #endif

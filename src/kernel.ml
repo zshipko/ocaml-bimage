@@ -58,7 +58,7 @@ let gaussian ?(std = 1.4) n =
     n n
   |> normalize
 
-let op_3x3 =
+let op_3x3 ?(input = 0) =
  fun kernel ->
   let k00 = get kernel 0 0 in
   let k10 = get kernel 1 0 in
@@ -70,7 +70,7 @@ let op_3x3 =
   let k12 = get kernel 1 2 in
   let k22 = get kernel 2 2 in
   fun inputs x y c ->
-    let a = Input.get inputs 0 in
+    let a = Input.get inputs input in
     (get_f a (x - 1) (y - 1) c *. k00)
     +. (get_f a (x - 1) y c *. k10)
     +. (get_f a (x - 1) (y + 1) c *. k20)
@@ -82,14 +82,14 @@ let op_3x3 =
     +. (get_f a (x + 1) (y + 1) c *. k22)
 
 
-let op kernel =
+let op ?(input = 0) kernel =
   let rows = rows kernel in
   let cols = cols kernel in
   let r2 = rows / 2 in
   let c2 = cols / 2 in
   if rows = 3 && cols = 3 then op_3x3 kernel
   else fun inputs x y c ->
-    let a = Input.get inputs 0 in
+    let a = Input.get inputs input in
     let f = ref 0.0 in
     for ky = -r2 to r2 do
       let kr = kernel.(ky + r2) in
@@ -99,13 +99,13 @@ let op kernel =
     done;
     !f
 
-let join fn kernel kernel2 =
+let join ?(input = 0) fn kernel kernel2 =
   let rows = rows kernel in
   let cols = cols kernel in
   let r2 = rows / 2 in
   let c2 = cols / 2 in
   fun inputs x y c ->
-    let a = Input.get inputs 0 in
+    let a = Input.get inputs input in
     let f = ref 0.0 in
     for ky = -r2 to r2 do
       let kr = kernel.(ky + r2) in
@@ -117,13 +117,13 @@ let join fn kernel kernel2 =
     done;
     !f
 
-let combine kernel kernel2 =
+let combine ?(input = 0) kernel kernel2 =
   let r2 = rows kernel / 2 in
   let c2 = cols kernel / 2 in
   let r2' = rows kernel2 / 2 in
   let c2' = cols kernel2 / 2 in
   fun inputs x y c ->
-    let a = Input.get inputs 0 in
+    let a = Input.get inputs input in
     let f = ref 0.0 in
     for ky = -r2 to r2 do
       let kr = kernel.(ky + r2) in

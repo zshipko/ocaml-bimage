@@ -54,7 +54,7 @@ let test_invert ~output input =
   Op.(eval invert) ~output [| input |]
 
 let test_blend ~output input =
-  Op.eval (Op.blend (Input.index 0) (Input.index 1)) ~output [| input; input|]
+  Op.eval Op.blend ~output [| input; input|]
 
 let test_grayscale ~output input =
   Op.(eval grayscale ~output [| input |])

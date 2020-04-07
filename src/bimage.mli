@@ -509,14 +509,15 @@ end
 module Kernel : sig
   type t
 
-  val op : t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  val op : ?input:Input.index -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
   (** Create a kernel operation *)
 
   val join :
+    ?input:Input.index ->
     (float -> float -> float) -> t -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
   (** Create a kernel operation using two kernels combined using the designated operation *)
 
-  val combine : t -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  val combine : ?input:Input.index -> t -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
   val create : int -> int -> t
   (** [create rows cols] makes a new Kernel with the given dimensions *)
@@ -590,11 +591,9 @@ end
 module Input : sig
   type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
 
-  type index
+  type index = int
 
-  val index : int -> index
-
-  val get : ('a, 'b, 'c) t -> int -> ('a, 'b, 'c) Image.t
+  val get : ('a, 'b, 'c) t -> index -> ('a, 'b, 'c) Image.t
   (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
       if the provided index is out of bounds. *)
 
@@ -612,19 +611,19 @@ module Op : sig
   type ('a, 'b, 'c) f =
     float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
-  val blend: Input.index -> Input.index -> ('a, 'b, 'c) t
+  val blend: ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
 
-  val min: Input.index -> Input.index -> ('a, 'b, 'c) t
+  val min: ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
   (** Minimum pixel value of two images *)
 
-  val max: Input.index -> Input.index -> ('a, 'b, 'c) t
+  val max: ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
   (** Maximum pixel value of two images *)
 
-  val grayscale : ('a, 'b, [< `Rgb | `Rgba]) t
+  val grayscale: ?input:Input.index -> ('a, 'b, [< `Rgb | `Rgba]) t
   (** Convert a color image to grayscale *)
 
-  val color : ('a, 'b, [`Gray]) t
+  val color : ?input:Input.index -> ('a, 'b, [`Gray]) t
   (** Convert a grayscale image to color *)
 
   val eval :
@@ -662,10 +661,10 @@ module Op : sig
   val scalar_min : ('a, 'b) kind -> ('a, 'b, 'c) t
   (** Builds an operation returning the minimum value for a given kind *)
 
-  val invert_f : ('a, 'b, 'c) f
+  val invert_f : ?input:Input.index -> ('a, 'b, 'c) f
   (** Invert a single value *)
 
-  val invert : ('a, 'b, 'c) t
+  val invert : ?input:Input.index -> ('a, 'b, 'c) t
   (** Invert the values in an image *)
 
   val cond :
@@ -702,31 +701,31 @@ module Op : sig
   val ( $ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) f -> ('a, 'b, 'c) t
   (** Infix operator for [map] *)
 
-  val sobel_x : ('a, 'b, 'c) t
+  val sobel_x : ?input:Input.index -> ('a, 'b, 'c) t
   (** Sobel in the X direction *)
 
-  val sobel_y : ('a, 'b, 'c) t
+  val sobel_y : ?input:Input.index -> ('a, 'b, 'c) t
   (** Sobel in the Y direction *)
 
-  val sobel : ('a, 'b, 'c) t
+  val sobel : ?input:Input.index -> ('a, 'b, 'c) t
   (** Sobel kernel *)
 
-  val gaussian_blur : ?std:float -> int -> ('a, 'b, 'c) t
+  val gaussian_blur : ?input:Input.index -> ?std:float -> int -> ('a, 'b, 'c) t
   (** Blur using gaussian kernel. The size must be an odd number. *)
 
-  val transform : Transform.t -> ('a, 'b, 'c) t
+  val transform : ?input:Input.index -> Transform.t -> ('a, 'b, 'c) t
   (** Apply a transformation *)
 
-  val rotate : ?center:float * float -> Angle.t -> ('a, 'b, 'c) t
+  val rotate : ?input:Input.index -> ?center:float * float -> Angle.t -> ('a, 'b, 'c) t
   (** Rotation operation *)
 
-  val scale : float -> float -> ('a, 'b, 'c) t
+  val scale : ?input:Input.index -> float -> float -> ('a, 'b, 'c) t
   (** Scale an image by the given amount *)
 
-  val brightness : Input.index -> float Expr.t -> ('a, 'b, 'c) t
+  val brightness : ?input:Input.index -> float Expr.t -> ('a, 'b, 'c) t
   (** Adjust the brightness of an image. 0.0 will remove all brightness and 1.0 will keep the image as-is. *)
 
-  val threshold : float array -> ('a, 'b, 'c) t
+  val threshold : ?input:Input.index -> float array -> ('a, 'b, 'c) t
   (** Per-channel threshold -- each entry in the given array is the threshold for the channel with the same index *)
 end
 
@@ -734,7 +733,7 @@ end
 module Expr : sig
   type _ t =
     | Kernel : Kernel.t -> float t
-    | Input : int * int t * int t * int t -> float t
+    | Input : Input.index * int t * int t * int t -> float t
     | X : int t
     | Y : int t
     | C : int t
@@ -766,8 +765,8 @@ module Expr : sig
     | Not : bool t -> bool t
     | If : bool t * 'a t * 'a t -> 'a t
     | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
-    | Pixel: int t option * int t * int t -> Pixel.t t
-    | Pixel_norm: int t option * int t * int t -> Pixel.t t
+    | Pixel: Input.index * int t * int t -> Pixel.t t
+    | Pixel_norm: Input.index * int t * int t -> Pixel.t t
     | Value: 'a -> 'a t
     | Pair : 'a t * 'b t -> ('a * 'b) t
 
@@ -794,9 +793,9 @@ module Expr : sig
 
   val pair: 'a t -> 'b t -> ('a * 'b) t
 
-  val pixel: ?index:int t -> int t -> int t -> Pixel.t t
+  val pixel: ?input:Input.index -> int t -> int t -> Pixel.t t
 
-  val pixel_norm: ?index:int t -> int t -> int t -> Pixel.t t
+  val pixel_norm: ?input:Input.index -> int t -> int t -> Pixel.t t
 
   val value : 'a -> 'a t
 

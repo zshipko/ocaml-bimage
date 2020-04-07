@@ -9,26 +9,24 @@ type ('a, 'b, 'c) f =
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =
   output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
 
-let blend a b : ('a, 'b, 'c) t =
-  Expr.op (Expr.blend a b)
+let blend ?(input = 0) ?(input1 = 1) : ('a, 'b, 'c) t =
+  Expr.op (Expr.blend input input1)
 
-let max a b : ('a, 'b, 'c) t =
-  Expr.op (Expr.max a b)
+let max ?(input = 0) ?(input1 = 1) : ('a, 'b, 'c) t =
+  Expr.op (Expr.max input input1)
 
-let min a b : ('a, 'b, 'c) t =
-  Expr.op (Expr.min a b)
+let min ?(input = 0) ?(input1 = 1) : ('a, 'b, 'c) t =
+  Expr.op (Expr.min input input1)
 
-let grayscale : ('a, 'b, [< `Rgb | `Rgba]) t =
+let grayscale ?(input = 0) : ('a, 'b, [< `Rgb | `Rgba]) t =
  fun inputs x y _c ->
-  let a = inputs.(0) in
+  let a = inputs.(input) in
   (get_f a x y 0 *. 0.21) +. (get_f a x y 1 *. 0.72) +. (get_f a x y 2 *. 0.07)
 
-
-let color : ('a, 'b, [`Gray]) t =
+let color ?(input = 0) : ('a, 'b, [`Gray]) t =
  fun inputs x y _c ->
-  let a = inputs.(0) in
+  let a = inputs.(input) in
   get_f a x y 0
-
 
 let cond :
        (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool)
@@ -95,19 +93,17 @@ let scalar_max : ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t =
  fun k -> scalar (Kind.max_f k)
 
 
-let invert_f f : ('a, 'b, 'c) t =
+let invert_f ?(input = 0) f : ('a, 'b, 'c) t =
  fun inputs _x _y _c ->
-  let kind = Input.get inputs 0 in
+  let kind = Input.get inputs input in
   Kind.max_f (Image.kind kind) -. f
 
 
-let invert : ('a, 'b, 'c) t =
+let invert ?(input = 0) : ('a, 'b, 'c) t =
  fun inputs x y c ->
-  let a = inputs.(0) in
+  let a = inputs.(input) in
   let kind = kind a in
   if c = 4 then get_f a x y c else Kind.max_f kind -. get_f a x y c
-
-
 
 
 let ( $ ) a f = apply f a
@@ -128,48 +124,49 @@ let ( %* ) a b = Kernel.join ( *. ) a b
 
 let ( %/ ) a b = Kernel.join ( /. ) a b
 
-let sobel_x : ('a, 'b, 'c) t =
- fun inputs x y c -> Kernel.op_3x3 Kernel.sobel_x inputs x y c
+let sobel_x ?input : ('a, 'b, 'c) t =
+ fun inputs x y c -> Kernel.op_3x3 ?input Kernel.sobel_x inputs x y c
 
 
-let sobel_y : ('a, 'b, 'c) t =
- fun inputs x y c -> Kernel.op_3x3 Kernel.sobel_y inputs x y c
+let sobel_y ?input : ('a, 'b, 'c) t =
+ fun inputs x y c -> Kernel.op_3x3 ?input Kernel.sobel_y inputs x y c
 
 
-let[@inline] sobel inputs x y c =
-  Kernel.combine Kernel.sobel_x Kernel.sobel_y inputs x y c
+let[@inline] sobel ?input inputs x y c =
+  Kernel.combine ?input Kernel.sobel_x Kernel.sobel_y inputs x y c
 
 
-let gaussian_blur ?std n x y z inputs =
-  Kernel.op (Kernel.gaussian ?std n) x y z inputs
+let gaussian_blur ?input ?std n x y z inputs =
+  Kernel.op ?input (Kernel.gaussian ?std n) x y z inputs
 
 
-let transform t inputs x y c =
+let transform ?(input = 0) t inputs x y c =
   let x = float_of_int x in
   let y = float_of_int y in
   let x', y' = Transform.transform t (x, y) in
+  let input = inputs.(input) in
   let x0', y0' = (int_of_float (ceil x'), int_of_float (ceil y')) in
   let x1', y1' = (int_of_float (floor x'), int_of_float (floor y')) in
-  if x0' >= 0 && y0' >= 0 && x0' < inputs.(0).width && y0' < inputs.(0).height
-  then (get_f inputs.(0) x0' y0' c +. get_f inputs.(0) x1' y1' c) /. 2.
+  if x0' >= 0 && y0' >= 0 && x0' < input.width && y0' < input.height
+  then (get_f input x0' y0' c +. get_f input x1' y1' c) /. 2.
   else 0.
 
 
-let rotate ?center angle =
+let rotate ?input ?center angle =
   let r = Transform.rotate ?center angle in
-  transform r
+  transform ?input r
 
 
-let scale x y =
+let scale ?input x y =
   let s = Transform.scale x y in
-  transform s
+  transform ?input s
 
 
-let brightness input n inputs x y c =
+let brightness ?(input = 0) n inputs x y c =
   Expr.op (Expr.brightness input n) inputs x y c
 
 
-let threshold thresh inputs x y c =
-  let a = Input.get inputs 0 in
+let threshold ?(input = 0) thresh inputs x y c =
+  let a = Input.get inputs input in
   let v = get_f a x y c in
   if v < thresh.(c) then 0.0 else Kind.max_f (kind a)

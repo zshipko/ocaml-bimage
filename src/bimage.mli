@@ -68,6 +68,8 @@ module Error : sig
   val unwrap : ('a, t) result -> 'a
   (** A convenience function that returns the [Ok] value of a result if possible, otherwise
       it raises the [Error] value *)
+
+  val string_of_exn : exn -> string
 end
 
 (** The Angle type is used instead of a float whenever a function expects an angle

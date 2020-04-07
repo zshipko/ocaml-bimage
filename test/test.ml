@@ -146,7 +146,7 @@ let () =
   Printf.printf "\n\n-----\nTotal: %d\n\tPassed: %d\n\tFailed: %d\n%!" !total
     !passed (!total - !passed);
   try Test_magick.run ()
-  with ex -> Printf.eprintf "Magick Error: %s" (Printexc.to_string ex)
+  with ex -> Printf.eprintf "Magick Error: %s" (Error.string_of_exn ex)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

@@ -3,9 +3,16 @@ open Foreign
 
 external _stbi_load_stub : unit -> unit = "stbi_load"
 
-external _stbi_load_stub : unit -> unit = "stbi_load_16"
+external _stbi_load_from_memory_stub : unit -> unit = "stbi_load_from_memory"
 
-external _stbi_load_stub : unit -> unit = "stbi_loadf"
+external _stbi_load16_stub : unit -> unit = "stbi_load_16"
+
+external _stbi_load_16_from_memory_stub : unit -> unit
+  = "stbi_load_16_from_memory"
+
+external _stbi_loadf_stub : unit -> unit = "stbi_loadf"
+
+external _stbi_loadf_from_memory_stub : unit -> unit = "stbi_loadf_from_memory"
 
 external _stbi_write_png : unit -> unit = "stbi_write_png"
 
@@ -24,6 +31,21 @@ let stbi_load_u16 =
   foreign ~release_runtime_lock:true "stbi_load_16"
     ( string @-> ptr int @-> ptr int @-> ptr int @-> int
     @-> returning (ptr uint16_t) )
+
+let stbi_load_u16_from_memory =
+  foreign ~release_runtime_lock:true "stbi_load_16_from_memory"
+    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr uint16_t) )
+
+let stbi_load_u8_from_memory =
+  foreign ~release_runtime_lock:true "stbi_load_from_memory"
+    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr uint8_t) )
+
+let stbi_load_f32_from_memory =
+  foreign ~release_runtime_lock:true "stbi_loadf_from_memory"
+    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr float) )
 
 let stbi_load_f =
   foreign ~release_runtime_lock:true "stbi_loadf"
@@ -49,8 +71,34 @@ let read f a b c color filename =
     let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
     Ok im
 
+let read_from_memory f a b c color data =
+  let width = allocate int 0 in
+  let height = allocate int 0 in
+  let channels = allocate int 0 in
+  let n = Bimage.Color.channels color in
+  let data = f data width height channels n in
+  if is_null data then Error (`Msg "unable to decode image")
+  else
+    let data = coerce (ptr a) (ptr b) data in
+    let data' =
+      Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data
+    in
+    let im =
+      Bimage.Image.of_data color !@width !@height Bimage.Image.Interleaved data'
+    in
+    let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
+    Ok im
+
+let read_u16_from_memory color data =
+  read_from_memory stbi_load_u16_from_memory uint16_t int Bimage.u16 color
+    (Bytes.to_string data)
+
 let read_u8 color filename =
   read stbi_load_u8 uint8_t int Bimage.u8 color filename
+
+let read_u8_from_memory color data =
+  read_from_memory stbi_load_u8_from_memory uint8_t int Bimage.u8 color
+    (Bytes.to_string data)
 
 let read_u16 color filename =
   read stbi_load_u16 uint16_t int Bimage.u16 color filename
@@ -58,8 +106,17 @@ let read_u16 color filename =
 let read_f32 color filename =
   read stbi_load_f float float Bimage.f32 color filename
 
+let read_f32_from_memory color data =
+  read_from_memory stbi_load_f32_from_memory float float Bimage.f32 color
+    (Bytes.to_string data)
+
 let read kind color filename =
   match read_u16 color filename with
+  | Error e -> Error e
+  | Ok tmp -> Ok (Bimage.Image.convert kind tmp)
+
+let read_from_memory kind color filename =
+  match read_u16_from_memory color filename with
   | Error e -> Error e
   | Ok tmp -> Ok (Bimage.Image.convert kind tmp)
 

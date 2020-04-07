@@ -2,61 +2,77 @@ open Bimage
 
 (** Stb contains image I/O operationgs using stb_image *)
 module Stb : sig
-  val read_u8: 'a Color.t -> string -> ((int, u8, 'a) Image.t, Error.t) result
-  val read_u16: 'a Color.t -> string -> ((int, u16, 'a) Image.t, Error.t) result
-  val read_f32: 'a Color.t -> string -> ((float, f32, 'a) Image.t, Error.t) result
-  val read: ('a, 'b) kind -> 'c Color.t -> string -> (('a, 'b, 'c) Image.t , Error.t) result
+  val read_u8 : 'a Color.t -> string -> ((int, u8, 'a) Image.t, Error.t) result
 
-  val write_png: string -> (int, u8, 'c) Image.t -> (unit, Error.t) result
-  val write_jpg: ?quality:int -> string -> (int, u8, 'c) Image.t -> (unit, Error.t) result
-  val write_hdr: string -> (float, f32, 'c) Image.t -> (unit, Error.t) result
-  val write: string -> ('a, 'b, 'c) Image.t -> (unit, Error.t) result
+  val read_u16 :
+    'a Color.t -> string -> ((int, u16, 'a) Image.t, Error.t) result
+
+  val read_f32 :
+    'a Color.t -> string -> ((float, f32, 'a) Image.t, Error.t) result
+
+  val read :
+    ('a, 'b) kind ->
+    'c Color.t ->
+    string ->
+    (('a, 'b, 'c) Image.t, Error.t) result
+
+  val write_png : string -> (int, u8, 'c) Image.t -> (unit, Error.t) result
+
+  val write_jpg :
+    ?quality:int -> string -> (int, u8, 'c) Image.t -> (unit, Error.t) result
+
+  val write_hdr : string -> (float, f32, 'c) Image.t -> (unit, Error.t) result
+
+  val write : string -> ('a, 'b, 'c) Image.t -> (unit, Error.t) result
 end
 
 (** Magick contains image I/O operations using ImageMagick/GraphicsMagick on the
     command-line *)
 module Magick : sig
   val use_graphicsmagick : unit -> unit
+
   (* Use GraphicsMagick instead of ImageMagick *)
 
   val read :
-      ?create:(   string
-                -> ?layout:Image.layout
-                -> ('a, 'b) kind
-                -> 'c Color.t
-                -> int
-                -> int
-                -> ('a, 'b, 'c) Image.t)
-    -> ?layout:Image.layout
-    -> ('a, 'b) kind
-    -> ([< gray | rgb | rgba] as 'c) Color.t
-    -> ?format:string
-    -> string
-    -> (('a, 'b, 'c) Image.t, Error.t) result
+    ?create:
+      (string ->
+      ?layout:Image.layout ->
+      ('a, 'b) kind ->
+      'c Color.t ->
+      int ->
+      int ->
+      ('a, 'b, 'c) Image.t) ->
+    ?layout:Image.layout ->
+    ('a, 'b) kind ->
+    ([< gray | rgb | rgba ] as 'c) Color.t ->
+    ?format:string ->
+    string ->
+    (('a, 'b, 'c) Image.t, Error.t) result
   (** [read filename kind color] loads an image from [filename] on disk using the given [kind] and [color] *)
 
   val write :
-       ?quality:int
-    -> ?format:string
-    -> string
-    -> ('a, 'b, [< gray | rgb | rgba]) Image.t
-    -> unit
+    ?quality:int ->
+    ?format:string ->
+    string ->
+    ('a, 'b, [< gray | rgb | rgba ]) Image.t ->
+    unit
   (** [write filename image] saves an image to [filename] *)
 
   val read_all :
-      ?create:(   string
-                -> ?layout:Image.layout
-                -> ('a, 'b) kind
-                -> 'c Color.t
-                -> int
-                -> int
-                -> ('a, 'b, 'c) Image.t)
-    -> ?layout:Image.layout
-    -> ('a, 'b) kind
-    -> ([< gray | rgb | rgba] as 'c) Color.t
-    -> ?format:string
-    -> string array
-    -> (('a, 'b, 'c) Input.t, Error.t) result
+    ?create:
+      (string ->
+      ?layout:Image.layout ->
+      ('a, 'b) kind ->
+      'c Color.t ->
+      int ->
+      int ->
+      ('a, 'b, 'c) Image.t) ->
+    ?layout:Image.layout ->
+    ('a, 'b) kind ->
+    ([< gray | rgb | rgba ] as 'c) Color.t ->
+    ?format:string ->
+    string array ->
+    (('a, 'b, 'c) Input.t, Error.t) result
   (** Read multiple images directly into an Input array *)
 
   val convert_command : string ref
@@ -68,10 +84,19 @@ module Magick : sig
    *  but if you'd like to use GraphicsMagick then set this to "gm identify" *)
 end
 
-module Data_unix: sig
-  val create_mmap: ?mode:int -> ('a, 'b) kind -> filename:string -> int -> ('a, 'b) Data.t
+module Data_unix : sig
+  val create_mmap :
+    ?mode:int -> ('a, 'b) kind -> filename:string -> int -> ('a, 'b) Data.t
 end
 
-module Image_unix: sig
-  val create_mmap: ?mode:int -> ?layout:Image.layout -> ('a, 'b) kind -> 'c Color.t -> filename:string -> int -> int -> ('a, 'b, 'c) Image.t
+module Image_unix : sig
+  val create_mmap :
+    ?mode:int ->
+    ?layout:Image.layout ->
+    ('a, 'b) kind ->
+    'c Color.t ->
+    filename:string ->
+    int ->
+    int ->
+    ('a, 'b, 'c) Image.t
 end

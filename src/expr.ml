@@ -32,153 +32,140 @@ type 'a t =
   | Not : bool t -> bool t
   | If : bool t * 'a t * 'a t -> 'a t
   | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
-  | Pixel: Input.index * int t * int t -> Pixel.t t
-  | Pixel_norm: Input.index * int t * int t -> Pixel.t t
+  | Pixel : Input.index * int t * int t -> Pixel.t t
+  | Pixel_norm : Input.index * int t * int t -> Pixel.t t
   | Value : 'a -> 'a t
   | Pair : 'a t * 'b t -> ('a * 'b) t
 
-let rec prepare : type a.
-    int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
+let rec prepare :
+    type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
  fun x y c expr inputs ->
-  match expr with
-  | Kernel k ->
-      (Kernel.op k inputs !x !y !c)
-  | Input (input, x', y', c') ->
-      let x' = prepare x y c x' inputs in
-      let y' = prepare x y c y' inputs in
-      let c' = prepare c y c c' inputs in
-      let f : float = Image.get_f (Input.get inputs input) x' y' c' in
-      f
-  | X ->
-      !x
-  | Y ->
-      !y
-  | C ->
-      !c
-  | Bool b ->
-      b
-  | Int i ->
-      i
-  | Float f ->
-      f
-  | Float_of_int i ->
-      let a = prepare x y c i inputs in
-      float_of_int a
-  | Int_of_float f ->
-      let a = prepare x y c f inputs in
-      int_of_float a
-  | Fadd (Kernel a, Kernel b) ->
-      Kernel.join ( +. ) a b inputs !x !y !c
-  | Fadd (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a +. b
-  | Fsub (Kernel a, Kernel b) ->
-      Kernel.join ( -. ) a b inputs !x !y !c
-  | Fsub (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a -. b
-  | Fmul (Kernel a, Kernel b) ->
-      Kernel.join ( *. ) a b inputs !x !y !c
-  | Fmul (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a *. b
-  | Fdiv (Kernel a, Kernel b) ->
-      Kernel.join ( /. ) a b inputs !x !y !c
-  | Fdiv (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a /. b
-  | Fpow (Kernel a, Kernel b) ->
-      Kernel.join ( ** ) a b inputs !x !y !c
-  | Fpow (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a ** b
-  | Fsqrt a ->
-      let a = prepare x y c a inputs in
-      sqrt a
-  | Fsin a ->
-      let a = prepare x y c a inputs in
-      sin a
-  | Fcos a ->
-      let a = prepare x y c a inputs in
-      cos a
-  | Ftan a ->
-      let a = prepare x y c a inputs in
-      tan a
-  | Fmod (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      mod_float a b
-  | Iadd (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a + b
-  | Isub (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a - b
-  | Imul (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a * b
-  | Idiv (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a / b
-  | Imod (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a mod b
-  | Gt (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a > b
-  | Eq (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a = b
-  | Lt (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a < b
-  | And (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a && b
-  | Or (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      a || b
-  | Not a ->
-      let a = prepare x y c a inputs in
-      not a
-  | If (cond, a, b) ->
-      let cond = prepare x y c cond inputs in
-      if cond then prepare x y c a inputs else prepare x y c b inputs
-  | Func (f, func) ->
-      let x' = prepare x y c X inputs in
-      let y' = prepare x y c Y inputs in
-      let c' = prepare x y c C inputs in
-      let f = prepare  x y c f inputs in
-      func x' y' c' f
-  | Pixel (index, x', y') ->
-      let x' = prepare x y c x' inputs in
-      let y' = prepare x y c y' inputs in
-      Image.get_pixel inputs.(index) x' y'
-  | Pixel_norm (index, x', y') ->
-      let x' = prepare x y c x' inputs in
-      let y' = prepare x y c y' inputs in
-      Image.get_pixel_norm inputs.(index) x' y'
-  | Value x -> x
-  | Pair (a, b) ->
-      let a = prepare x y c a inputs in
-      let b = prepare x y c b inputs in
-      (a, b)
-
+   match expr with
+   | Kernel k -> Kernel.op k inputs !x !y !c
+   | Input (input, x', y', c') ->
+       let x' = prepare x y c x' inputs in
+       let y' = prepare x y c y' inputs in
+       let c' = prepare c y c c' inputs in
+       let f : float = Image.get_f (Input.get inputs input) x' y' c' in
+       f
+   | X -> !x
+   | Y -> !y
+   | C -> !c
+   | Bool b -> b
+   | Int i -> i
+   | Float f -> f
+   | Float_of_int i ->
+       let a = prepare x y c i inputs in
+       float_of_int a
+   | Int_of_float f ->
+       let a = prepare x y c f inputs in
+       int_of_float a
+   | Fadd (Kernel a, Kernel b) -> Kernel.join ( +. ) a b inputs !x !y !c
+   | Fadd (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a +. b
+   | Fsub (Kernel a, Kernel b) -> Kernel.join ( -. ) a b inputs !x !y !c
+   | Fsub (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a -. b
+   | Fmul (Kernel a, Kernel b) -> Kernel.join ( *. ) a b inputs !x !y !c
+   | Fmul (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a *. b
+   | Fdiv (Kernel a, Kernel b) -> Kernel.join ( /. ) a b inputs !x !y !c
+   | Fdiv (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a /. b
+   | Fpow (Kernel a, Kernel b) -> Kernel.join ( ** ) a b inputs !x !y !c
+   | Fpow (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a ** b
+   | Fsqrt a ->
+       let a = prepare x y c a inputs in
+       sqrt a
+   | Fsin a ->
+       let a = prepare x y c a inputs in
+       sin a
+   | Fcos a ->
+       let a = prepare x y c a inputs in
+       cos a
+   | Ftan a ->
+       let a = prepare x y c a inputs in
+       tan a
+   | Fmod (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       mod_float a b
+   | Iadd (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a + b
+   | Isub (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a - b
+   | Imul (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a * b
+   | Idiv (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a / b
+   | Imod (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a mod b
+   | Gt (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a > b
+   | Eq (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a = b
+   | Lt (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a < b
+   | And (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a && b
+   | Or (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       a || b
+   | Not a ->
+       let a = prepare x y c a inputs in
+       not a
+   | If (cond, a, b) ->
+       let cond = prepare x y c cond inputs in
+       if cond then prepare x y c a inputs else prepare x y c b inputs
+   | Func (f, func) ->
+       let x' = prepare x y c X inputs in
+       let y' = prepare x y c Y inputs in
+       let c' = prepare x y c C inputs in
+       let f = prepare x y c f inputs in
+       func x' y' c' f
+   | Pixel (index, x', y') ->
+       let x' = prepare x y c x' inputs in
+       let y' = prepare x y c y' inputs in
+       Image.get_pixel inputs.(index) x' y'
+   | Pixel_norm (index, x', y') ->
+       let x' = prepare x y c x' inputs in
+       let y' = prepare x y c y' inputs in
+       Image.get_pixel_norm inputs.(index) x' y'
+   | Value x -> x
+   | Pair (a, b) ->
+       let a = prepare x y c a inputs in
+       let b = prepare x y c b inputs in
+       (a, b)
 
 let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body =
   let f = prepare x y c body in
@@ -187,7 +174,6 @@ let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body =
     y := y';
     c := c';
     f inputs
-
 
 let int i = Int i
 
@@ -254,17 +240,22 @@ let not_ a = Not a
 let if_ cond a b = If (cond, a, b)
 
 let blend a b : float t =
-  func (pair (input a X Y C) (input b X Y C)) (fun _ _ _ (a, b) -> (a +. b) /. 2.0)
+  func
+    (pair (input a X Y C) (input b X Y C))
+    (fun _ _ _ (a, b) -> (a +. b) /. 2.0)
 
 let min a b : float t =
-  func (pair (input a X Y C) (input b X Y C)) (fun _ _ _ (a, b) -> if a < b then a else b)
+  func
+    (pair (input a X Y C) (input b X Y C))
+    (fun _ _ _ (a, b) -> if a < b then a else b)
 
 let max a b : float t =
-  func (pair (input a X Y C) (input b X Y C)) (fun _ _ _ (a, b) -> if a > b then a else b)
+  func
+    (pair (input a X Y C) (input b X Y C))
+    (fun _ _ _ (a, b) -> if a > b then a else b)
 
 let brightness i scale : float t =
   func (pair scale (input i X Y C)) (fun _ _ _ (scale, x) -> x *. scale)
-
 
 let ( + ) a b = Iadd (a, b)
 

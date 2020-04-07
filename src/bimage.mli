@@ -8,11 +8,11 @@
 
     {e %%VERSION%% — {{:%%PKG_HOMEPAGE%% }homepage}} *)
 
-(** {1 Bimage} *)
 open Bigarray
+(** {1 Bimage} *)
 
-(** Raised when attempting to use Char, Int8_signed, Int16_signed Bigarray types *)
 exception Unsupported
+(** Raised when attempting to use Char, Int8_signed, Int16_signed Bigarray types *)
 
 type ('a, 'b) kind = ('a, 'b) Bigarray.kind
 
@@ -89,20 +89,20 @@ module Angle : sig
 end
 
 (** Point is a 2 element float tuple used to perform calculations on (x, y) coordinates *)
-module Point: sig
+module Point : sig
   type t = float * float
 
-  val x: t -> float
+  val x : t -> float
   (** [x pt] extracts the x coordinate *)
 
-  val y: t -> float
+  val y : t -> float
   (** [y pt] extracts the y coordinate *)
 end
 
 (** Color contains methods for creating and inspecting color types *)
 module Color : sig
-  (** Used to specify the color model of an image *)
   type 'a t
+  (** Used to specify the color model of an image *)
 
   val create : has_alpha:bool -> channels:int -> 'a -> 'a t
   (** Create a new color type *)
@@ -117,52 +117,52 @@ module Color : sig
   (** Returns the underlying type of a color *)
 end
 
+type gray = [ `Gray ]
 (** 1-channels gray color type *)
-type gray = [`Gray]
 
+type rgb = [ `Rgb ]
 (** 3-channel RGB color type *)
-type rgb = [`Rgb]
 
-type rgb_packed = [`Rgb_packed]
+type rgb_packed = [ `Rgb_packed ]
 
+type xyz = [ `Xyz ]
 (** 3-channel XYZ color type *)
-type xyz = [`Xyz]
 
+type yuv = [ `Yuv ]
 (** 3-channel YUV color type *)
-type yuv = [`Yuv]
 
+type rgba = [ `Rgba ]
 (** 4-channel RGBA image *)
-type rgba = [`Rgba]
 
+type any = [ `Any ]
 (** Any color image *)
-type any = [`Any]
 
-(** Gray color *)
 val gray : gray Color.t
+(** Gray color *)
 
-(** RGB color *)
 val rgb : rgb Color.t
+(** RGB color *)
 
-(** RGB packed into a signle channel *)
 val rgb_packed : rgb_packed Color.t
+(** RGB packed into a signle channel *)
 
-(** XYZ color *)
 val xyz : xyz Color.t
+(** XYZ color *)
 
-(** YUV color *)
 val yuv : yuv Color.t
+(** YUV color *)
 
-(** RGBA color *)
 val rgba : rgba Color.t
+(** RGBA color *)
 
-(** Generic color *)
 val color : int -> any Color.t
+(** Generic color *)
 
 module Kind : sig
-  val name: ('a, 'b) kind -> string
+  val name : ('a, 'b) kind -> string
   (** [name k] returns the name of a given kind *)
 
-  val depth: ('a, 'b) kind -> int
+  val depth : ('a, 'b) kind -> int
   (** returns the number of bits for a given kind *)
 
   val max : ('a, 'b) kind -> 'a
@@ -197,8 +197,8 @@ end
 
 (** The Data module defines several operations on one dimensional image data *)
 module Data : sig
-  (** Data type *)
   type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
+  (** Data type *)
 
   val kind : ('a, 'b) t -> ('a, 'b) kind
   (** Get the [Bigarray.kind] *)
@@ -276,6 +276,7 @@ module Pixel : sig
   (** Get the number of channels in a pixel *)
 
   val compare : t -> t -> int
+
   val equal : t -> t -> bool
 
   val from_data : ('a, 'b) Data.t -> t
@@ -296,7 +297,7 @@ module Pixel : sig
   val map : (float -> float) -> t -> t
   (** [map f x] executes [f] for each value in [x], returning a new Pixel.t *)
 
-  val convert_in_place: ('a, 'b) kind -> ('c, 'd) kind -> t -> t
+  val convert_in_place : ('a, 'b) kind -> ('c, 'd) kind -> t -> t
 
   val map_inplace : (float -> float) -> t -> unit
   (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
@@ -323,29 +324,31 @@ module Image : sig
   type layout =
     | Planar
     | Interleaved
-    (** Image pixel layout. Planar is [RRRGGGBBB] and Interleaved is [RGBRGBRGB] *)
+        (** Image pixel layout. Planar is [RRRGGGBBB] and Interleaved is [RGBRGBRGB] *)
 
-  type ('a, 'b, 'c) t =
-    { width : int
-    ; height : int
-    ; color : 'c Color.t
-    ; layout : layout
-    ; data : ('a, 'b) Data.t }
+  type ('a, 'b, 'c) t = {
+    width : int;
+    height : int;
+    color : 'c Color.t;
+    layout : layout;
+    data : ('a, 'b) Data.t;
+  }
   (** Image type *)
 
   val create :
-    ?layout:layout
-    -> ('a, 'b) kind
-    -> 'c Color.t
-    -> int
-    -> int
-    -> ('a, 'b, 'c) t
+    ?layout:layout ->
+    ('a, 'b) kind ->
+    'c Color.t ->
+    int ->
+    int ->
+    ('a, 'b, 'c) t
   (** [create kind color width height] makes a new image with the given [kind], [color] and dimensions *)
 
-  val compare: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> int
-  val equal: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> bool
+  val compare : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> int
 
-  val data: ('a, 'b, 'c) t -> ('a, 'b) Data.t
+  val equal : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> bool
+
+  val data : ('a, 'b, 'c) t -> ('a, 'b) Data.t
   (** Get image data *)
 
   val of_data :
@@ -433,45 +436,45 @@ module Image : sig
   (** [set_data image x y px] sets the value of [image] at ([x], [y]) to [px] *)
 
   val for_each :
-    (int -> int -> ('a, 'b) Data.t -> unit)
-    -> ?x:int
-    -> ?y:int
-    -> ?width:int
-    -> ?height:int
-    -> ('a, 'b, 'c) t
-    -> unit
+    (int -> int -> ('a, 'b) Data.t -> unit) ->
+    ?x:int ->
+    ?y:int ->
+    ?width:int ->
+    ?height:int ->
+    ('a, 'b, 'c) t ->
+    unit
   (** Iterate over each pixel in an image, or a rectangle segment of an image specified by [x], [y], [width],
       and [height]. The data segment used in the callback is mutable and will write directly to the underlying
       image data. *)
 
   val for_each_pixel :
-    (int -> int -> Pixel.t -> unit)
-    -> ?x:int
-    -> ?y:int
-    -> ?width:int
-    -> ?height:int
-    -> ('a, 'b, 'c) t
-    -> unit
+    (int -> int -> Pixel.t -> unit) ->
+    ?x:int ->
+    ?y:int ->
+    ?width:int ->
+    ?height:int ->
+    ('a, 'b, 'c) t ->
+    unit
 
   val avg :
-    ?x:int
-    -> ?y:int
-    -> ?width:int
-    -> ?height:int
-    -> ('a, 'b, 'c) t
-    -> (float, f32) Data.t
+    ?x:int ->
+    ?y:int ->
+    ?width:int ->
+    ?height:int ->
+    ('a, 'b, 'c) t ->
+    (float, f32) Data.t
   (** Get the average pixel of an image or region of an image *)
 
   val convert_layout : layout -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Convert an image to the given layout *)
 
   val crop :
+    ('a, 'b, 'c) t ->
+    x:int ->
+    y:int ->
+    width:int ->
+    height:int ->
     ('a, 'b, 'c) t
-    -> x:int
-    -> y:int
-    -> width:int
-    -> height:int
-    -> ('a, 'b, 'c) t
   (** Extract the sub-image specified by the given dimensions *)
 
   val rotate_90 : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
@@ -486,39 +489,78 @@ module Image : sig
   val resize : int -> int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Scale an image to the given size *)
 
-  val mean_std: ?channel:int -> ('a, 'b, 'c) t -> float * float
+  val mean_std : ?channel:int -> ('a, 'b, 'c) t -> float * float
   (** Calculate the mean and standard deviation of an image *)
 
-  val fold: ('a -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
-  val fold2: ('a -> 'e -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
-  val fold_data: (int -> int -> ('a, 'b) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
-  val fold_data2: (int -> int -> ('a, 'b) Data.t -> ('e, 'f) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
-  val map_inplace: ('a -> 'a) -> ('a, 'b, 'c) t -> unit
-  val map: ('a -> 'a) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  val map2_inplace: ('a -> 'd -> 'a) -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> unit
-  val map2: ('a -> 'd -> 'a) -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
+  val fold : ('a -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
 
-  module Diff: sig
+  val fold2 :
+    ('a -> 'e -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
+
+  val fold_data :
+    (int -> int -> ('a, 'b) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
+
+  val fold_data2 :
+    (int -> int -> ('a, 'b) Data.t -> ('e, 'f) Data.t -> 'd -> 'd) ->
+    ('a, 'b, 'c) t ->
+    ('e, 'f, 'c) t ->
+    'd ->
+    'd
+
+  val map_inplace : ('a -> 'a) -> ('a, 'b, 'c) t -> unit
+
+  val map : ('a -> 'a) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+
+  val map2_inplace :
+    ('a -> 'd -> 'a) -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> unit
+
+  val map2 :
+    ('a -> 'd -> 'a) -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
+
+  module Diff : sig
     type diff
-    val apply: diff -> ('a, 'b, 'c) t -> unit
+
+    val apply : diff -> ('a, 'b, 'c) t -> unit
   end
 
-  val diff: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> Diff.diff
+  val diff : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> Diff.diff
 end
 
 (** Kernels are used for filtering images using convolution *)
 module Kernel : sig
   type t
 
-  val op : ?input:Input.index -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  val op :
+    ?input:Input.index ->
+    t ->
+    ('a, 'b, 'c) Image.t array ->
+    int ->
+    int ->
+    int ->
+    float
   (** Create a kernel operation *)
 
   val join :
     ?input:Input.index ->
-    (float -> float -> float) -> t -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+    (float -> float -> float) ->
+    t ->
+    t ->
+    ('a, 'b, 'c) Image.t array ->
+    int ->
+    int ->
+    int ->
+    float
   (** Create a kernel operation using two kernels combined using the designated operation *)
 
-  val combine : ?input:Input.index -> t -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  val combine :
+    ?input:Input.index ->
+    t ->
+    t ->
+    ('a, 'b, 'c) Image.t array ->
+    int ->
+    int ->
+    int ->
+    float
 
   val create : int -> int -> t
   (** [create rows cols] makes a new Kernel with the given dimensions *)
@@ -558,33 +600,50 @@ module Kernel : sig
   (** [gassian n] generates a new [n]x[n] gaussian kernel *)
 end
 
-
-
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =
   output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
 
 module Transform : sig
   type t
 
-  val v:
-    float -> float -> float ->
-    float -> float -> float ->
-    float -> float -> float -> t
+  val v :
+    float ->
+    float ->
+    float ->
+    float ->
+    float ->
+    float ->
+    float ->
+    float ->
+    float ->
+    t
 
-  val neg: t -> t
-  val add: t -> t -> t
-  val sub: t -> t -> t
-  val mul: t -> t -> t
-  val div: t -> t -> t
-  val mmul: t -> t -> t
-  val smul: t -> float -> t
-  val transpose: t -> t
-  val det: t -> float
-  val inv: t -> t
+  val neg : t -> t
 
-  val translate: float -> float -> t
+  val add : t -> t -> t
+
+  val sub : t -> t -> t
+
+  val mul : t -> t -> t
+
+  val div : t -> t -> t
+
+  val mmul : t -> t -> t
+
+  val smul : t -> float -> t
+
+  val transpose : t -> t
+
+  val det : t -> float
+
+  val inv : t -> t
+
+  val translate : float -> float -> t
+
   val rotate : ?center:Point.t -> Angle.t -> t
+
   val scale : float -> float -> t
+
   val transform : t -> Point.t -> Point.t
 end
 
@@ -600,7 +659,7 @@ module Input : sig
 
   val make_output :
     ?width:int -> ?height:int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) Image.t
-    (** Create an output image width the given width and height if provided, otherwise the generated
+  (** Create an output image width the given width and height if provided, otherwise the generated
         image will match the first input image in size, kind and color *)
 end
 
@@ -640,13 +699,21 @@ module Expr : sig
     | Not : bool t -> bool t
     | If : bool t * 'a t * 'a t -> 'a t
     | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
-    | Pixel: Input.index * int t * int t -> Pixel.t t
-    | Pixel_norm: Input.index * int t * int t -> Pixel.t t
-    | Value: 'a -> 'a t
+    | Pixel : Input.index * int t * int t -> Pixel.t t
+    | Pixel_norm : Input.index * int t * int t -> Pixel.t t
+    | Value : 'a -> 'a t
     | Pair : 'a t * 'b t -> ('a * 'b) t
 
   val op :
-    ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+    ?x:int ref ->
+    ?y:int ref ->
+    ?c:int ref ->
+    float t ->
+    ('a, 'b, 'c) Image.t array ->
+    int ->
+    int ->
+    int ->
+    float
 
   val int : int -> int t
   (** Create an int [Expr] *)
@@ -667,13 +734,13 @@ module Expr : sig
   val kernel : Kernel.t -> float t
   (** Create a kernel expr from an existing kernel *)
 
-  val pair: 'a t -> 'b t -> ('a * 'b) t
+  val pair : 'a t -> 'b t -> ('a * 'b) t
   (** Create a new Pair expr, used for joining existing expressions *)
 
-  val pixel: ?input:Input.index -> int t -> int t -> Pixel.t t
+  val pixel : ?input:Input.index -> int t -> int t -> Pixel.t t
   (** Create a Pixel expr, for extracting pixels *)
 
-  val pixel_norm: ?input:Input.index -> int t -> int t -> Pixel.t t
+  val pixel_norm : ?input:Input.index -> int t -> int t -> Pixel.t t
   (** Create a Pixel_norm expr, for extracting normalized pixels *)
 
   val value : 'a -> 'a t
@@ -748,63 +815,62 @@ module Expr : sig
   val ( ** ) : float t -> float t -> float t
   (** Pow *)
 
-  val blend: Input.index -> Input.index -> float t
+  val blend : Input.index -> Input.index -> float t
   (** An expression to average two images *)
 
-  val min: Input.index -> Input.index -> float t
+  val min : Input.index -> Input.index -> float t
   (** An expression to take the lowest value from two images *)
 
-  val max: Input.index -> Input.index -> float t
+  val max : Input.index -> Input.index -> float t
   (** An expression to take the highest value from two images *)
 
-  val brightness: Input.index -> float t -> float t
+  val brightness : Input.index -> float t -> float t
   (** Multiply each pixel component *)
 end
 
 (** Op is used to define pixel-level operations. These operations are performed on normalized floating-point values *)
 module Op : sig
-  type ('a, 'b, 'c) t =
-    ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
   type ('a, 'b, 'c) f =
     float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
-  val blend: ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
+  val blend : ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
 
-  val min: ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
+  val min : ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
   (** Minimum pixel value of two images *)
 
-  val max: ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
+  val max : ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
   (** Maximum pixel value of two images *)
 
-  val grayscale: ?input:Input.index -> ('a, 'b, [< `Rgb | `Rgba]) t
+  val grayscale : ?input:Input.index -> ('a, 'b, [< `Rgb | `Rgba ]) t
   (** Convert a color image to grayscale *)
 
-  val color : ?input:Input.index -> ('a, 'b, [`Gray]) t
+  val color : ?input:Input.index -> ('a, 'b, [ `Gray ]) t
   (** Convert a grayscale image to color *)
 
   val eval :
-    ?x:int ref
-    -> ?y:int ref
-    -> ?c:int ref
-    -> ('a, 'b, 'c) t
-    -> ('a, 'b, 'c, 'd, 'e, 'f) filter
+    ?x:int ref ->
+    ?y:int ref ->
+    ?c:int ref ->
+    ('a, 'b, 'c) t ->
+    ('a, 'b, 'c, 'd, 'e, 'f) filter
   (** Evaluate an operation *)
 
   val eval_expr :
-    ?x:int ref
-    -> ?y:int ref
-    -> ?c:int ref
-    -> float Expr.t
-    -> ('a, 'b, 'c, 'd, 'e, 'f) filter
+    ?x:int ref ->
+    ?y:int ref ->
+    ?c:int ref ->
+    float Expr.t ->
+    ('a, 'b, 'c, 'd, 'e, 'f) filter
   (** Convert an [Expr] to a filter *)
 
   val join :
-    (float -> float -> float)
-    -> ('a, 'b, 'c) t
-    -> ('a, 'b, 'c) t
-    -> ('a, 'b, 'c) t
+    (float -> float -> float) ->
+    ('a, 'b, 'c) t ->
+    ('a, 'b, 'c) t ->
+    ('a, 'b, 'c) t
   (** [join f a b] builds a new operation of [f(a, b)] *)
 
   val apply : ('a, 'b, 'c) f -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
@@ -826,10 +892,10 @@ module Op : sig
   (** Invert the values in an image *)
 
   val cond :
-    (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool)
-    -> ('a, 'b, 'c) t
-    -> ('a, 'b, 'c) t
-    -> ('a, 'b, 'c) t
+    (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool) ->
+    ('a, 'b, 'c) t ->
+    ('a, 'b, 'c) t ->
+    ('a, 'b, 'c) t
   (** Conditional operation *)
 
   val ( &+ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
@@ -874,7 +940,8 @@ module Op : sig
   val transform : ?input:Input.index -> Transform.t -> ('a, 'b, 'c) t
   (** Apply a transformation *)
 
-  val rotate : ?input:Input.index -> ?center:float * float -> Angle.t -> ('a, 'b, 'c) t
+  val rotate :
+    ?input:Input.index -> ?center:float * float -> Angle.t -> ('a, 'b, 'c) t
   (** Rotation operation *)
 
   val scale : ?input:Input.index -> float -> float -> ('a, 'b, 'c) t
@@ -887,15 +954,18 @@ module Op : sig
   (** Per-channel threshold -- each entry in the given array is the threshold for the channel with the same index *)
 end
 
-
-
-module Hash: sig
+module Hash : sig
   type t
-  module Set: Set.S with type elt = t
-  val phash: ('a, 'b, 'c) Image.t -> t
-  val equal: t -> t -> bool
-  val to_string: t -> string
-  val to_int64: t -> int64
+
+  module Set : Set.S with type elt = t
+
+  val phash : ('a, 'b, 'c) Image.t -> t
+
+  val equal : t -> t -> bool
+
+  val to_string : t -> string
+
+  val to_int64 : t -> int64
 end
 
 (*---------------------------------------------------------------------------

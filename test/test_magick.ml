@@ -10,5 +10,4 @@ let test_magick_read () =
   Magick.write "test-magick-write.tiff" img;
   ()
 
-let run () =
-  test_magick_read ()
+let run () = test_magick_read ()

@@ -3,16 +3,16 @@ open Bimage
 type t
 
 val create :
-     ?width:int
-  -> ?height:int
-  -> ?mousedown:(int -> int -> unit)
-  -> ?mouseup:(int -> int -> unit)
-  -> ?keydown:(int -> unit)
-  -> ?keyup:(int -> unit)
-  -> ?timer:int * (unit -> bool)
-  -> string
-  -> (int, u8, rgb) Image.t
-  -> t
+  ?width:int ->
+  ?height:int ->
+  ?mousedown:(int -> int -> unit) ->
+  ?mouseup:(int -> int -> unit) ->
+  ?keydown:(int -> unit) ->
+  ?keyup:(int -> unit) ->
+  ?timer:int * (unit -> bool) ->
+  string ->
+  (int, u8, rgb) Image.t ->
+  t
 
 val exists : string -> bool
 

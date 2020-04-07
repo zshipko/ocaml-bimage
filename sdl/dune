@@ -1,9 +1,6 @@
 (library
-    (name bimage_sdl)
-    (public_name bimage-sdl)
-    (optional true)
-    (modules bimage_sdl)
-    (libraries bimage tsdl))
-
-
-
+ (name bimage_sdl)
+ (public_name bimage-sdl)
+ (optional true)
+ (modules bimage_sdl)
+ (libraries bimage tsdl))

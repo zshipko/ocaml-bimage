@@ -8,23 +8,30 @@ open Bimage
 open Bimage_unix
 
 exception Assert of string
+
 let check name a b = if a = b then () else raise (Assert name)
 
-let only_generate_images = try Unix.getenv "ONLY_GENERATE_IMAGES" = "1" with _ -> false
+let only_generate_images =
+  try Unix.getenv "ONLY_GENERATE_IMAGES" = "1" with _ -> false
 
 let image_eq a b =
-  if not only_generate_images then
-    let b = Stb.read_u8 (Image.color a) ("tests/test-" ^ b ^ ".png") |> Error.unwrap in
+  if not only_generate_images then (
+    let b =
+      Stb.read_u8 (Image.color a) ("tests/test-" ^ b ^ ".png") |> Error.unwrap
+    in
     let w, h, c = Image.shape a in
     let w', h', c' = Image.shape b in
     check "image: same width" w w';
     check "image: same height" h h';
     check "image: same channels" c c';
-    Image.for_each (fun x y px ->
-      for i = 0 to c - 1 do
-        check (Printf.sprintf "image: pixel %dx%d" x y) px.{i} (Image.get b x y i)
-      done
-    ) a
+    Image.for_each
+      (fun x y px ->
+        for i = 0 to c - 1 do
+          check
+            (Printf.sprintf "image: pixel %dx%d" x y)
+            px.{i} (Image.get b x y i)
+        done)
+      a )
 
 let invert_f kind =
   let open Expr in
@@ -36,47 +43,40 @@ let sobel =
   kernel Kernel.sobel_x +. kernel Kernel.sobel_y
 
 let test name f ~input ~output =
-  name,
-  fun () ->
-    let start = Unix.gettimeofday () in
-    ignore (f ~output input);
-    let stop = Unix.gettimeofday () in
-    Printf.printf "%s: %fsec\n" name (stop -. start);
-    Stb.write ("test-" ^ name ^ ".png") output |> Error.unwrap;
-    image_eq output name;
-    Gc.full_major ();
-    Gc.minor ()
+  ( name,
+    fun () ->
+      let start = Unix.gettimeofday () in
+      ignore (f ~output input);
+      let stop = Unix.gettimeofday () in
+      Printf.printf "%s: %fsec\n" name (stop -. start);
+      Stb.write ("test-" ^ name ^ ".png") output |> Error.unwrap;
+      image_eq output name;
+      Gc.full_major ();
+      Gc.minor () )
 
-let test_write ~output input =
-  Image.copy_to ~dest:output input
+let test_write ~output input = Image.copy_to ~dest:output input
 
-let test_invert ~output input =
-  Op.(eval invert) ~output [| input |]
+let test_invert ~output input = Op.(eval invert) ~output [| input |]
 
-let test_blend ~output input =
-  Op.eval Op.blend ~output [| input; input|]
+let test_blend ~output input = Op.eval Op.blend ~output [| input; input |]
 
-let test_grayscale ~output input =
-  Op.(eval grayscale ~output [| input |])
+let test_grayscale ~output input = Op.(eval grayscale ~output [| input |])
 
 let test_blur ~output input =
-  let b = Kernel.of_array [|
-    [| 3.0; 3.0; 3.0 |];
-    [| 3.0; 3.0; 3.0 |];
-    [| 3.0; 3.0; 3.0 |];
-  |] in
+  let b =
+    Kernel.of_array
+      [| [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |] |]
+  in
   let h = Kernel.op b in
   Op.eval h ~output [| input |]
 
-let test_sobel ~output input =
-  Op.(eval Op.sobel ~output [| input |])
+let test_sobel ~output input = Op.(eval Op.sobel ~output [| input |])
 
 let test_sobel_x ~output input =
-  let k = Kernel.of_array [|
-    [| 1.0; 0.0; -1.0 |];
-    [| 2.0; 0.0; -2.0 |];
-    [| 1.0; 0.0; -1.0 |];
-  |] in
+  let k =
+    Kernel.of_array
+      [| [| 1.0; 0.0; -1.0 |]; [| 2.0; 0.0; -2.0 |]; [| 1.0; 0.0; -1.0 |] |]
+  in
   let h = Kernel.op k in
   Op.eval h ~output [| input |]
 
@@ -89,17 +89,19 @@ let test_rotate_270 ~output input =
 
 let test_grayscale_invert ~output input =
   let grayscale_invert = Op.(grayscale $ invert_f) in
-  Op.eval grayscale_invert ~output[| input |]
+  Op.eval grayscale_invert ~output [| input |]
 
 let test_grayscale_invert2 ~output input =
   let kind = Image.kind input in
-  let grayscale = Expr.func (Expr.pixel X Y) (fun _ _ _ px ->
-    let px = Pixel.data px in
-    (px.{0} *. 0.21) +. (px.{1} *. 0.72) +. (px.{2} *. 0.07)
-  ) in
-  let grayscale_invert = Expr.func grayscale (fun _x _y _c value -> (Kind.max_f kind) -. value) in
+  let grayscale =
+    Expr.func (Expr.pixel X Y) (fun _ _ _ px ->
+        let px = Pixel.data px in
+        (px.{0} *. 0.21) +. (px.{1} *. 0.72) +. (px.{2} *. 0.07))
+  in
+  let grayscale_invert =
+    Expr.func grayscale (fun _x _y _c value -> Kind.max_f kind -. value)
+  in
   Op.eval_expr grayscale_invert ~output [| input |]
-
 
 let test_resize ~output input =
   let im = Image.resize 123 456 input in
@@ -109,42 +111,49 @@ let test_crop ~output input =
   let im = Image.crop ~x:240 ~y:120 ~width:200 ~height:400 input in
   Image.copy_to ~dest:output im
 
-
 let input = Error.unwrap @@ Stb.read_u8 rgb "test.jpg"
+
 let output = Image.like input
 
-let tests = [
-  test "write" test_write ~input ~output;
-  test "grayscale-invert" test_grayscale_invert ~input ~output;
-  test "grayscale-invert2" test_grayscale_invert2 ~input ~output;
-  test "blur" test_blur ~input ~output;
-  test "sobel" test_sobel ~input ~output;
-  test "sobel_x" test_sobel_x ~input ~output;
-  test "gaussian-blur" test_gausssian_blur ~input ~output;
-  test "rotate-270" test_rotate_270 ~input ~output:(Image.create ~layout:input.Image.layout u8 rgb input.Image.height input.Image.width);
-  test "resize" test_resize ~input ~output:(Image.create ~layout:input.Image.layout u8 rgb 123 456);
-  test "invert" test_invert ~input ~output;
-  test "blend" test_blend ~input ~output;
-  test "grayscale" test_grayscale ~input ~output:(Image.like_with_color gray input);
-  test "crop" test_crop ~input ~output:(Image.create ~layout:input.Image.layout u8 rgb 200 400);
-]
+let tests =
+  [
+    test "write" test_write ~input ~output;
+    test "grayscale-invert" test_grayscale_invert ~input ~output;
+    test "grayscale-invert2" test_grayscale_invert2 ~input ~output;
+    test "blur" test_blur ~input ~output;
+    test "sobel" test_sobel ~input ~output;
+    test "sobel_x" test_sobel_x ~input ~output;
+    test "gaussian-blur" test_gausssian_blur ~input ~output;
+    test "rotate-270" test_rotate_270 ~input
+      ~output:
+        (Image.create ~layout:input.Image.layout u8 rgb input.Image.height
+           input.Image.width);
+    test "resize" test_resize ~input
+      ~output:(Image.create ~layout:input.Image.layout u8 rgb 123 456);
+    test "invert" test_invert ~input ~output;
+    test "blend" test_blend ~input ~output;
+    test "grayscale" test_grayscale ~input
+      ~output:(Image.like_with_color gray input);
+    test "crop" test_crop ~input
+      ~output:(Image.create ~layout:input.Image.layout u8 rgb 200 400);
+  ]
 
 let () =
   let passed = ref 0 in
   let total = ref 0 in
-  List.iter (fun (name, f) ->
-    Printf.printf "-----\nRunning: %s\n" name;
-    incr total;
-    try
-      f ();
-      incr passed;
-      Printf.printf "\tPassed\n%!"
-    with exc ->
-      Printexc.to_string exc |> Printf.printf "\tError: %s\n%!"
-  ) tests;
-  Printf.printf "\n\n-----\nTotal: %d\n\tPassed: %d\n\tFailed: %d\n%!" !total !passed (!total - !passed);
-  try
-    Test_magick.run ()
+  List.iter
+    (fun (name, f) ->
+      Printf.printf "-----\nRunning: %s\n" name;
+      incr total;
+      try
+        f ();
+        incr passed;
+        Printf.printf "\tPassed\n%!"
+      with exc -> Printexc.to_string exc |> Printf.printf "\tError: %s\n%!")
+    tests;
+  Printf.printf "\n\n-----\nTotal: %d\n\tPassed: %d\n\tFailed: %d\n%!" !total
+    !passed (!total - !passed);
+  try Test_magick.run ()
   with ex -> Printf.eprintf "Magick Error: %s" (Printexc.to_string ex)
 
 (*---------------------------------------------------------------------------

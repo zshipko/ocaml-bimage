@@ -1,5 +1,7 @@
 (library
-    (name bimage_unix)
-    (public_name bimage-unix)
-    (foreign_stubs (language c) (names stb))
-    (libraries unix ctypes.foreign bimage))
+ (name bimage_unix)
+ (public_name bimage-unix)
+ (foreign_stubs
+  (language c)
+  (names stb))
+ (libraries unix ctypes.foreign bimage))

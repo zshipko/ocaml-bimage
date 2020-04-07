@@ -16,8 +16,8 @@ end
 
 module Point = struct
   type t = float * float
+
   let x = fst
+
   let y = snd
 end
-
-

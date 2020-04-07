@@ -3,11 +3,20 @@ open Tsdl
 
 type t
 
-val window: t -> Sdl.window
-val texture: t -> Sdl.texture
-val surface: t -> Sdl.surface
-val renderer: t -> Sdl.renderer
+val window : t -> Sdl.window
 
-val create: ?title:string -> Sdl.Window.flags -> (int, u8, [< rgb | rgba ]) Image.t -> t Sdl.result
-val update: ?image:(int, u8, [< rgb | rgba ]) Image.t -> t -> unit Sdl.result
-val draw: t -> unit
+val texture : t -> Sdl.texture
+
+val surface : t -> Sdl.surface
+
+val renderer : t -> Sdl.renderer
+
+val create :
+  ?title:string ->
+  Sdl.Window.flags ->
+  (int, u8, [< rgb | rgba ]) Image.t ->
+  t Sdl.result
+
+val update : ?image:(int, u8, [< rgb | rgba ]) Image.t -> t -> unit Sdl.result
+
+val draw : t -> unit

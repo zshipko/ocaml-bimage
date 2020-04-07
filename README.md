@@ -78,6 +78,21 @@ let () = Op.eval f ~output:dest [| a |] in
 Magick.write "test2.jpg" dest
 ```
 
+Turning an `Expr.t` into an `Op.t`:
+
+```ocaml
+open Bimage
+
+(** Create an expressiong to get the average pixel for each (x, y) coordinate *)
+let avg = Expr.(func (pixel X Y) (fun _x _y _c px -> Pixel.fold ( + ) 0 px))
+
+(** Turn it into an Op, which can be evaulated with `Op.eval` *)
+let op = Expr.op avg
+
+(** It can also be evaluated directly using `Op.eval_expr` *)
+let result = Op.eval_expr avg ~output:dest [| a |]
+```
+
 ## Documentation
 
 The documentation and API reference is generated from the source

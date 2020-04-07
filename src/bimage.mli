@@ -346,6 +346,7 @@ module Image : sig
   val equal: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> bool
 
   val data: ('a, 'b, 'c) t -> ('a, 'b) Data.t
+  (** Get image data *)
 
   val of_data :
     'c Color.t -> int -> int -> layout -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
@@ -603,6 +604,163 @@ module Input : sig
         image will match the first input image in size, kind and color *)
 end
 
+(** Expr implements an operation combinator which can be used to build operations from low-level functions *)
+module Expr : sig
+  type _ t =
+    | Kernel : Kernel.t -> float t
+    | Input : Input.index * int t * int t * int t -> float t
+    | X : int t
+    | Y : int t
+    | C : int t
+    | Int : int -> int t
+    | Float : float -> float t
+    | Bool : bool -> bool t
+    | Float_of_int : int t -> float t
+    | Int_of_float : float t -> int t
+    | Fadd : float t * float t -> float t
+    | Fsub : float t * float t -> float t
+    | Fmul : float t * float t -> float t
+    | Fdiv : float t * float t -> float t
+    | Fpow : float t * float t -> float t
+    | Fsqrt : float t -> float t
+    | Fsin : float t -> float t
+    | Fcos : float t -> float t
+    | Ftan : float t -> float t
+    | Fmod : float t * float t -> float t
+    | Iadd : int t * int t -> int t
+    | Isub : int t * int t -> int t
+    | Imul : int t * int t -> int t
+    | Idiv : int t * int t -> int t
+    | Imod : int t * int t -> int t
+    | Gt : 'a t * 'a t -> bool t
+    | Eq : 'a t * 'a t -> bool t
+    | Lt : 'a t * 'a t -> bool t
+    | And : bool t * bool t -> bool t
+    | Or : bool t * bool t -> bool t
+    | Not : bool t -> bool t
+    | If : bool t * 'a t * 'a t -> 'a t
+    | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
+    | Pixel: Input.index * int t * int t -> Pixel.t t
+    | Pixel_norm: Input.index * int t * int t -> Pixel.t t
+    | Value: 'a -> 'a t
+    | Pair : 'a t * 'b t -> ('a * 'b) t
+
+  val op :
+    ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+
+  val int : int -> int t
+  (** Create an int [Expr] *)
+
+  val float : float -> float t
+  (** Create a float [Expr] *)
+
+  val int_of_float : float t -> int t
+
+  val float_of_int : int t -> float t
+
+  val x : int t
+
+  val y : int t
+
+  val c : int t
+
+  val kernel : Kernel.t -> float t
+  (** Create a kernel expr from an existing kernel *)
+
+  val pair: 'a t -> 'b t -> ('a * 'b) t
+  (** Create a new Pair expr, used for joining existing expressions *)
+
+  val pixel: ?input:Input.index -> int t -> int t -> Pixel.t t
+  (** Create a Pixel expr, for extracting pixels *)
+
+  val pixel_norm: ?input:Input.index -> int t -> int t -> Pixel.t t
+  (** Create a Pixel_norm expr, for extracting normalized pixels *)
+
+  val value : 'a -> 'a t
+  (** Create a Value expr *)
+
+  val func : 'b t -> (int -> int -> int -> 'b -> 'a) -> 'a t
+  (** Create a Func expr *)
+
+  val input : int -> int t -> int t -> int t -> float t
+  (** Get input data from the specified index *)
+
+  val fadd : float t -> float t -> float t
+
+  val fsub : float t -> float t -> float t
+
+  val fmul : float t -> float t -> float t
+
+  val fdiv : float t -> float t -> float t
+
+  val iadd : int t -> int t -> int t
+
+  val isub : int t -> int t -> int t
+
+  val imul : int t -> int t -> int t
+
+  val idiv : int t -> int t -> int t
+
+  val pow : float t -> float t -> float t
+
+  val sqrt : float t -> float t
+
+  val sin : float t -> float t
+
+  val cos : float t -> float t
+
+  val tan : float t -> float t
+
+  val pi : unit -> float t
+
+  val and_ : bool t -> bool t -> bool t
+
+  val or_ : bool t -> bool t -> bool t
+
+  val not_ : bool t -> bool t
+
+  val if_ : bool t -> 'a t -> 'a t -> 'a t
+
+  val ( + ) : int t -> int t -> int t
+  (** Integer addition *)
+
+  val ( - ) : int t -> int t -> int t
+  (** Integer subtraction *)
+
+  val ( * ) : int t -> int t -> int t
+  (** Integer multiplacation *)
+
+  val ( / ) : int t -> int t -> int t
+  (** Integer division *)
+
+  val ( +. ) : float t -> float t -> float t
+  (** Float addition *)
+
+  val ( -. ) : float t -> float t -> float t
+  (** Float subtraction *)
+
+  val ( *. ) : float t -> float t -> float t
+  (** Float multiplication *)
+
+  val ( /. ) : float t -> float t -> float t
+  (** Float division *)
+
+  val ( ** ) : float t -> float t -> float t
+  (** Pow *)
+
+  val blend: Input.index -> Input.index -> float t
+  (** An expression to average two images *)
+
+  val min: Input.index -> Input.index -> float t
+  (** An expression to take the lowest value from two images *)
+
+  val max: Input.index -> Input.index -> float t
+  (** An expression to take the highest value from two images *)
+
+  val brightness: Input.index -> float t -> float t
+  (** Multiply each pixel component *)
+end
+
 (** Op is used to define pixel-level operations. These operations are performed on normalized floating-point values *)
 module Op : sig
   type ('a, 'b, 'c) t =
@@ -729,148 +887,7 @@ module Op : sig
   (** Per-channel threshold -- each entry in the given array is the threshold for the channel with the same index *)
 end
 
-(** Expr implements an operation combinator which can be used to build operations from low-level functions *)
-module Expr : sig
-  type _ t =
-    | Kernel : Kernel.t -> float t
-    | Input : Input.index * int t * int t * int t -> float t
-    | X : int t
-    | Y : int t
-    | C : int t
-    | Int : int -> int t
-    | Float : float -> float t
-    | Bool : bool -> bool t
-    | Float_of_int : int t -> float t
-    | Int_of_float : float t -> int t
-    | Fadd : float t * float t -> float t
-    | Fsub : float t * float t -> float t
-    | Fmul : float t * float t -> float t
-    | Fdiv : float t * float t -> float t
-    | Fpow : float t * float t -> float t
-    | Fsqrt : float t -> float t
-    | Fsin : float t -> float t
-    | Fcos : float t -> float t
-    | Ftan : float t -> float t
-    | Fmod : float t * float t -> float t
-    | Iadd : int t * int t -> int t
-    | Isub : int t * int t -> int t
-    | Imul : int t * int t -> int t
-    | Idiv : int t * int t -> int t
-    | Imod : int t * int t -> int t
-    | Gt : 'a t * 'a t -> bool t
-    | Eq : 'a t * 'a t -> bool t
-    | Lt : 'a t * 'a t -> bool t
-    | And : bool t * bool t -> bool t
-    | Or : bool t * bool t -> bool t
-    | Not : bool t -> bool t
-    | If : bool t * 'a t * 'a t -> 'a t
-    | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
-    | Pixel: Input.index * int t * int t -> Pixel.t t
-    | Pixel_norm: Input.index * int t * int t -> Pixel.t t
-    | Value: 'a -> 'a t
-    | Pair : 'a t * 'b t -> ('a * 'b) t
 
-  val op :
-    ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t
-
-  val int : int -> int t
-  (** Create an int [Expr] *)
-
-  val float : float -> float t
-  (** Create a float [Expr] *)
-
-  val int_of_float : float t -> int t
-
-  val float_of_int : int t -> float t
-
-  val x : int t
-
-  val y : int t
-
-  val c : int t
-
-  val kernel : Kernel.t -> float t
-
-  val pair: 'a t -> 'b t -> ('a * 'b) t
-
-  val pixel: ?input:Input.index -> int t -> int t -> Pixel.t t
-
-  val pixel_norm: ?input:Input.index -> int t -> int t -> Pixel.t t
-
-  val value : 'a -> 'a t
-
-  val func : 'b t -> (int -> int -> int -> 'b -> 'a) -> 'a t
-
-  val input : int -> int t -> int t -> int t -> float t
-
-  val fadd : float t -> float t -> float t
-
-  val fsub : float t -> float t -> float t
-
-  val fmul : float t -> float t -> float t
-
-  val fdiv : float t -> float t -> float t
-
-  val iadd : int t -> int t -> int t
-
-  val isub : int t -> int t -> int t
-
-  val imul : int t -> int t -> int t
-
-  val idiv : int t -> int t -> int t
-
-  val pow : float t -> float t -> float t
-
-  val sqrt : float t -> float t
-
-  val sin : float t -> float t
-
-  val cos : float t -> float t
-
-  val tan : float t -> float t
-
-  val pi : unit -> float t
-
-  val and_ : bool t -> bool t -> bool t
-
-  val or_ : bool t -> bool t -> bool t
-
-  val not_ : bool t -> bool t
-
-  val if_ : bool t -> 'a t -> 'a t -> 'a t
-
-  val ( + ) : int t -> int t -> int t
-  (** Integer addition *)
-
-  val ( - ) : int t -> int t -> int t
-  (** Integer subtraction *)
-
-  val ( * ) : int t -> int t -> int t
-  (** Integer multiplacation *)
-
-  val ( / ) : int t -> int t -> int t
-  (** Integer division *)
-
-  val ( +. ) : float t -> float t -> float t
-  (** Float addition *)
-
-  val ( -. ) : float t -> float t -> float t
-  (** Float subtraction *)
-
-  val ( *. ) : float t -> float t -> float t
-  (** Float multiplication *)
-
-  val ( /. ) : float t -> float t -> float t
-  (** Float division *)
-
-  val ( ** ) : float t -> float t -> float t
-  (** Pow *)
-
-  val blend: Input.index -> Input.index -> float t
-  val min: Input.index -> Input.index -> float t
-  val max: Input.index -> Input.index -> float t
-  val brightness: Input.index -> float t -> float t
-end
 
 module Hash: sig
   type t

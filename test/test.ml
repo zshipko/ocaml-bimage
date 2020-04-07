@@ -97,8 +97,8 @@ let test_grayscale_invert2 ~output input =
     let px = Pixel.data px in
     (px.{0} *. 0.21) +. (px.{1} *. 0.72) +. (px.{2} *. 0.07)
   ) in
-  let grayscale_invert = Expr.func grayscale (fun _x _y _c value -> (Kind.max_f kind) -. value) |> Expr.op in
-  Op.eval grayscale_invert ~output [| input |]
+  let grayscale_invert = Expr.func grayscale (fun _x _y _c value -> (Kind.max_f kind) -. value) in
+  Op.eval_expr grayscale_invert ~output [| input |]
 
 
 let test_resize ~output input =

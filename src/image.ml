@@ -148,8 +148,27 @@ let set_n image x y c v =
   let v = Kind.denormalize kind v |> Kind.of_float kind in
   set image x y c v
 
-
 let get_pixel image ?dest x y =
+  let c = channels image in
+  let (Pixel.Pixel px) =
+    match dest with
+    | Some px ->
+      px
+    | None ->
+      Pixel.empty c
+  in
+  for i = 0 to c - 1 do
+    Bigarray.Array1.set px i (get_f image x y i)
+  done;
+  Pixel.Pixel px
+
+let set_pixel image x y (Pixel.Pixel px) =
+  let c = channels image in
+  for i = 0 to c - 1 do
+    set_f image x y i (Bigarray.Array1.get px i)
+  done
+
+let get_pixel_norm image ?dest x y =
   let c = channels image in
   let (Pixel.Pixel px) =
     match dest with
@@ -164,7 +183,7 @@ let get_pixel image ?dest x y =
   Pixel.Pixel px
 
 
-let set_pixel image x y (Pixel.Pixel px) =
+let set_pixel_norm image x y (Pixel.Pixel px) =
   let c = channels image in
   for i = 0 to c - 1 do
     set_n image x y i (Bigarray.Array1.get px i)
@@ -370,5 +389,3 @@ let diff a b =
       done
     ) a;
   dest
-
-

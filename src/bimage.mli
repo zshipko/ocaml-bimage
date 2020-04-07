@@ -265,7 +265,7 @@ module Data : sig
   (** Default equality function *)
 end
 
-(** Pixels are float vectors used to store normalized image data *)
+(** Pixels are float vectors used to store image data *)
 module Pixel : sig
   type t
 
@@ -451,6 +451,12 @@ module Image : sig
 
   val set_n : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
   (** Set a single channel of the given image at (x, y) using a normalized float value *)
+
+  val get_pixel_norm : ('a, 'b, 'c) t -> ?dest:Pixel.t -> int -> int -> Pixel.t
+  (** [get_pixel image x y] returns a normalized pixel representation of [image] data at ([x], [y]) *)
+
+  val set_pixel_norm : ('a, 'b, 'c) t -> int -> int -> Pixel.t -> unit
+  (** [set_pixel image x y px] sets the normalized value of [image] at ([x], [y]) to [px] *)
 
   val get_pixel : ('a, 'b, 'c) t -> ?dest:Pixel.t -> int -> int -> Pixel.t
   (** [get_pixel image x y] returns a pixel representation of [image] data at ([x], [y]) *)
@@ -750,6 +756,7 @@ module Expr : sig
     | If : bool t * 'a t * 'a t -> 'a t
     | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
     | Pixel: int option * int t * int t -> Pixel.t t
+    | Pixel_norm: int option * int t * int t -> Pixel.t t
 
   val op :
     ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t

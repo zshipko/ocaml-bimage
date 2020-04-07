@@ -33,6 +33,7 @@ type 'a t =
   | If : bool t * 'a t * 'a t -> 'a t
   | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
   | Pixel: int option * int t * int t -> Pixel.t t
+  | Pixel_norm: int option * int t * int t -> Pixel.t t
 
 let rec prepare : type a.
     int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
@@ -163,6 +164,14 @@ let rec prepare : type a.
       let f = prepare  x y c f inputs in
       func x' y' c' f
   | Pixel (index, x', y') ->
+      let x' = prepare x y c x' inputs in
+      let y' = prepare x y c y' inputs in
+      let index = match index with
+        | Some i -> i
+        | None -> 0
+      in
+      Image.get_pixel_norm inputs.(index) x' y'
+  | Pixel_norm (index, x', y') ->
       let x' = prepare x y c x' inputs in
       let y' = prepare x y c y' inputs in
       let index = match index with

@@ -1,4 +1,4 @@
-type _ t =
+type 'a t =
   | Kernel : Kernel.t -> float t
   | Input : int * int t * int t * int t -> float t
   | X : int t
@@ -31,7 +31,8 @@ type _ t =
   | Or : bool t * bool t -> bool t
   | Not : bool t -> bool t
   | If : bool t * 'a t * 'a t -> 'a t
-  | Func : float t * (int -> int -> int -> float -> float) -> float t
+  | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
+  | Pixel: int option * int t * int t -> Pixel.t t
 
 let rec prepare : type a.
     int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
@@ -161,6 +162,15 @@ let rec prepare : type a.
       let c' = prepare x y c C inputs in
       let f = prepare  x y c f inputs in
       func x' y' c' f
+  | Pixel (index, x', y') ->
+      let x' = prepare x y c x' inputs in
+      let y' = prepare x y c y' inputs in
+      let index = match index with
+        | Some i -> i
+        | None -> 0
+      in
+      Image.get_pixel inputs.(index) x' y'
+
 
 let f ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body : ('a, 'b, 'c) Op.t =
   let f = prepare x y c body in
@@ -192,6 +202,8 @@ let c = C
 let kernel k = Kernel k
 
 let func i f = Func (i, f)
+
+let pixel ?index x y = Pixel (index, x, y)
 
 let input i x y c = Input (i, x, y, c)
 

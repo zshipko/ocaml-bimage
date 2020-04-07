@@ -748,7 +748,8 @@ module Expr : sig
     | Or : bool t * bool t -> bool t
     | Not : bool t -> bool t
     | If : bool t * 'a t * 'a t -> 'a t
-    | Func : float t * (int -> int -> int -> float -> float) -> float t
+    | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
+    | Pixel: int option * int t * int t -> Pixel.t t
 
   val f :
     ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t
@@ -779,7 +780,9 @@ module Expr : sig
 
   val kernel : Kernel.t -> float t
 
-  val func : float t -> (int -> int -> int -> float -> float) -> float t
+  val pixel: ?index:int -> int t -> int t -> Pixel.t t
+
+  val func : 'b t -> (int -> int -> int -> 'b -> 'a) -> 'a t
 
   val input : int -> int t -> int t -> int t -> float t
 

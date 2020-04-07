@@ -85,11 +85,13 @@ open Bimage
 
 (** Create an expressiong to get the average pixel for each (x, y) coordinate *)
 let avg = Expr.(func (pixel X Y) (fun _x _y _c px -> Pixel.fold ( + ) 0 px))
+let avg_minus_1 = Expr.(avg -. 1.0)
+let avg_plus_1 = Expr.(avg +. 1.0)
 
 (** Turn it into an Op, which can be evaulated with `Op.eval` *)
 let op = Expr.op avg
 
-(** It can also be evaluated directly using `Op.eval_expr` *)
+(** Exprs can also be evaluated directly using `Op.eval_expr` *)
 let result = Op.eval_expr avg ~output:dest [| a |]
 ```
 

@@ -35,11 +35,13 @@ let image_eq a b =
 
 let invert_f kind =
   let open Expr in
+  let open Infix in
   let max = Kind.max_f kind in
   float max -. input 0 x y c
 
 let sobel =
   let open Expr in
+  let open Infix in
   kernel Kernel.sobel_x +. kernel Kernel.sobel_y
 
 let test name f ~input ~output =
@@ -67,8 +69,8 @@ let test_blur ~output input =
     Kernel.of_array
       [| [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |] |]
   in
-  let h = Kernel.op b in
-  Op.eval h ~output [| input |]
+  let h = Expr.kernel_3x3 b in
+  Op.eval_expr h ~output [| input |]
 
 let test_sobel ~output input = Op.(eval Op.sobel ~output [| input |])
 
@@ -77,8 +79,8 @@ let test_sobel_x ~output input =
     Kernel.of_array
       [| [| 1.0; 0.0; -1.0 |]; [| 2.0; 0.0; -2.0 |]; [| 1.0; 0.0; -1.0 |] |]
   in
-  let h = Kernel.op k in
-  Op.eval h ~output [| input |]
+  let h = Expr.kernel_3x3 k in
+  Op.eval_expr h ~output [| input |]
 
 let test_gausssian_blur ~output input =
   Op.eval (Op.gaussian_blur 3) ~output [| input |]
@@ -87,20 +89,11 @@ let test_rotate_270 ~output input =
   let tmp = Image.rotate_270 input in
   Image.copy_to ~dest:output tmp
 
-let test_grayscale_invert ~output input =
-  let grayscale_invert = Op.(grayscale $ invert_f) in
-  Op.eval grayscale_invert ~output [| input |]
+let grayscale_invert =
+  let open Expr in
+  func (pair (kind_max 0) (grayscale 0)) (fun _ _ _ (a, b) -> a -. b)
 
-let test_grayscale_invert2 ~output input =
-  let kind = Image.kind input in
-  let grayscale =
-    Expr.func (Expr.pixel X Y) (fun _ _ _ px ->
-        let px = Pixel.data px in
-        (px.{0} *. 0.21) +. (px.{1} *. 0.72) +. (px.{2} *. 0.07))
-  in
-  let grayscale_invert =
-    Expr.func grayscale (fun _x _y _c value -> Kind.max_f kind -. value)
-  in
+let test_grayscale_invert ~output input =
   Op.eval_expr grayscale_invert ~output [| input |]
 
 let test_resize ~output input =
@@ -119,7 +112,6 @@ let tests =
   [
     test "write" test_write ~input ~output;
     test "grayscale-invert" test_grayscale_invert ~input ~output;
-    test "grayscale-invert2" test_grayscale_invert2 ~input ~output;
     test "blur" test_blur ~input ~output;
     test "sobel" test_sobel ~input ~output;
     test "sobel_x" test_sobel_x ~input ~output;

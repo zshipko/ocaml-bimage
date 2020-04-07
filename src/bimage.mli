@@ -697,12 +697,15 @@ module Expr : sig
     | And : bool t * bool t -> bool t
     | Or : bool t * bool t -> bool t
     | Not : bool t -> bool t
-    | If : bool t * 'a t * 'a t -> 'a t
+    | Cond : bool t * 'a t * 'a t -> 'a t
     | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
     | Pixel : Input.index * int t * int t -> Pixel.t t
     | Pixel_norm : Input.index * int t * int t -> Pixel.t t
     | Value : 'a -> 'a t
     | Pair : 'a t * 'b t -> ('a * 'b) t
+    | Kind_min : Input.index -> float t
+    | Kind_max : Input.index -> float t
+    | Channels : Input.index -> int t
 
   val op :
     ?x:int ref ->
@@ -737,11 +740,17 @@ module Expr : sig
   val pair : 'a t -> 'b t -> ('a * 'b) t
   (** Create a new Pair expr, used for joining existing expressions *)
 
-  val pixel : ?input:Input.index -> int t -> int t -> Pixel.t t
+  val pixel : Input.index -> int t -> int t -> Pixel.t t
   (** Create a Pixel expr, for extracting pixels *)
 
-  val pixel_norm : ?input:Input.index -> int t -> int t -> Pixel.t t
+  val pixel_norm : Input.index -> int t -> int t -> Pixel.t t
   (** Create a Pixel_norm expr, for extracting normalized pixels *)
+
+  val kind_min : Input.index -> float t
+
+  val kind_max : Input.index -> float t
+
+  val channels : Input.index -> int t
 
   val value : 'a -> 'a t
   (** Create a Value expr *)
@@ -786,34 +795,7 @@ module Expr : sig
 
   val not_ : bool t -> bool t
 
-  val if_ : bool t -> 'a t -> 'a t -> 'a t
-
-  val ( + ) : int t -> int t -> int t
-  (** Integer addition *)
-
-  val ( - ) : int t -> int t -> int t
-  (** Integer subtraction *)
-
-  val ( * ) : int t -> int t -> int t
-  (** Integer multiplacation *)
-
-  val ( / ) : int t -> int t -> int t
-  (** Integer division *)
-
-  val ( +. ) : float t -> float t -> float t
-  (** Float addition *)
-
-  val ( -. ) : float t -> float t -> float t
-  (** Float subtraction *)
-
-  val ( *. ) : float t -> float t -> float t
-  (** Float multiplication *)
-
-  val ( /. ) : float t -> float t -> float t
-  (** Float division *)
-
-  val ( ** ) : float t -> float t -> float t
-  (** Pow *)
+  val cond : bool t -> 'a t -> 'a t -> 'a t
 
   val blend : Input.index -> Input.index -> float t
   (** An expression to average two images *)
@@ -826,14 +808,48 @@ module Expr : sig
 
   val brightness : Input.index -> float t -> float t
   (** Multiply each pixel component *)
+
+  val grayscale : Input.index -> float t
+
+  val color : Input.index -> float t
+
+  val kernel_3x3 : ?input:Input.index -> Kernel.t -> float t
+
+  module Infix : sig
+    val ( + ) : int t -> int t -> int t
+    (** Integer addition *)
+
+    val ( - ) : int t -> int t -> int t
+    (** Integer subtraction *)
+
+    val ( * ) : int t -> int t -> int t
+    (** Integer multiplacation *)
+
+    val ( / ) : int t -> int t -> int t
+    (** Integer division *)
+
+    val ( +. ) : float t -> float t -> float t
+    (** Float addition *)
+
+    val ( -. ) : float t -> float t -> float t
+    (** Float subtraction *)
+
+    val ( *. ) : float t -> float t -> float t
+    (** Float multiplication *)
+
+    val ( /. ) : float t -> float t -> float t
+    (** Float division *)
+
+    val ( ** ) : float t -> float t -> float t
+    (** Pow *)
+  end
 end
 
 (** Op is used to define pixel-level operations. These operations are performed on normalized floating-point values *)
 module Op : sig
   type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
-  type ('a, 'b, 'c) f =
-    float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  type ('a, 'b, 'c) f = float Expr.t -> ('a, 'b, 'c) t
 
   val blend : ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
@@ -876,7 +892,7 @@ module Op : sig
   val apply : ('a, 'b, 'c) f -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** [map f a] builds a new operation of [f(a)] *)
 
-  val scalar : ('a, 'b, 'c) f
+  val scalar : float -> ('a, 'b, 'c) t
   (** Builds an operation returning a single value *)
 
   val scalar_max : ('a, 'b) kind -> ('a, 'b, 'c) t
@@ -884,9 +900,6 @@ module Op : sig
 
   val scalar_min : ('a, 'b) kind -> ('a, 'b, 'c) t
   (** Builds an operation returning the minimum value for a given kind *)
-
-  val invert_f : ?input:Input.index -> ('a, 'b, 'c) f
-  (** Invert a single value *)
 
   val invert : ?input:Input.index -> ('a, 'b, 'c) t
   (** Invert the values in an image *)
@@ -897,33 +910,6 @@ module Op : sig
     ('a, 'b, 'c) t ->
     ('a, 'b, 'c) t
   (** Conditional operation *)
-
-  val ( &+ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  (** Infix operator for [join] using addition *)
-
-  val ( &- ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  (** Infix operator for [join] using subtraction *)
-
-  val ( &* ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  (** Infix operator for [join] using multiplication *)
-
-  val ( &/ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  (** Infix operator for [join] using division *)
-
-  val ( %+ ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Infix operator for [join_kernel] using addition *)
-
-  val ( %- ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Infix operator for [join_kernel] using subtraction *)
-
-  val ( %* ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Infix operator for [join_kernel] using multiplication *)
-
-  val ( %/ ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Infix operator for [join_kernel] using division *)
-
-  val ( $ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) f -> ('a, 'b, 'c) t
-  (** Infix operator for [map] *)
 
   val sobel_x : ?input:Input.index -> ('a, 'b, 'c) t
   (** Sobel in the X direction *)
@@ -952,6 +938,35 @@ module Op : sig
 
   val threshold : ?input:Input.index -> float array -> ('a, 'b, 'c) t
   (** Per-channel threshold -- each entry in the given array is the threshold for the channel with the same index *)
+
+  module Infix : sig
+    val ( &+ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+    (** Infix operator for [join] using addition *)
+
+    val ( &- ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+    (** Infix operator for [join] using subtraction *)
+
+    val ( &* ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+    (** Infix operator for [join] using multiplication *)
+
+    val ( &/ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+    (** Infix operator for [join] using division *)
+
+    val ( %+ ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+    (** Infix operator for [join_kernel] using addition *)
+
+    val ( %- ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+    (** Infix operator for [join_kernel] using subtraction *)
+
+    val ( %* ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+    (** Infix operator for [join_kernel] using multiplication *)
+
+    val ( %/ ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
+    (** Infix operator for [join_kernel] using division *)
+
+    val ( $ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) f -> ('a, 'b, 'c) t
+    (** Infix operator for [map] *)
+  end
 end
 
 module Hash : sig

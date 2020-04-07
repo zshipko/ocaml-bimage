@@ -4,7 +4,7 @@ open Image
 type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
 type ('a, 'b, 'c) f =
-  float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  float Expr.t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =
   output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
@@ -19,14 +19,9 @@ let min ?(input = 0) ?(input1 = 1) : ('a, 'b, 'c) t =
   Expr.op (Expr.min input input1)
 
 let grayscale ?(input = 0) : ('a, 'b, [< `Rgb | `Rgba ]) t =
- fun inputs x y _c ->
-   let a = inputs.(input) in
-   (get_f a x y 0 *. 0.21) +. (get_f a x y 1 *. 0.72) +. (get_f a x y 2 *. 0.07)
+  Expr.op (Expr.grayscale input)
 
-let color ?(input = 0) : ('a, 'b, [ `Gray ]) t =
- fun inputs x y _c ->
-   let a = inputs.(input) in
-   get_f a x y 0
+let color ?(input = 0) : ('a, 'b, [ `Gray ]) t = Expr.op (Expr.color input)
 
 let cond :
     (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool) ->
@@ -80,7 +75,7 @@ let eval_expr ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body ~output inputs =
 
 let join f a b inputs x y c = f (a inputs x y c) (b inputs x y c)
 
-let apply f a inputs x y c = f (a inputs x y c) inputs x y c
+let apply f a inputs x y c = f (Expr.float @@ a inputs x y c) inputs x y c
 
 let scalar : float -> ('a, 'b, 'c) t = fun f _inputs _x _y _c -> f
 
@@ -90,34 +85,31 @@ let scalar_min : ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t =
 let scalar_max : ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t =
  fun k -> scalar (Kind.max_f k)
 
-let invert_f ?(input = 0) f : ('a, 'b, 'c) t =
- fun inputs _x _y _c ->
-   let kind = Input.get inputs input in
-   Kind.max_f (Image.kind kind) -. f
-
 let invert ?(input = 0) : ('a, 'b, 'c) t =
  fun inputs x y c ->
    let a = inputs.(input) in
    let kind = kind a in
    if c = 4 then get_f a x y c else Kind.max_f kind -. get_f a x y c
 
-let ( $ ) a f = apply f a
+module Infix = struct
+  let ( $ ) a f = apply f a
 
-let ( &+ ) a b = join ( +. ) a b
+  let ( &+ ) a b = join ( +. ) a b
 
-let ( &- ) a b = join ( -. ) a b
+  let ( &- ) a b = join ( -. ) a b
 
-let ( &* ) a b = join ( *. ) a b
+  let ( &* ) a b = join ( *. ) a b
 
-let ( &/ ) a b = join ( /. ) a b
+  let ( &/ ) a b = join ( /. ) a b
 
-let ( %+ ) a b = Kernel.join ( +. ) a b
+  let ( %+ ) a b = Kernel.join ( +. ) a b
 
-let ( %- ) a b = Kernel.join ( -. ) a b
+  let ( %- ) a b = Kernel.join ( -. ) a b
 
-let ( %* ) a b = Kernel.join ( *. ) a b
+  let ( %* ) a b = Kernel.join ( *. ) a b
 
-let ( %/ ) a b = Kernel.join ( /. ) a b
+  let ( %/ ) a b = Kernel.join ( /. ) a b
+end
 
 let sobel_x ?input : ('a, 'b, 'c) t =
  fun inputs x y c -> Kernel.op_3x3 ?input Kernel.sobel_x inputs x y c

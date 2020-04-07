@@ -30,12 +30,15 @@ type 'a t =
   | And : bool t * bool t -> bool t
   | Or : bool t * bool t -> bool t
   | Not : bool t -> bool t
-  | If : bool t * 'a t * 'a t -> 'a t
+  | Cond : bool t * 'a t * 'a t -> 'a t
   | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
   | Pixel : Input.index * int t * int t -> Pixel.t t
   | Pixel_norm : Input.index * int t * int t -> Pixel.t t
   | Value : 'a -> 'a t
   | Pair : 'a t * 'b t -> ('a * 'b) t
+  | Kind_min : Input.index -> float t
+  | Kind_max : Input.index -> float t
+  | Channels : Input.index -> int t
 
 let rec prepare :
     type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
@@ -144,7 +147,7 @@ let rec prepare :
    | Not a ->
        let a = prepare x y c a inputs in
        not a
-   | If (cond, a, b) ->
+   | Cond (cond, a, b) ->
        let cond = prepare x y c cond inputs in
        if cond then prepare x y c a inputs else prepare x y c b inputs
    | Func (f, func) ->
@@ -166,6 +169,9 @@ let rec prepare :
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        (a, b)
+   | Kind_min index -> Image.kind inputs.(index) |> Type.Kind.min_f
+   | Kind_max index -> Image.kind inputs.(index) |> Type.Kind.max_f
+   | Channels index -> Image.channels inputs.(index)
 
 let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body =
   let f = prepare x y c body in
@@ -195,9 +201,15 @@ let func i f = Func (i, f)
 
 let pair a b = Pair (a, b)
 
-let pixel ?(input = 0) x y = Pixel (input, x, y)
+let pixel input x y = Pixel (input, x, y)
 
-let pixel_norm ?(input = 0) x y = Pixel_norm (input, x, y)
+let pixel_norm input x y = Pixel_norm (input, x, y)
+
+let kind_min input = Kind_min input
+
+let kind_max input = Kind_max input
+
+let channels input = Channels input
 
 let value x = Value x
 
@@ -237,7 +249,7 @@ let or_ a b = Or (a, b)
 
 let not_ a = Not a
 
-let if_ cond a b = If (cond, a, b)
+let cond v a b = Cond (v, a, b)
 
 let blend a b : float t =
   func
@@ -257,20 +269,54 @@ let max a b : float t =
 let brightness i scale : float t =
   func (pair scale (input i X Y C)) (fun _ _ _ (scale, x) -> x *. scale)
 
-let ( + ) a b = Iadd (a, b)
+let grayscale input : float t =
+  func (pixel input X Y) (fun _ _ _ px ->
+      let px = Pixel.data px in
+      (px.{0} *. 0.21) +. (px.{1} *. 0.72) +. (px.{2} *. 0.07))
 
-let ( - ) a b = Isub (a, b)
+let color input : float t =
+  func (pixel input X Y) (fun _ _ _ px ->
+      let px = Pixel.data px in
+      px.{0})
 
-let ( * ) a b = Imul (a, b)
+module Infix = struct
+  let ( + ) a b = Iadd (a, b)
 
-let ( / ) a b = Idiv (a, b)
+  let ( - ) a b = Isub (a, b)
 
-let ( +. ) a b = Fadd (a, b)
+  let ( * ) a b = Imul (a, b)
 
-let ( -. ) a b = Fsub (a, b)
+  let ( / ) a b = Idiv (a, b)
 
-let ( *. ) a b = Fmul (a, b)
+  let ( +. ) a b = Fadd (a, b)
 
-let ( /. ) a b = Fdiv (a, b)
+  let ( -. ) a b = Fsub (a, b)
 
-let ( ** ) a b = Fpow (a, b)
+  let ( *. ) a b = Fmul (a, b)
+
+  let ( /. ) a b = Fdiv (a, b)
+
+  let ( ** ) a b = Fpow (a, b)
+end
+
+let kernel_3x3 ?(input = 0) kernel =
+  let k00 = Kernel.get kernel 0 0 |> float in
+  let k10 = Kernel.get kernel 1 0 |> float in
+  let k20 = Kernel.get kernel 2 0 |> float in
+  let k01 = Kernel.get kernel 0 1 |> float in
+  let k11 = Kernel.get kernel 1 1 |> float in
+  let k21 = Kernel.get kernel 2 1 |> float in
+  let k02 = Kernel.get kernel 0 2 |> float in
+  let k12 = Kernel.get kernel 1 2 |> float in
+  let k22 = Kernel.get kernel 2 2 |> float in
+  let open Infix in
+  let get a b = Input (input, X + int a, Y + int b, C) in
+  (get (-1) (-1) *. k00)
+  +. (get (-1) 0 *. k10)
+  +. (get (-1) 1 *. k20)
+  +. (get 0 (-1) *. k01)
+  +. (get 0 0 *. k11)
+  +. (get 0 1 *. k21)
+  +. (get 1 (-1) *. k02)
+  +. (get 1 0 *. k12)
+  +. (get 1 1 *. k22)

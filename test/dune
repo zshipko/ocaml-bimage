@@ -3,10 +3,6 @@
     (names test)
     (modules test test_magick))
 
-(alias
-    (name runtest)
-    (package bimage-unix)
-    (deps test.exe test.jpg test.tiff
-        (glob_files tests/*.png)
-    )
-    (action (run %{dep:test.exe})))
+(rule
+ (alias  runtest)
+ (action (run ./test.exe)))

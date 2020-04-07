@@ -26,10 +26,6 @@ let image_eq a b =
       done
     ) a
 
-let blend =
-  let open Expr in
-  (input 0 x y c +. input 1 x y c) /. float 2.
-
 let invert_f kind =
   let open Expr in
   let max = Kind.max_f kind in
@@ -57,12 +53,8 @@ let test_write ~output input =
 let test_invert ~output input =
   Op.(eval invert) ~output [| input |]
 
-let test_blend_expr ~output input =
-  let f = Op.eval (Expr.op blend) in
-  f ~output [| input; input |]
-
 let test_blend ~output input =
-  Op.eval Op.blend ~output [| input; input|]
+  Op.eval (Op.blend (Input.index 0) (Input.index 1)) ~output [| input; input|]
 
 let test_grayscale ~output input =
   Op.(eval grayscale ~output [| input |])
@@ -73,7 +65,8 @@ let test_blur ~output input =
     [| 3.0; 3.0; 3.0 |];
     [| 3.0; 3.0; 3.0 |];
   |] in
-  Image.kernel b ~output input
+  let h = Kernel.op b in
+  Op.eval h ~output [| input |]
 
 let test_sobel ~output input =
   Op.(eval Op.sobel ~output [| input |])
@@ -84,7 +77,7 @@ let test_sobel_x ~output input =
     [| 2.0; 0.0; -2.0 |];
     [| 1.0; 0.0; -1.0 |];
   |] in
-  let h = Op.kernel k in
+  let h = Kernel.op k in
   Op.eval h ~output [| input |]
 
 let test_gausssian_blur ~output input =
@@ -122,7 +115,6 @@ let output = Image.like input
 
 let tests = [
   test "write" test_write ~input ~output;
-  test "blend-expr" test_blend_expr ~input ~output;
   test "grayscale-invert" test_grayscale_invert ~input ~output;
   test "grayscale-invert2" test_grayscale_invert2 ~input ~output;
   test "blur" test_blur ~input ~output;

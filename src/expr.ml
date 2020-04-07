@@ -35,13 +35,14 @@ type 'a t =
   | Pixel: int t option * int t * int t -> Pixel.t t
   | Pixel_norm: int t option * int t * int t -> Pixel.t t
   | Value : 'a -> 'a t
+  | Pair : 'a t * 'b t -> ('a * 'b) t
 
 let rec prepare : type a.
     int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
  fun x y c expr inputs ->
   match expr with
   | Kernel k ->
-      (Op.kernel k inputs !x !y !c)
+      (Kernel.op k inputs !x !y !c)
   | Input (input, x', y', c') ->
       let x' = prepare x y c x' inputs in
       let y' = prepare x y c y' inputs in
@@ -67,31 +68,31 @@ let rec prepare : type a.
       let a = prepare x y c f inputs in
       int_of_float a
   | Fadd (Kernel a, Kernel b) ->
-      Op.join_kernel ( +. ) a b inputs !x !y !c
+      Kernel.join ( +. ) a b inputs !x !y !c
   | Fadd (a, b) ->
       let a = prepare x y c a inputs in
       let b = prepare x y c b inputs in
       a +. b
   | Fsub (Kernel a, Kernel b) ->
-      Op.join_kernel ( -. ) a b inputs !x !y !c
+      Kernel.join ( -. ) a b inputs !x !y !c
   | Fsub (a, b) ->
       let a = prepare x y c a inputs in
       let b = prepare x y c b inputs in
       a -. b
   | Fmul (Kernel a, Kernel b) ->
-      Op.join_kernel ( *. ) a b inputs !x !y !c
+      Kernel.join ( *. ) a b inputs !x !y !c
   | Fmul (a, b) ->
       let a = prepare x y c a inputs in
       let b = prepare x y c b inputs in
       a *. b
   | Fdiv (Kernel a, Kernel b) ->
-      Op.join_kernel ( /. ) a b inputs !x !y !c
+      Kernel.join ( /. ) a b inputs !x !y !c
   | Fdiv (a, b) ->
       let a = prepare x y c a inputs in
       let b = prepare x y c b inputs in
       a /. b
   | Fpow (Kernel a, Kernel b) ->
-      Op.join_kernel ( ** ) a b inputs !x !y !c
+      Kernel.join ( ** ) a b inputs !x !y !c
   | Fpow (a, b) ->
       let a = prepare x y c a inputs in
       let b = prepare x y c b inputs in
@@ -181,19 +182,19 @@ let rec prepare : type a.
       in
       Image.get_pixel_norm inputs.(index) x' y'
   | Value x -> x
+  | Pair (a, b) ->
+      let a = prepare x y c a inputs in
+      let b = prepare x y c b inputs in
+      (a, b)
 
 
-let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body : ('a, 'b, 'c) Op.t =
+let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body =
   let f = prepare x y c body in
   fun inputs x' y' c' ->
     x := x';
     y := y';
     c := c';
     f inputs
-
-
-let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body ~output inputs =
-  Op.eval ~x ~y ~c (op ~x ~y ~c body) ~output inputs
 
 
 let int i = Int i
@@ -213,6 +214,8 @@ let c = C
 let kernel k = Kernel k
 
 let func i f = Func (i, f)
+
+let pair a b = Pair (a, b)
 
 let pixel ?index x y = Pixel (index, x, y)
 
@@ -257,6 +260,19 @@ let or_ a b = Or (a, b)
 let not_ a = Not a
 
 let if_ cond a b = If (cond, a, b)
+
+let blend a b : float t =
+  func (pair (input a X Y C) (input b X Y C)) (fun _ _ _ (a, b) -> (a +. b) /. 2.0)
+
+let min a b : float t =
+  func (pair (input a X Y C) (input b X Y C)) (fun _ _ _ (a, b) -> if a < b then a else b)
+
+let max a b : float t =
+  func (pair (input a X Y C) (input b X Y C)) (fun _ _ _ (a, b) -> if a > b then a else b)
+
+let brightness i scale : float t =
+  func (pair scale (input i X Y C)) (fun _ _ _ (scale, x) -> x *. scale)
+
 
 let ( + ) a b = Iadd (a, b)
 

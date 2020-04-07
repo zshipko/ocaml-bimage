@@ -318,48 +318,6 @@ module Pixel : sig
   val pp : Format.formatter -> t -> unit
 end
 
-(** Kernels are used for filtering images using convolution *)
-module Kernel : sig
-  type t
-
-  val create : int -> int -> t
-  (** [create rows cols] makes a new Kernel with the given dimensions *)
-
-  val rows : t -> int
-  (** Returns the number of rows in a kernel *)
-
-  val cols : t -> int
-  (** Returns the number of columns in a kernel *)
-
-  val of_array : ?norm:bool -> float array array -> t
-  (** Create a kernel from an existing 2-dimensional float array. When [norm] is true,
-      the kernel will be normalized *)
-
-  val to_array : t -> float array array
-  (** Convert a kernel to a 2-dimensional float array *)
-
-  val get : t -> int -> int -> float
-  (** [get kernel y x] gets the value at (x, y) *)
-
-  val set : t -> int -> int -> float -> unit
-  (** [set kernel y x v] sets the value at (x, y) *)
-
-  val sum : t -> float
-  (** Get the sum of each value of a kernel *)
-
-  val normalize : t -> t
-  (** [normalize kernel] returns a kernel where each element has been divided by the sum of all elements *)
-
-  val sobel_x : t
-  (** Sobel kernel in the X direction onlu *)
-
-  val sobel_y : t
-  (** Sobel kernel in the Y direction only *)
-
-  val gaussian : ?std:float -> int -> t
-  (** [gassian n] generates a new [n]x[n] gaussian kernel *)
-end
-
 (** The Image module defines a simple interface for manipulating image data *)
 module Image : sig
   type layout =
@@ -494,11 +452,6 @@ module Image : sig
     -> ('a, 'b, 'c) t
     -> unit
 
-  val kernel :
-    Kernel.t -> ?output:('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  (** Apply a kernel directly to the provided image. Note that this implementation is much slower
-      than `Op.kernel`, it is mostly provided for convenience *)
-
   val avg :
     ?x:int
     -> ?y:int
@@ -552,6 +505,59 @@ module Image : sig
   val diff: ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> Diff.diff
 end
 
+(** Kernels are used for filtering images using convolution *)
+module Kernel : sig
+  type t
+
+  val op : t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  (** Create a kernel operation *)
+
+  val join :
+    (float -> float -> float) -> t -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  (** Create a kernel operation using two kernels combined using the designated operation *)
+
+  val combine : t -> t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+
+  val create : int -> int -> t
+  (** [create rows cols] makes a new Kernel with the given dimensions *)
+
+  val rows : t -> int
+  (** Returns the number of rows in a kernel *)
+
+  val cols : t -> int
+  (** Returns the number of columns in a kernel *)
+
+  val of_array : ?norm:bool -> float array array -> t
+  (** Create a kernel from an existing 2-dimensional float array. When [norm] is true,
+      the kernel will be normalized *)
+
+  val to_array : t -> float array array
+  (** Convert a kernel to a 2-dimensional float array *)
+
+  val get : t -> int -> int -> float
+  (** [get kernel y x] gets the value at (x, y) *)
+
+  val set : t -> int -> int -> float -> unit
+  (** [set kernel y x v] sets the value at (x, y) *)
+
+  val sum : t -> float
+  (** Get the sum of each value of a kernel *)
+
+  val normalize : t -> t
+  (** [normalize kernel] returns a kernel where each element has been divided by the sum of all elements *)
+
+  val sobel_x : t
+  (** Sobel kernel in the X direction onlu *)
+
+  val sobel_y : t
+  (** Sobel kernel in the Y direction only *)
+
+  val gaussian : ?std:float -> int -> t
+  (** [gassian n] generates a new [n]x[n] gaussian kernel *)
+end
+
+
+
 type ('a, 'b, 'c, 'd, 'e, 'f) filter =
   output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
 
@@ -584,6 +590,10 @@ end
 module Input : sig
   type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
 
+  type index
+
+  val index : int -> index
+
   val get : ('a, 'b, 'c) t -> int -> ('a, 'b, 'c) Image.t
   (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
       if the provided index is out of bounds. *)
@@ -602,13 +612,13 @@ module Op : sig
   type ('a, 'b, 'c) f =
     float -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
 
-  val blend : ('a, 'b, 'c) t
+  val blend: Input.index -> Input.index -> ('a, 'b, 'c) t
   (** Blend two images: [a + b / 2] *)
 
-  val min : ('a, 'b, 'c) t
+  val min: Input.index -> Input.index -> ('a, 'b, 'c) t
   (** Minimum pixel value of two images *)
 
-  val max : ('a, 'b, 'c) t
+  val max: Input.index -> Input.index -> ('a, 'b, 'c) t
   (** Maximum pixel value of two images *)
 
   val grayscale : ('a, 'b, [< `Rgb | `Rgba]) t
@@ -624,6 +634,14 @@ module Op : sig
     -> ('a, 'b, 'c) t
     -> ('a, 'b, 'c, 'd, 'e, 'f) filter
   (** Evaluate an operation *)
+
+  val eval_expr :
+    ?x:int ref
+    -> ?y:int ref
+    -> ?c:int ref
+    -> float Expr.t
+    -> ('a, 'b, 'c, 'd, 'e, 'f) filter
+  (** Convert an [Expr] to a filter *)
 
   val join :
     (float -> float -> float)
@@ -656,15 +674,6 @@ module Op : sig
     -> ('a, 'b, 'c) t
     -> ('a, 'b, 'c) t
   (** Conditional operation *)
-
-  val kernel : Kernel.t -> ('a, 'b, 'c) t
-  (** Create a kernel operation *)
-
-  val join_kernel :
-    (float -> float -> float) -> Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-  (** Create a kernel operation using two kernels combined using the designated operation *)
-
-  val combine_kernels : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
 
   val ( &+ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Infix operator for [join] using addition *)
@@ -714,7 +723,7 @@ module Op : sig
   val scale : float -> float -> ('a, 'b, 'c) t
   (** Scale an image by the given amount *)
 
-  val brightness : float -> ('a, 'b, 'c) t
+  val brightness : Input.index -> float Expr.t -> ('a, 'b, 'c) t
   (** Adjust the brightness of an image. 0.0 will remove all brightness and 1.0 will keep the image as-is. *)
 
   val threshold : float array -> ('a, 'b, 'c) t
@@ -760,17 +769,10 @@ module Expr : sig
     | Pixel: int t option * int t * int t -> Pixel.t t
     | Pixel_norm: int t option * int t * int t -> Pixel.t t
     | Value: 'a -> 'a t
+    | Pair : 'a t * 'b t -> ('a * 'b) t
 
   val op :
     ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t
-
-  val eval :
-    ?x:int ref
-    -> ?y:int ref
-    -> ?c:int ref
-    -> float t
-    -> ('a, 'b, 'c, 'd, 'e, 'f) filter
-  (** Convert an [Expr] to a filter *)
 
   val int : int -> int t
   (** Create an int [Expr] *)
@@ -789,6 +791,8 @@ module Expr : sig
   val c : int t
 
   val kernel : Kernel.t -> float t
+
+  val pair: 'a t -> 'b t -> ('a * 'b) t
 
   val pixel: ?index:int t -> int t -> int t -> Pixel.t t
 
@@ -862,6 +866,11 @@ module Expr : sig
 
   val ( ** ) : float t -> float t -> float t
   (** Pow *)
+
+  val blend: Input.index -> Input.index -> float t
+  val min: Input.index -> Input.index -> float t
+  val max: Input.index -> Input.index -> float t
+  val brightness: Input.index -> float t -> float t
 end
 
 module Hash: sig

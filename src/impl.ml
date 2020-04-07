@@ -1,19 +1,6 @@
 open Util
 open Image
 
-let kernel k ?output image =
-  let output =
-    match output with
-    | Some d ->
-        d
-    | None ->
-        like image
-  in
-  let f = Op.kernel k in
-  Op.eval f ~output [|image|];
-  output
-
-
 let rotate_90 image =
   let output = create (kind image) image.color image.height image.width in
   let center =

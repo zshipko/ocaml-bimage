@@ -159,7 +159,6 @@ let kernel kernel =
     done;
     !f
 
-
 let join_kernel fn kernel kernel2 =
   let rows = Kernel.rows kernel in
   let cols = Kernel.cols kernel in

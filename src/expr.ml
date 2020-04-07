@@ -39,7 +39,7 @@ let rec prepare : type a.
  fun x y c expr inputs ->
   match expr with
   | Kernel k ->
-      Op.kernel k inputs !x !y !c
+      (Op.kernel k inputs !x !y !c)
   | Input (input, x', y', c') ->
       let x' = prepare x y c x' inputs in
       let y' = prepare x y c y' inputs in
@@ -172,7 +172,7 @@ let rec prepare : type a.
       Image.get_pixel inputs.(index) x' y'
 
 
-let f ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body : ('a, 'b, 'c) Op.t =
+let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body : ('a, 'b, 'c) Op.t =
   let f = prepare x y c body in
   fun inputs x' y' c' ->
     x := x';
@@ -182,7 +182,7 @@ let f ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body : ('a, 'b, 'c) Op.t =
 
 
 let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body ~output inputs =
-  Op.eval ~x ~y ~c (f ~x ~y ~c body) ~output inputs
+  Op.eval ~x ~y ~c (op ~x ~y ~c body) ~output inputs
 
 
 let int i = Int i

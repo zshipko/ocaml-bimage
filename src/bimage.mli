@@ -751,7 +751,7 @@ module Expr : sig
     | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
     | Pixel: int option * int t * int t -> Pixel.t t
 
-  val f :
+  val op :
     ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t
 
   val eval :

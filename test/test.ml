@@ -58,7 +58,7 @@ let test_invert ~output input =
   Op.(eval invert) ~output [| input |]
 
 let test_blend_expr ~output input =
-  let f = Op.eval (Expr.f blend) in
+  let f = Op.eval (Expr.op blend) in
   f ~output [| input; input |]
 
 let test_blend ~output input =
@@ -102,7 +102,7 @@ let test_grayscale_invert2 ~output input =
   let a = input in
   let kind = Image.kind input in
   let grayscale = Expr.func (Expr.input 0 X Y C) (fun x y _c _ -> (Image.get_f a x y 0 *. 0.21) +. (Image.get_f a x y 1 *. 0.72) +. (Image.get_f a x y 2 *. 0.07)) in
-  let grayscale_invert = Expr.func grayscale (fun _x _y _c value -> (Kind.max_f kind) -. value) |> Expr.f in
+  let grayscale_invert = Expr.func grayscale (fun _x _y _c value -> (Kind.max_f kind) -. value) |> Expr.op in
   Op.eval grayscale_invert ~output [| input |]
 
 

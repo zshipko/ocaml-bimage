@@ -296,6 +296,8 @@ module Pixel : sig
   val map : (float -> float) -> t -> t
   (** [map f x] executes [f] for each value in [x], returning a new Pixel.t *)
 
+  val convert_in_place: ('a, 'b) kind -> ('c, 'd) kind -> t -> t
+
   val map_inplace : (float -> float) -> t -> unit
   (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
    *  index *)
@@ -446,10 +448,10 @@ module Image : sig
   val set_f : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
   (** Set a single channel of the given image at (x, y) using a float value *)
 
-  val get_n : ('a, 'b, 'c) t -> int -> int -> int -> float
+  val get_norm : ('a, 'b, 'c) t -> int -> int -> int -> float
   (** [get_f image x y c] returns the normalized float value at (x, y, c) *)
 
-  val set_n : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
+  val set_norm : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
   (** Set a single channel of the given image at (x, y) using a normalized float value *)
 
   val get_pixel_norm : ('a, 'b, 'c) t -> ?dest:Pixel.t -> int -> int -> Pixel.t
@@ -755,8 +757,9 @@ module Expr : sig
     | Not : bool t -> bool t
     | If : bool t * 'a t * 'a t -> 'a t
     | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
-    | Pixel: int option * int t * int t -> Pixel.t t
-    | Pixel_norm: int option * int t * int t -> Pixel.t t
+    | Pixel: int t option * int t * int t -> Pixel.t t
+    | Pixel_norm: int t option * int t * int t -> Pixel.t t
+    | Value: 'a -> 'a t
 
   val op :
     ?x:int ref -> ?y:int ref -> ?c:int ref -> float t -> ('a, 'b, 'c) Op.t
@@ -787,7 +790,11 @@ module Expr : sig
 
   val kernel : Kernel.t -> float t
 
-  val pixel: ?index:int -> int t -> int t -> Pixel.t t
+  val pixel: ?index:int t -> int t -> int t -> Pixel.t t
+
+  val pixel_norm: ?index:int t -> int t -> int t -> Pixel.t t
+
+  val value : 'a -> 'a t
 
   val func : 'b t -> (int -> int -> int -> 'b -> 'a) -> 'a t
 

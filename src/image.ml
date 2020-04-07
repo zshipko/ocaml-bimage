@@ -138,12 +138,12 @@ let set_f image x y c v =
   set image x y c v
 
 
-let get_n image x y c =
+let get_norm image x y c =
   let kind = kind image in
   get image x y c |> Kind.to_float kind |> Kind.normalize kind
 
 
-let set_n image x y c v =
+let set_norm image x y c v =
   let kind = kind image in
   let v = Kind.denormalize kind v |> Kind.of_float kind in
   set image x y c v
@@ -178,7 +178,7 @@ let get_pixel_norm image ?dest x y =
       Pixel.empty c
   in
   for i = 0 to c - 1 do
-    Bigarray.Array1.set px i (get_n image x y i)
+    Bigarray.Array1.set px i (get_norm image x y i)
   done;
   Pixel.Pixel px
 
@@ -186,7 +186,7 @@ let get_pixel_norm image ?dest x y =
 let set_pixel_norm image x y (Pixel.Pixel px) =
   let c = channels image in
   for i = 0 to c - 1 do
-    set_n image x y i (Bigarray.Array1.get px i)
+    set_norm image x y i (Bigarray.Array1.get px i)
   done
 
 
@@ -369,8 +369,8 @@ module Diff = struct
 
   let apply diff image =
     Hashtbl.iter (fun (x, y, c) v ->
-        let v' = get_n image x y c in
-        set_n image x y c (v' +. v)
+        let v' = get_norm image x y c in
+        set_norm image x y c (v' +. v)
     ) diff
 
   let length x = Hashtbl.length x

@@ -32,8 +32,9 @@ type 'a t =
   | Not : bool t -> bool t
   | If : bool t * 'a t * 'a t -> 'a t
   | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
-  | Pixel: int option * int t * int t -> Pixel.t t
-  | Pixel_norm: int option * int t * int t -> Pixel.t t
+  | Pixel: int t option * int t * int t -> Pixel.t t
+  | Pixel_norm: int t option * int t * int t -> Pixel.t t
+  | Value : 'a -> 'a t
 
 let rec prepare : type a.
     int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
@@ -167,18 +168,19 @@ let rec prepare : type a.
       let x' = prepare x y c x' inputs in
       let y' = prepare x y c y' inputs in
       let index = match index with
-        | Some i -> i
+        | Some i -> prepare x y c i inputs
         | None -> 0
       in
-      Image.get_pixel_norm inputs.(index) x' y'
+      Image.get_pixel inputs.(index) x' y'
   | Pixel_norm (index, x', y') ->
       let x' = prepare x y c x' inputs in
       let y' = prepare x y c y' inputs in
       let index = match index with
-        | Some i -> i
+        | Some i -> prepare x y c i inputs
         | None -> 0
       in
-      Image.get_pixel inputs.(index) x' y'
+      Image.get_pixel_norm inputs.(index) x' y'
+  | Value x -> x
 
 
 let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body : ('a, 'b, 'c) Op.t =
@@ -213,6 +215,10 @@ let kernel k = Kernel k
 let func i f = Func (i, f)
 
 let pixel ?index x y = Pixel (index, x, y)
+
+let pixel_norm ?index x y = Pixel_norm (index, x, y)
+
+let value x = Value x
 
 let input i x y c = Input (i, x, y, c)
 

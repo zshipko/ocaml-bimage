@@ -6,6 +6,7 @@ let empty n =
   let p = Data.create f32 n in
   Pixel p
 
+
 let length (Pixel p) =
   Data.length p
 
@@ -85,6 +86,11 @@ let map2 f (Pixel a) (Pixel b) =
   Data.map2_inplace f dest b;
   Pixel dest
 
+
+let convert_in_place from to_ px =
+  map (fun x ->
+    let x = Kind.normalize from x in
+    Kind.denormalize to_ x) px
 
 let fold f (Pixel px) a = Data.fold f px a
 

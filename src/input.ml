@@ -5,7 +5,6 @@ type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
 let get inputs i =
   if i < Array.length inputs then inputs.(i) else Error.exc (`Invalid_input i)
 
-
 let make_output ?width ?height inputs =
   let a = get inputs 0 in
   let width =

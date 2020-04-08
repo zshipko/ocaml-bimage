@@ -5,10 +5,16 @@ env:
   global:
     - PINS="bimage.dev:. bimage-unix.dev:. bimage-gtk.dev:. bimage-sdl.dev:."
   matrix:
+    - OCAML_VERSION=4.07 PACKAGE="bimage.dev" TESTS=false
+    - OCAML_VERSION=4.07 PACKAGE="bimage-gtk.dev" TESTS=false
+    - OCAML_VERSION=4.08 PACKAGE="bimage.dev" TESTS=false
+    - OCAML_VERSION=4.08 PACKAGE="bimage-gtk.dev" TESTS=false
+    - OCAML_VERSION=4.09 PACKAGE="bimage.dev" TESTS=false
+    - OCAML_VERSION=4.09 PACKAGE="bimage-gtk.dev" TESTS=false
     - OCAML_VERSION=4.10 PACKAGE="bimage.dev" TESTS=false
     - OCAML_VERSION=4.10 PACKAGE="bimage-gtk.dev" TESTS=false
     #- OCAML_VERSION=4.10 PACKAGE="bimage-sdl.dev" TESTS=false
-    - OCAML_VERSION=4.06 PACKAGE="bimage-unix.dev" TESTS=true
+    #- OCAML_VERSION=4.06 PACKAGE="bimage-unix.dev" TESTS=true
     - OCAML_VERSION=4.07 PACKAGE="bimage-unix.dev" TESTS=true
     - OCAML_VERSION=4.08 PACKAGE="bimage-unix.dev" TESTS=true
     - OCAML_VERSION=4.09 PACKAGE="bimage-unix.dev" TESTS=true

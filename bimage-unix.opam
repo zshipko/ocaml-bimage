@@ -10,7 +10,7 @@ tags: ["image processing"]
 
 depends:
 [
-    "ocaml" {>= "4.76.0"}
+    "ocaml" {>= "4.07.0"}
     "dune" {>= "2.0"}
     "bimage" {>= "0.1"}
     "ctypes" {>= "0.14"}

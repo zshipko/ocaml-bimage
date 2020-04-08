@@ -624,6 +624,7 @@ module Input : sig
   type index = private int
 
   val index : int -> index
+
   val int_of_index : index -> int
 
   val get : ('a, 'b, 'c) t -> index -> ('a, 'b, 'c) Image.t
@@ -719,18 +720,16 @@ module Expr : sig
     float t
   (** Create a kernel expession using two kernels combined using the designated operation *)
 
-  val combine_kernel :
-    Input.index ->
-    Kernel.t ->
-    Kernel.t ->
-    float t
+  val combine_kernel : Input.index -> Kernel.t -> Kernel.t -> float t
 
   val transform : Input.index -> Transform.t -> float t
   (** Apply a transformation *)
 
-  val rotate: Input.index -> ?center:(float * float) -> float -> float t
-  val scale: Input.index -> float -> float -> float t
-  val threshold: Input.index -> float array -> float t
+  val rotate : Input.index -> ?center:float * float -> float -> float t
+
+  val scale : Input.index -> float -> float -> float t
+
+  val threshold : Input.index -> float array -> float t
 
   val pair : 'a t -> 'b t -> ('a * 'b) t
   (** Create a new Pair expr, used for joining existing expressions *)
@@ -814,6 +813,7 @@ module Expr : sig
 
   module Infix : sig
     val ( && ) : bool t -> bool t -> bool t
+
     val ( || ) : bool t -> bool t -> bool t
 
     val ( + ) : int t -> int t -> int t
@@ -971,8 +971,7 @@ module Hash : sig
   val to_int64 : t -> int64
 end
 
-
-val ( !@ ) : int -> Input.index
+val ( ~@ ) : int -> Input.index
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

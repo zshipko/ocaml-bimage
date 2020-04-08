@@ -61,8 +61,8 @@ open Bimage
 open Expr
 
 (** Create an expression to get the average pixel for each pixel,
-    [!@] is used to create [index] parameters *)
-let avg = func (pixel !@0 X Y) (fun _x _y _c px ->
+    [~@] is used to create [index] parameters *)
+let avg = func (pixel ~@0 X Y) (fun _x _y _c px ->
   Pixel.fold ( + ) 0 px
 )
 

@@ -33,16 +33,10 @@ let image_eq a b =
         done)
       a )
 
-let invert_f kind =
-  let open Expr in
-  let open Infix in
-  let max = Kind.max_f kind in
-  float max -. input 0 x y c
-
 let sobel =
   let open Expr in
   let open Infix in
-  kernel !@0 Kernel.sobel_x +. kernel !@0 Kernel.sobel_y
+  kernel ~@0 Kernel.sobel_x +. kernel ~@0 Kernel.sobel_y
 
 let test name f ~input ~output =
   ( name,
@@ -69,7 +63,7 @@ let test_blur ~output input =
     Kernel.of_array
       [| [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |] |]
   in
-  let h = Expr.kernel_3x3 !@0 b in
+  let h = Expr.kernel_3x3 ~@0 b in
   Op.eval_expr h ~output [| input |]
 
 let test_sobel ~output input = Op.(eval Op.sobel ~output [| input |])
@@ -79,7 +73,7 @@ let test_sobel_x ~output input =
     Kernel.of_array
       [| [| 1.0; 0.0; -1.0 |]; [| 2.0; 0.0; -2.0 |]; [| 1.0; 0.0; -1.0 |] |]
   in
-  let h = Expr.kernel_3x3 !@0 k in
+  let h = Expr.kernel_3x3 ~@0 k in
   Op.eval_expr h ~output [| input |]
 
 let test_gausssian_blur ~output input =
@@ -91,7 +85,9 @@ let test_rotate_270 ~output input =
 
 let grayscale_invert =
   let open Expr in
-  func (pair (kind_max !@0) (grayscale !@0)) (fun _ _ _ (a, b) -> float (a -. b))
+  func
+    (pair (kind_max ~@0) (grayscale ~@0))
+    (fun _ _ _ (a, b) -> float (a -. b))
 
 let test_grayscale_invert ~output input =
   Op.eval_expr grayscale_invert ~output [| input |]

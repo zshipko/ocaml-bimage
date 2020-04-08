@@ -26,7 +26,7 @@ module Hash = Hash
 
 type ('a, 'b, 'c, 'd, 'e, 'f) filter = ('a, 'b, 'c, 'd, 'e, 'f) Op.filter
 
-let ( !@ ) = Input.index
+let ( ~@ ) = Input.index
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

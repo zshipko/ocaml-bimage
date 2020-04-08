@@ -52,14 +52,16 @@ in
 Bimage_unix.Magick.write "test1.jpg" a
 ```
 
+The above example does direct image processing, however you may also use `Expr`s which can be used to compose operations.
+
 Turning an `Expr.t` into an `Op.t`:
 
 ```ocaml
 open Bimage
 open Expr
 
-(** Create an expressiong to get the average pixel for each (x, y) coordinate *)
-let avg = func (pixel 0 X Y) (fun _x _y _c px ->
+(** Create an expressiong to get the average pixel for each (x, y) coordinate, [!@] is used to create [index] parameters *)
+let avg = func (pixel !@0 X Y) (fun _x _y _c px ->
   Pixel.fold ( + ) 0 px
 )
 
@@ -73,7 +75,7 @@ let op = Expr.op avg
 let result = Op.eval_expr avg ~output:dest [| a |]
 ```
 
-An example using `Op.t` to execute an expression:
+An example composing two `Op`s:
 
 ```ocaml
 open Bimage

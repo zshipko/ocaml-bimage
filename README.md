@@ -60,7 +60,8 @@ Turning an `Expr.t` into an `Op.t`:
 open Bimage
 open Expr
 
-(** Create an expressiong to get the average pixel for each (x, y) coordinate, [!@] is used to create [index] parameters *)
+(** Create an expression to get the average pixel for each pixel,
+    [!@] is used to create [index] parameters *)
 let avg = func (pixel !@0 X Y) (fun _x _y _c px ->
   Pixel.fold ( + ) 0 px
 )

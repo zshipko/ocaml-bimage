@@ -6,6 +6,8 @@ type index = int
 
 let index i = i
 
+let int_of_index i = i
+
 let get inputs i =
   if i < Array.length inputs then inputs.(i) else Error.exc (`Invalid_input i)
 

@@ -621,7 +621,10 @@ end
 module Input : sig
   type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
 
-  type index = int
+  type index = private int
+
+  val index : int -> index
+  val int_of_index : index -> int
 
   val get : ('a, 'b, 'c) t -> index -> ('a, 'b, 'c) Image.t
   (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
@@ -967,6 +970,9 @@ module Hash : sig
 
   val to_int64 : t -> int64
 end
+
+
+val ( !@ ) : int -> Input.index
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

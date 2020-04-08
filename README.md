@@ -52,7 +52,28 @@ in
 Bimage_unix.Magick.write "test1.jpg" a
 ```
 
-An example using `Op.t` to run a filter on an image:
+Turning an `Expr.t` into an `Op.t`:
+
+```ocaml
+open Bimage
+open Expr
+
+(** Create an expressiong to get the average pixel for each (x, y) coordinate *)
+let avg = func (pixel 0 X Y) (fun _x _y _c px ->
+  Pixel.fold ( + ) 0 px
+)
+
+let avg_minus_1 = Expr.(avg -. 1.0)
+let avg_times_3 = Expr.(avg *. 3.0)
+
+(** Turn it into an Op, which can be evaulated with `Op.eval` *)
+let op = Expr.op avg
+
+(** Exprs can also be evaluated directly using `Op.eval_expr` *)
+let result = Op.eval_expr avg ~output:dest [| a |]
+```
+
+An example using `Op.t` to execute an expression:
 
 ```ocaml
 open Bimage
@@ -76,23 +97,6 @@ let () = Op.eval f ~output:dest [| a |] in
 
 (* Save the image using ImageMagick *)
 Magick.write "test2.jpg" dest
-```
-
-Turning an `Expr.t` into an `Op.t`:
-
-```ocaml
-open Bimage
-
-(** Create an expressiong to get the average pixel for each (x, y) coordinate *)
-let avg = Expr.(func (pixel X Y) (fun _x _y _c px -> Pixel.fold ( + ) 0 px))
-let avg_minus_1 = Expr.(avg -. 1.0)
-let avg_plus_1 = Expr.(avg +. 1.0)
-
-(** Turn it into an Op, which can be evaulated with `Op.eval` *)
-let op = Expr.op avg
-
-(** Exprs can also be evaluated directly using `Op.eval_expr` *)
-let result = Op.eval_expr avg ~output:dest [| a |]
 ```
 
 ## Documentation

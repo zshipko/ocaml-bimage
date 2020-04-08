@@ -101,38 +101,23 @@ module Infix = struct
   let ( &* ) a b = join ( *. ) a b
 
   let ( &/ ) a b = join ( /. ) a b
-
-  let ( %+ ) a b = Kernel.join ( +. ) a b
-
-  let ( %- ) a b = Kernel.join ( -. ) a b
-
-  let ( %* ) a b = Kernel.join ( *. ) a b
-
-  let ( %/ ) a b = Kernel.join ( /. ) a b
 end
 
-let sobel_x ?input : ('a, 'b, 'c) t =
- fun inputs x y c -> Kernel.op_3x3 ?input Kernel.sobel_x inputs x y c
+let sobel_x ?(input = 0) : ('a, 'b, 'c) t =
+  Expr.op (Expr.kernel_3x3 input Kernel.sobel_x)
 
-let sobel_y ?input : ('a, 'b, 'c) t =
- fun inputs x y c -> Kernel.op_3x3 ?input Kernel.sobel_y inputs x y c
 
-let[@inline] sobel ?input inputs x y c =
-  Kernel.combine ?input Kernel.sobel_x Kernel.sobel_y inputs x y c
+let sobel_y ?(input = 0) : ('a, 'b, 'c) t =
+  Expr.op (Expr.kernel_3x3 input Kernel.sobel_y)
 
-let gaussian_blur ?input ?std n x y z inputs =
-  Kernel.op ?input (Kernel.gaussian ?std n) x y z inputs
+let[@inline] sobel ?(input = 0) =
+  Expr.op (Expr.combine_kernel input Kernel.sobel_x Kernel.sobel_y)
 
-let transform ?(input = 0) t inputs x y c =
-  let x = float_of_int x in
-  let y = float_of_int y in
-  let x', y' = Transform.transform t (x, y) in
-  let input = inputs.(input) in
-  let x0', y0' = (int_of_float (ceil x'), int_of_float (ceil y')) in
-  let x1', y1' = (int_of_float (floor x'), int_of_float (floor y')) in
-  if x0' >= 0 && y0' >= 0 && x0' < input.width && y0' < input.height then
-    (get_f input x0' y0' c +. get_f input x1' y1' c) /. 2.
-  else 0.
+let gaussian_blur ?(input = 0) ?std n =
+  Expr.op (Expr.kernel input (Kernel.gaussian ?std n))
+
+let transform ?(input = 0) t =
+  Expr.op (Expr.transform input t)
 
 let rotate ?input ?center angle =
   let r = Transform.rotate ?center angle in
@@ -145,7 +130,5 @@ let scale ?input x y =
 let brightness ?(input = 0) n inputs x y c =
   Expr.op (Expr.brightness input n) inputs x y c
 
-let threshold ?(input = 0) thresh inputs x y c =
-  let a = Input.get inputs input in
-  let v = get_f a x y c in
-  if v < thresh.(c) then 0.0 else Kind.max_f (kind a)
+let threshold ?(input = 0) thresh =
+  Expr.op (Expr.threshold input thresh)

@@ -532,38 +532,6 @@ end
 module Kernel : sig
   type t
 
-  val op :
-    ?input:Input.index ->
-    t ->
-    ('a, 'b, 'c) Image.t array ->
-    int ->
-    int ->
-    int ->
-    float
-  (** Create a kernel operation *)
-
-  val join :
-    ?input:Input.index ->
-    (float -> float -> float) ->
-    t ->
-    t ->
-    ('a, 'b, 'c) Image.t array ->
-    int ->
-    int ->
-    int ->
-    float
-  (** Create a kernel operation using two kernels combined using the designated operation *)
-
-  val combine :
-    ?input:Input.index ->
-    t ->
-    t ->
-    ('a, 'b, 'c) Image.t array ->
-    int ->
-    int ->
-    int ->
-    float
-
   val create : int -> int -> t
   (** [create rows cols] makes a new Kernel with the given dimensions *)
 
@@ -668,7 +636,7 @@ end
 (** Expr implements an operation combinator which can be used to build operations from low-level functions *)
 module Expr : sig
   type _ t =
-    | Kernel : Kernel.t -> float t
+    | Kernel : Input.index * Kernel.t -> float t
     | Input : Input.index * int t * int t * int t -> float t
     | X : int t
     | Y : int t
@@ -700,7 +668,7 @@ module Expr : sig
     | Or : bool t * bool t -> bool t
     | Not : bool t -> bool t
     | Cond : bool t * 'a t * 'a t -> 'a t
-    | Func : 'b t * (int -> int -> int -> 'b -> 'a) -> 'a t
+    | Func : 'b t * (int -> int -> int -> 'b -> 'a t) -> 'a t
     | Pixel : Input.index * int t * int t -> Pixel.t t
     | Pixel_norm : Input.index * int t * int t -> Pixel.t t
     | Value : 'a -> 'a t
@@ -708,6 +676,7 @@ module Expr : sig
     | Kind_min : Input.index -> float t
     | Kind_max : Input.index -> float t
     | Channels : Input.index -> int t
+    | Shape : Input.index -> (int * int * int) t
 
   val op :
     ?x:int ref ->
@@ -736,8 +705,29 @@ module Expr : sig
 
   val c : int t
 
-  val kernel : Kernel.t -> float t
+  val kernel : Input.index -> Kernel.t -> float t
   (** Create a kernel expr from an existing kernel *)
+
+  val join_kernel :
+    Input.index ->
+    (float t -> float t -> float t) ->
+    Kernel.t ->
+    Kernel.t ->
+    float t
+  (** Create a kernel expession using two kernels combined using the designated operation *)
+
+  val combine_kernel :
+    Input.index ->
+    Kernel.t ->
+    Kernel.t ->
+    float t
+
+  val transform : Input.index -> Transform.t -> float t
+  (** Apply a transformation *)
+
+  val rotate: Input.index -> ?center:(float * float) -> float -> float t
+  val scale: Input.index -> float -> float -> float t
+  val threshold: Input.index -> float array -> float t
 
   val pair : 'a t -> 'b t -> ('a * 'b) t
   (** Create a new Pair expr, used for joining existing expressions *)
@@ -757,7 +747,9 @@ module Expr : sig
   val value : 'a -> 'a t
   (** Create a Value expr *)
 
-  val func : 'b t -> (int -> int -> int -> 'b -> 'a) -> 'a t
+  val shape : Input.index -> (int * int * int) t
+
+  val func : 'b t -> (int -> int -> int -> 'b -> 'a t) -> 'a t
   (** Create a Func expr *)
 
   val input : int -> int t -> int t -> int t -> float t
@@ -815,9 +807,12 @@ module Expr : sig
 
   val color : Input.index -> float t
 
-  val kernel_3x3 : ?input:Input.index -> Kernel.t -> float t
+  val kernel_3x3 : Input.index -> Kernel.t -> float t
 
   module Infix : sig
+    val ( && ) : bool t -> bool t -> bool t
+    val ( || ) : bool t -> bool t -> bool t
+
     val ( + ) : int t -> int t -> int t
     (** Integer addition *)
 
@@ -953,18 +948,6 @@ module Op : sig
 
     val ( &/ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
     (** Infix operator for [join] using division *)
-
-    val ( %+ ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-    (** Infix operator for [join_kernel] using addition *)
-
-    val ( %- ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-    (** Infix operator for [join_kernel] using subtraction *)
-
-    val ( %* ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-    (** Infix operator for [join_kernel] using multiplication *)
-
-    val ( %/ ) : Kernel.t -> Kernel.t -> ('a, 'b, 'c) t
-    (** Infix operator for [join_kernel] using division *)
 
     val ( $ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) f -> ('a, 'b, 'c) t
     (** Infix operator for [map] *)

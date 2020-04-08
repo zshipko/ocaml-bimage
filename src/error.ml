@@ -21,6 +21,4 @@ let exc x = raise (Exc x)
 
 let unwrap = function Ok x -> x | Error e -> exc e
 
-let string_of_exn = function
-  | Exc x -> to_string x
-  | x -> Printexc.to_string x
+let string_of_exn = function Exc x -> to_string x | x -> Printexc.to_string x

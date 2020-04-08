@@ -106,7 +106,6 @@ end
 let sobel_x ?(input = 0) : ('a, 'b, 'c) t =
   Expr.op (Expr.kernel_3x3 input Kernel.sobel_x)
 
-
 let sobel_y ?(input = 0) : ('a, 'b, 'c) t =
   Expr.op (Expr.kernel_3x3 input Kernel.sobel_y)
 
@@ -116,8 +115,7 @@ let[@inline] sobel ?(input = 0) =
 let gaussian_blur ?(input = 0) ?std n =
   Expr.op (Expr.kernel input (Kernel.gaussian ?std n))
 
-let transform ?(input = 0) t =
-  Expr.op (Expr.transform input t)
+let transform ?(input = 0) t = Expr.op (Expr.transform input t)
 
 let rotate ?input ?center angle =
   let r = Transform.rotate ?center angle in
@@ -130,5 +128,4 @@ let scale ?input x y =
 let brightness ?(input = 0) n inputs x y c =
   Expr.op (Expr.brightness input n) inputs x y c
 
-let threshold ?(input = 0) thresh =
-  Expr.op (Expr.threshold input thresh)
+let threshold ?(input = 0) thresh = Expr.op (Expr.threshold input thresh)

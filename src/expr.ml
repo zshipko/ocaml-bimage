@@ -59,6 +59,8 @@ let c = C
 
 let func i f = Func (i, f)
 
+let map f x = Func (x, fun _ _ _ x -> f x)
+
 let pair a b = Pair (a, b)
 
 let pixel input x y = Pixel (input, x, y)
@@ -102,19 +104,19 @@ let not_ a = Not a
 let cond v a b = Cond (v, a, b)
 
 let blend a b : float t =
-  func
+  map
+    (fun (a, b) -> Float ((a +. b) /. 2.0))
     (pair (input a X Y C) (input b X Y C))
-    (fun _ _ _ (a, b) -> Float ((a +. b) /. 2.0))
 
 let min a b : float t =
-  func
+  map
+    (fun (a, b) -> if a < b then Float a else Float b)
     (pair (input a X Y C) (input b X Y C))
-    (fun _ _ _ (a, b) -> if a < b then Float a else Float b)
 
 let max a b : float t =
-  func
+  map
+    (fun (a, b) -> if a > b then Float a else Float b)
     (pair (input a X Y C) (input b X Y C))
-    (fun _ _ _ (a, b) -> if a > b then Float a else Float b)
 
 let brightness i scale : float t =
   func (pair scale (input i X Y C)) (fun _ _ _ (scale, x) -> Float (x *. scale))
@@ -131,6 +133,7 @@ let color input : float t =
 
 module Infix = struct
   let ( && ) a b = And (a, b)
+
   let ( || ) a b = Or (a, b)
 
   let ( + ) a b = Iadd (a, b)
@@ -180,79 +183,89 @@ let kernel input k =
   let r2 = rows / 2 in
   let c2 = cols / 2 in
   if rows = 3 && cols = 3 then kernel_3x3 input k
-  else func (value k) (fun x y c k ->
-    let f = ref (Float 0.0) in
-    for ky = -r2 to r2 do
-      let kr = k.(ky + r2) in
-      for kx = -c2 to c2 do
-        let idx = kx + c2 in
-        f := Infix.(!f +. Input (input, int x + int kx, int y + int ky, int c) *. float kr.(idx))
-      done
-    done;
-    !f
-  )
-
+  else
+    func (value k) (fun x y c k ->
+        let f = ref (Float 0.0) in
+        for ky = -r2 to r2 do
+          let kr = k.(ky + r2) in
+          for kx = -c2 to c2 do
+            let idx = kx + c2 in
+            f :=
+              Infix.(
+                !f
+                +. Input (input, int x + int kx, int y + int ky, int c)
+                   *. float kr.(idx))
+          done
+        done;
+        !f)
 
 let join_kernel input fn k k2 =
   let rows = Kernel.rows k in
   let cols = Kernel.cols k in
   let r2 = rows / 2 in
   let c2 = cols / 2 in
-  func (pair (value k) (value k2)) (fun x y c (k, k2) ->
-    let f = ref (Float 0.0) in
-    for ky = -r2 to r2 do
-      let kr = k.(ky + r2) in
-      let kr2 = k2.(ky + r2) in
-      for kx = -c2 to c2 do
-        let idx = kx + c2 in
-        let v = Infix.(Input (input, int x + int kx, int y + int ky, int c)) in
-        f := Infix.(!f +. fn (v *. float kr.(idx)) (v *. float kr2.((idx))))
-      done
-    done;
-    !f
-  )
-
+  func
+    (pair (value k) (value k2))
+    (fun x y c (k, k2) ->
+      let f = ref (Float 0.0) in
+      for ky = -r2 to r2 do
+        let kr = k.(ky + r2) in
+        let kr2 = k2.(ky + r2) in
+        for kx = -c2 to c2 do
+          let idx = kx + c2 in
+          let v =
+            Infix.(Input (input, int x + int kx, int y + int ky, int c))
+          in
+          f := Infix.(!f +. fn (v *. float kr.(idx)) (v *. float kr2.(idx)))
+        done
+      done;
+      !f)
 
 let combine_kernel input k k2 =
   let r2 = Kernel.rows k / 2 in
   let c2 = Kernel.cols k / 2 in
   let r2' = Kernel.rows k2 / 2 in
   let c2' = Kernel.cols k2 / 2 in
-  func (pair (value k) (value k2)) (fun x y c (k, k2) ->
-    let f = ref (Float 0.0) in
-    for ky = -r2 to r2 do
-      let kr = k.(ky + r2) in
-      for kx = -c2 to c2 do
-        let idx = kx + c2 in
-        let v = Infix.(Input (input, int x + int kx, int y + int ky, int c)) in
-        f := Infix.(!f +. (v *. float kr.(idx)))
-      done
-    done;
-    for ky = -r2' to r2' do
-      let kr = k2.(ky + r2') in
-      for kx = -c2' to c2' do
-        let idx = kx + c2' in
-        let v = Infix.(Input (input, int x + int kx, int y + int ky, int c)) in
-        f := Infix.(!f +. (v *. float kr.(idx)))
-      done
-    done;
-    !f
-  )
+  func
+    (pair (value k) (value k2))
+    (fun x y c (k, k2) ->
+      let f = ref (Float 0.0) in
+      for ky = -r2 to r2 do
+        let kr = k.(ky + r2) in
+        for kx = -c2 to c2 do
+          let idx = kx + c2 in
+          let v =
+            Infix.(Input (input, int x + int kx, int y + int ky, int c))
+          in
+          f := Infix.(!f +. (v *. float kr.(idx)))
+        done
+      done;
+      for ky = -r2' to r2' do
+        let kr = k2.(ky + r2') in
+        for kx = -c2' to c2' do
+          let idx = kx + c2' in
+          let v =
+            Infix.(Input (input, int x + int kx, int y + int ky, int c))
+          in
+          f := Infix.(!f +. (v *. float kr.(idx)))
+        done
+      done;
+      !f)
 
 let transform input t =
   func (value t) (fun x y c t ->
-    let x = Float.of_int x in
-    let y = Float.of_int y in
-    let x', y' = Transform.transform t (x, y) in
-    let x0', y0' = (Float.to_int (ceil x'), Float.to_int (ceil y')) in
-    let x1', y1' = (Float.to_int (floor x'), Float.to_int (floor y')) in
-    func (shape input) (fun _ _ _ (w, h, _) ->
-      if x0' >= 0 && y0' >= 0 && x0' < w && y0' < h then
-        let open Infix in
-        (Input (input, int x0', int y0', int c) +. Input (input, int x1', int y1', int c)) /. float 2.0
-      else float 0.0
-    )
-  )
+      let x = Float.of_int x in
+      let y = Float.of_int y in
+      let x', y' = Transform.transform t (x, y) in
+      let x0', y0' = (Float.to_int (ceil x'), Float.to_int (ceil y')) in
+      let x1', y1' = (Float.to_int (floor x'), Float.to_int (floor y')) in
+      func (shape input) (fun _ _ _ (w, h, _) ->
+          if x0' >= 0 && y0' >= 0 && x0' < w && y0' < h then
+            let open Infix in
+            ( Input (input, int x0', int y0', int c)
+            +. Input (input, int x1', int y1', int c) )
+            /. float 2.0
+          else float 0.0))
 
 let rotate input ?center angle =
   let r = Transform.rotate ?center angle in
@@ -265,9 +278,9 @@ let scale input x y =
 let threshold input thresh =
   let v = Input (input, X, Y, C) in
   func (value ()) (fun _ _ c _ ->
-    cond (Lt (v, float thresh.(c mod Array.length thresh))) (float 0.0) (kind_max input)
-  )
-
+      cond
+        (Lt (v, float thresh.(c mod Array.length thresh)))
+        (float 0.0) (kind_max input))
 
 let rec prepare :
     type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
@@ -299,22 +312,30 @@ let rec prepare :
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a +. b
-   | Fsub (Kernel (i, a), Kernel (_, b)) -> let a = join_kernel i (fun a b -> Fsub (a, b)) a b in prepare x y c a inputs
+   | Fsub (Kernel (i, a), Kernel (_, b)) ->
+       let a = join_kernel i (fun a b -> Fsub (a, b)) a b in
+       prepare x y c a inputs
    | Fsub (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a -. b
-   | Fmul (Kernel (i, a), Kernel (_, b)) -> let a = join_kernel i (fun a b -> Fmul (a, b)) a b in prepare x y c a inputs
+   | Fmul (Kernel (i, a), Kernel (_, b)) ->
+       let a = join_kernel i (fun a b -> Fmul (a, b)) a b in
+       prepare x y c a inputs
    | Fmul (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a *. b
-   | Fdiv (Kernel (i, a), Kernel (_, b)) -> let a = join_kernel i (fun a b -> Fdiv (a, b)) a b in prepare x y c a inputs
+   | Fdiv (Kernel (i, a), Kernel (_, b)) ->
+       let a = join_kernel i (fun a b -> Fdiv (a, b)) a b in
+       prepare x y c a inputs
    | Fdiv (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a /. b
-   | Fpow (Kernel (i, a), Kernel (_, b)) -> let a = join_kernel i (fun a b -> Fpow (a, b)) a b in prepare x y c a inputs
+   | Fpow (Kernel (i, a), Kernel (_, b)) ->
+       let a = join_kernel i (fun a b -> Fpow (a, b)) a b in
+       prepare x y c a inputs
    | Fpow (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in

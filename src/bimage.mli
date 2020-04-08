@@ -754,6 +754,8 @@ module Expr : sig
   val func : 'b t -> (int -> int -> int -> 'b -> 'a t) -> 'a t
   (** Create a Func expr *)
 
+  val map : ('b -> 'a t) -> 'b t -> 'a t
+
   val input : int -> int t -> int t -> int t -> float t
   (** Get input data from the specified index *)
 

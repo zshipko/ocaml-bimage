@@ -1,4 +1,4 @@
-# v0.2
+# v0.2.1
 - Add Func Expr
 - Rewrite ops as exprs
 - Update stb-image/stb-image-write

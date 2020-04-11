@@ -12,13 +12,12 @@ depends:
 [
     "ocaml" {>= "4.07.0"}
     "dune" {>= "2.0"}
-    "bimage" {>= "0.1"}
+    "bimage" {= version}
     "tsdl" {>= "0.9"}
 ]
 
 build: [
     ["dune" "build" "-p" name "-j" jobs]
-    ["dune" "runtest" "-p" name] {with-test}
 ]
 
 

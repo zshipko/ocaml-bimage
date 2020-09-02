@@ -15,7 +15,7 @@ bimage is an image processing library for OCaml.
 
 bimage is distributed under the ISC license.
 
-Homepage: https://github.com/zshipko/bimage
+Homepage: https://github.com/zshipko/ocaml-bimage
 
 ## Installation
 

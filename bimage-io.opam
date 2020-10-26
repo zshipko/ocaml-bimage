@@ -6,27 +6,24 @@ doc: "https://zshipko.github.io/ocaml-bimage/doc"
 license: "ISC"
 dev-repo: "git+https://github.com/zshipko/ocaml-bimage.git"
 bug-reports: "https://github.com/zshipko/ocaml-bimage/issues"
-tags: ["image processing" "gtk"]
+tags: ["image processing"]
 
 depends:
 [
     "ocaml" {>= "4.07.0"}
     "dune" {>= "2.0"}
     "bimage" {= version}
-    "lablgtk3" {>= "3.0.0"}
-    "cairo2" {>= "0.6"}
 ]
 
 build: [
     ["dune" "build" "-p" name "-j" jobs]
+    ["dune" "runtest" "-p" name] {with-test}
 ]
 
-
 synopsis: """
-Bimage_gtk allows images to be displayed in GTK windows
+Input/output for Bimage using OpenImageIO
 """
 
 description: """
-An image processing library for OCaml providing efficient, composable operations.
-Additionally, bimage supports most types supported by Bigarray.
+Input/output for Bimage using OpenImageIO
 """

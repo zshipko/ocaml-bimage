@@ -101,63 +101,80 @@ module Point : sig
   (** [y pt] extracts the y coordinate *)
 end
 
+module type COLOR = sig
+  type t
+  val t: t
+
+  val name: t -> string
+  val channels: t -> int
+  val has_alpha: t -> bool
+  val to_rgb: t -> Pixel.t -> Pixel.t
+  val from_rgb: t -> Pixel.t -> Pixel.t
+end
+
 (** Color contains methods for creating and inspecting color types *)
 module Color : sig
-  type 'a t
+  module Rgb: COLOR with type t = [`Rgb]
+  module Rgba: COLOR with type t = [`Rgba]
+  module Gray: COLOR with type t = [`Gray]
+
+  type 'a t = (module COLOR with type t = 'a)
   (** Used to specify the color model of an image *)
 
-  val create : has_alpha:bool -> channels:int -> 'a -> 'a t
+
+  (*val create : has_alpha:bool -> channels:int -> 'a -> 'a t*)
   (** Create a new color type *)
 
-  val has_alpha : 'a t -> bool
+  (*val has_alpha : 'a t -> bool*)
   (** Returns true if the color has an alpha channel *)
 
-  val channels : 'a t -> int
+  (*val channels : 'a t -> int*)
   (** Returns the number of channels for a color *)
 
-  val t : 'a t -> 'a
+  (*val t : 'a t -> 'a*)
   (** Returns the underlying type of a color *)
 end
 
-type gray = [ `Gray ]
+type gray = Color.Gray.t
 (** 1-channels gray color type *)
 
-type rgb = [ `Rgb ]
+type rgb = Color.Rgb.t
 (** 3-channel RGB color type *)
 
-type rgb_packed = [ `Rgb_packed ]
+(*type rgb_packed = [ `Rgb_packed ]
 
 type xyz = [ `Xyz ]
 (** 3-channel XYZ color type *)
 
 type yuv = [ `Yuv ]
 (** 3-channel YUV color type *)
+*)
 
-type rgba = [ `Rgba ]
+type rgba = Color.Rgba.t
 (** 4-channel RGBA image *)
 
-type any = [ `Any ]
+(*type any = [ `Any ]*)
 (** Any color image *)
 
-val gray : gray Color.t
+val gray : [`Gray] Color.t
 (** Gray color *)
 
-val rgb : rgb Color.t
+val rgb : [`Rgb] Color.t
 (** RGB color *)
 
-val rgb_packed : rgb_packed Color.t
+(*val rgb_packed : rgb_packed Color.t
 (** RGB packed into a signle channel *)
 
 val xyz : xyz Color.t
 (** XYZ color *)
 
 val yuv : yuv Color.t
-(** YUV color *)
+(** YUV color *)*)
 
-val rgba : rgba Color.t
+val rgba : [`Rgba] Color.t
 (** RGBA color *)
 
-val color : int -> any Color.t
+(*val color : int -> any Color.t*)
 (** Generic color *)
 
 module Kind : sig
@@ -396,8 +413,8 @@ module Image : sig
   val convert : ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
   (** Convert an image to a new image of another kind *)
 
-  val of_any_color :
-    ('a, 'b, any) t -> 'c Color.t -> (('a, 'b, 'c) t, Error.t) result
+  (*val of_any_color :
+    ('a, 'b, any) t -> 'c Color.t -> (('a, 'b, 'c) t, Error.t) result*)
   (** Convert from [any] color to the given color *)
 
   val get : ('a, 'b, 'c) t -> int -> int -> int -> 'a
@@ -417,12 +434,6 @@ module Image : sig
 
   val set_norm : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
   (** Set a single channel of the given image at (x, y) using a normalized float value *)
-
-  val get_pixel_norm : ('a, 'b, 'c) t -> ?dest:Pixel.t -> int -> int -> Pixel.t
-  (** [get_pixel image x y] returns a normalized pixel representation of [image] data at ([x], [y]) *)
-
-  val set_pixel_norm : ('a, 'b, 'c) t -> int -> int -> Pixel.t -> unit
-  (** [set_pixel image x y px] sets the normalized value of [image] at ([x], [y]) to [px] *)
 
   val get_pixel : ('a, 'b, 'c) t -> ?dest:Pixel.t -> int -> int -> Pixel.t
   (** [get_pixel image x y] returns a pixel representation of [image] data at ([x], [y]) *)
@@ -540,6 +551,9 @@ module Kernel : sig
 
   val cols : t -> int
   (** Returns the number of columns in a kernel *)
+
+  val join: (float -> float -> float) -> t -> t -> t
+  (** Joins two kernels using the given operation *)
 
   val of_array : ?norm:bool -> float array array -> t
   (** Create a kernel from an existing 2-dimensional float array. When [norm] is true,
@@ -674,7 +688,6 @@ module Expr : sig
     | Cond : bool t * 'a t * 'a t -> 'a t
     | Func : 'b t * (int -> int -> int -> 'b -> 'a t) -> 'a t
     | Pixel : Input.index * int t * int t -> Pixel.t t
-    | Pixel_norm : Input.index * int t * int t -> Pixel.t t
     | Value : 'a -> 'a t
     | Pair : 'a t * 'b t -> ('a * 'b) t
     | Kind_min : Input.index -> float t
@@ -714,13 +727,11 @@ module Expr : sig
 
   val join_kernel :
     Input.index ->
-    (float t -> float t -> float t) ->
+    (float -> float -> float) ->
     Kernel.t ->
     Kernel.t ->
     float t
   (** Create a kernel expession using two kernels combined using the designated operation *)
-
-  val combine_kernel : Input.index -> Kernel.t -> Kernel.t -> float t
 
   val transform : Input.index -> Transform.t -> float t
   (** Apply a transformation *)
@@ -736,9 +747,6 @@ module Expr : sig
 
   val pixel : Input.index -> int t -> int t -> Pixel.t t
   (** Create a Pixel expr, for extracting pixels *)
-
-  val pixel_norm : Input.index -> int t -> int t -> Pixel.t t
-  (** Create a Pixel_norm expr, for extracting normalized pixels *)
 
   val kind_min : Input.index -> float t
 

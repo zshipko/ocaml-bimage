@@ -37,11 +37,12 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op :
    let width, height, channels = shape output in
    let kind = kind output in
    let of_float f = Kind.of_float kind f in
+   let denormalize = Kind.denormalize (Image.kind output) in
    let clamp = Kind.clamp kind in
    let op = op inputs in
    for i = 0 to length output - 1 do
      let f = op !x !y !c in
-     Bigarray.Array1.unsafe_set output.data i (of_float @@ clamp f);
+     Bigarray.Array1.unsafe_set output.data i (of_float @@ denormalize @@ clamp f);
      match output.layout with
      | Image.Interleaved ->
          (* Increment channel index *)
@@ -110,7 +111,7 @@ let sobel_y ?(input = 0) : ('a, 'b, 'c) t =
   Expr.op (Expr.kernel_3x3 input Kernel.sobel_y)
 
 let[@inline] sobel ?(input = 0) =
-  Expr.op (Expr.combine_kernel input Kernel.sobel_x Kernel.sobel_y)
+  Expr.op (Expr.kernel input (Kernel.join (+.) Kernel.sobel_x Kernel.sobel_y))
 
 let gaussian_blur ?(input = 0) ?std n =
   Expr.op (Expr.kernel input (Kernel.gaussian ?std n))

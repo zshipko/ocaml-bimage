@@ -33,7 +33,6 @@ type 'a t =
   | Cond : bool t * 'a t * 'a t -> 'a t
   | Func : 'b t * (int -> int -> int -> 'b -> 'a t) -> 'a t
   | Pixel : Input.index * int t * int t -> Pixel.t t
-  | Pixel_norm : Input.index * int t * int t -> Pixel.t t
   | Value : 'a -> 'a t
   | Pair : 'a t * 'b t -> ('a * 'b) t
   | Kind_min : Input.index -> float t
@@ -64,8 +63,6 @@ let map f x = Func (x, fun _ _ _ x -> f x)
 let pair a b = Pair (a, b)
 
 let pixel input x y = Pixel (input, x, y)
-
-let pixel_norm input x y = Pixel_norm (input, x, y)
 
 let kind_min input = Kind_min input
 
@@ -199,58 +196,7 @@ let kernel input k =
         done;
         !f)
 
-let join_kernel input fn k k2 =
-  let rows = Kernel.rows k in
-  let cols = Kernel.cols k in
-  let r2 = rows / 2 in
-  let c2 = cols / 2 in
-  func
-    (pair (value k) (value k2))
-    (fun x y c (k, k2) ->
-      let f = ref (Float 0.0) in
-      for ky = -r2 to r2 do
-        let kr = k.(ky + r2) in
-        let kr2 = k2.(ky + r2) in
-        for kx = -c2 to c2 do
-          let idx = kx + c2 in
-          let v =
-            Infix.(Input (input, int x + int kx, int y + int ky, int c))
-          in
-          f := Infix.(!f +. fn (v *. float kr.(idx)) (v *. float kr2.(idx)))
-        done
-      done;
-      !f)
-
-let combine_kernel input k k2 =
-  let r2 = Kernel.rows k / 2 in
-  let c2 = Kernel.cols k / 2 in
-  let r2' = Kernel.rows k2 / 2 in
-  let c2' = Kernel.cols k2 / 2 in
-  func
-    (pair (value k) (value k2))
-    (fun x y c (k, k2) ->
-      let f = ref (Float 0.0) in
-      for ky = -r2 to r2 do
-        let kr = k.(ky + r2) in
-        for kx = -c2 to c2 do
-          let idx = kx + c2 in
-          let v =
-            Infix.(Input (input, int x + int kx, int y + int ky, int c))
-          in
-          f := Infix.(!f +. (v *. float kr.(idx)))
-        done
-      done;
-      for ky = -r2' to r2' do
-        let kr = k2.(ky + r2') in
-        for kx = -c2' to c2' do
-          let idx = kx + c2' in
-          let v =
-            Infix.(Input (input, int x + int kx, int y + int ky, int c))
-          in
-          f := Infix.(!f +. (v *. float kr.(idx)))
-        done
-      done;
-      !f)
+let join_kernel input fn k k2 = Kernel (input, Kernel.join fn k k2)
 
 let transform input t =
   func (value t) (fun x y c t ->
@@ -291,7 +237,7 @@ let rec prepare :
        let x' = prepare x y c x' inputs in
        let y' = prepare x y c y' inputs in
        let c' = prepare x y c c' inputs in
-       let f : float = Image.get_f (Input.get inputs input) x' y' c' in
+       let f : float = Image.get_norm (Input.get inputs input) x' y' c' in
        f
    | X -> !x
    | Y -> !y
@@ -306,35 +252,35 @@ let rec prepare :
        let a = prepare x y c f inputs in
        Float.to_int a
    | Fadd (Kernel (i, a), Kernel (_, b)) ->
-       let a = join_kernel i (fun a b -> Fadd (a, b)) a b in
+       let a = join_kernel i (+.) a b in
        prepare x y c a inputs
    | Fadd (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a +. b
    | Fsub (Kernel (i, a), Kernel (_, b)) ->
-       let a = join_kernel i (fun a b -> Fsub (a, b)) a b in
+       let a = join_kernel i (-.) a b in
        prepare x y c a inputs
    | Fsub (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a -. b
    | Fmul (Kernel (i, a), Kernel (_, b)) ->
-       let a = join_kernel i (fun a b -> Fmul (a, b)) a b in
+       let a = join_kernel i ( *. ) a b in
        prepare x y c a inputs
    | Fmul (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a *. b
    | Fdiv (Kernel (i, a), Kernel (_, b)) ->
-       let a = join_kernel i (fun a b -> Fdiv (a, b)) a b in
+       let a = join_kernel i (/.) a b in
        prepare x y c a inputs
    | Fdiv (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a /. b
    | Fpow (Kernel (i, a), Kernel (_, b)) ->
-       let a = join_kernel i (fun a b -> Fpow (a, b)) a b in
+       let a = join_kernel i ( ** ) a b in
        prepare x y c a inputs
    | Fpow (a, b) ->
        let a = prepare x y c a inputs in
@@ -413,10 +359,6 @@ let rec prepare :
        let x' = prepare x y c x' inputs in
        let y' = prepare x y c y' inputs in
        Image.get_pixel inputs.(index) x' y'
-   | Pixel_norm (index, x', y') ->
-       let x' = prepare x y c x' inputs in
-       let y' = prepare x y c y' inputs in
-       Image.get_pixel_norm inputs.(index) x' y'
    | Value x -> x
    | Pair (a, b) ->
        let a = prepare x y c a inputs in

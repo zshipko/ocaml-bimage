@@ -1,9 +1,5 @@
 open Bimage
 
-let pixel_type : [< gray | rgb | rgba ] Color.t -> string =
- fun c ->
-   match Color.t c with `Gray -> "gray" | `Rgb -> "rgb" | `Rgba -> "rgba"
-
 let interlace = function Image.Planar -> "Plane" | Image.Interleaved -> "None"
 
 let convert_command = ref "convert"
@@ -14,8 +10,8 @@ let use_graphicsmagick () =
   convert_command := "gm convert";
   identify_command := "gm identify"
 
-let read ?(create = fun _name -> Image.create) ?(layout = Image.Interleaved) t
-    color ?format filename =
+let read (type color) ?(create = fun _name -> Image.create) ?(layout = Image.Interleaved) t
+    (module C: COLOR with type t = color) ?format filename =
   let format =
     match format with
     | Some f -> f
@@ -25,7 +21,7 @@ let read ?(create = fun _name -> Image.create) ?(layout = Image.Interleaved) t
   in
   try
     let read_image_data filename img =
-      let f = pixel_type img.Image.color in
+      let f = C.name C.t in
       let channels = Image.channels img in
       let interlace = interlace layout in
       let cmd =
@@ -51,7 +47,7 @@ let read ?(create = fun _name -> Image.create) ?(layout = Image.Interleaved) t
     let shape = String.split_on_char ' ' (String.trim s) in
     match List.map int_of_string shape with
     | [ x; y ] ->
-        let img = create filename ~layout t color x y in
+        let img = create filename ~layout t (module C) x y in
         let () = read_image_data filename img in
         Ok img
     | _ -> Error `Invalid_shape
@@ -67,7 +63,7 @@ let read_all ?create ?layout kind color ?format filenames =
          filenames)
   with Error.Exc err -> Error err
 
-let write ?quality ?format filename img =
+let write (type color) ?quality ?format filename img =
   let format =
     match format with
     | Some f -> f
@@ -76,7 +72,8 @@ let write ?quality ?format filename img =
         String.sub s 1 (String.length s - 1)
   in
   let width, height, channels = Image.shape img in
-  let f = pixel_type img.Image.color in
+  let (module C: COLOR with type t = color) = img.Image.color in
+  let f = C.name C.t in
   let quality =
     match quality with None -> "" | Some q -> Printf.sprintf "-quality %d" q
   in

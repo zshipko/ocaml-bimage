@@ -11,19 +11,19 @@ type ('a, 'b, 'c) t = {
   data : ('a, 'b) Data.t;
 }
 
-let create ?(layout = Interleaved) kind color width height =
-  let channels = channels_of_color color in
+let create (type color) ?(layout = Interleaved) kind (module C: COLOR with type t = color) width height =
+  let channels = C.channels C.t in
   let data = Data.create kind (width * height * channels) in
-  { width; height; color; layout; data }
+  { width; height; color = (module C); layout; data }
 
 let compare a b = Data.compare a.data b.data
 
 let equal a b = Data.equal a.data b.data
 
-let of_data color width height layout data =
-  let channels = channels_of_color color in
+let of_data (type color) (module C: COLOR with type t = color) width height layout data =
+  let channels = C.channels C.t in
   if width * height * channels <> Data.length data then Error.exc `Invalid_shape
-  else { width; height; color; layout; data }
+  else { width; height; color = (module C); layout; data }
 
 let like image =
   create ~layout:image.layout (Data.kind image.data) image.color image.width
@@ -45,12 +45,14 @@ let copy image =
 
 let copy_to ~dest src = Data.copy_to ~dest:dest.data src.data
 
-let random ?(layout = Interleaved) kind color width height =
-  let channels = channels_of_color color in
+let random (type color) ?(layout = Interleaved) kind (module C: COLOR with type t = color) width height =
+  let channels = C.channels C.t in
   let data = Data.random kind (width * height * channels) in
-  { width; height; color; layout; data }
+  { width; height; color = (module C); layout; data }
 
-let channels { color; _ } = channels_of_color color
+let channels (type c) { color; _ } =
+  let (module C: COLOR with type t = c) = color in
+  C.channels C.t
 
 let[@inline] kind { data; _ } = Data.kind data
 
@@ -58,10 +60,12 @@ let color { color; _ } = color
 
 let layout { layout; _ } = layout
 
-let shape { width; height; color; _ } = (width, height, channels_of_color color)
+let shape (type c) { width; height; color; _ } =
+  let (module C: COLOR with type t = c) = color in
+  (width, height, C.channels C.t)
 
-let[@inline] length { width; height; color; _ } =
-  width * height * Color.channels color
+let[@inline] length t =
+  t.width * t.height * channels t
 
 let data { data; _ } = data
 
@@ -81,21 +85,23 @@ let convert k img =
   convert_to ~dest img;
   dest
 
-let of_any_color im color : (('a, 'b, 'c) t, Error.t) result =
-  if Color.channels color = Color.channels im.color then
-    Ok (of_data color im.width im.height im.layout im.data)
+let of_any_color (type color) im (module C: COLOR with type t = color) : (('a, 'b, color) t, Error.t) result =
+  if channels im = C.channels C.t then
+    Ok (of_data (module C: COLOR with type t = color) im.width im.height im.layout im.data)
   else Error `Invalid_color
 
 let[@inline] index image x y c =
   match image.layout with
   | Planar -> (image.width * image.height * c) + (y * image.width) + x
   | Interleaved ->
-      (y * image.width * image.color.Color.channels)
-      + (image.color.Color.channels * x)
+      let channels = channels image in
+      (y * image.width * channels)
+      + (channels * x)
       + c
 
 let index_at image offs =
-  Data.slice image.data ~offs ~length:image.color.Color.channels
+  let channels = channels image in
+  Data.slice image.data ~offs ~length:channels
 
 let[@inline] get image x y c =
   let index = index image x y c in
@@ -130,27 +136,11 @@ let get_pixel image ?dest x y =
     match dest with Some px -> px | None -> Pixel.empty c
   in
   for i = 0 to c - 1 do
-    px.{i} <- get_f image x y i
-  done;
-  Pixel.Pixel px
-
-let set_pixel image x y (Pixel.Pixel px) =
-  let c = channels image in
-  for i = 0 to c - 1 do
-    set_f image x y i px.{i}
-  done
-
-let get_pixel_norm image ?dest x y =
-  let c = channels image in
-  let (Pixel.Pixel px) =
-    match dest with Some px -> px | None -> Pixel.empty c
-  in
-  for i = 0 to c - 1 do
     px.{i} <- get_norm image x y i
   done;
   Pixel.Pixel px
 
-let set_pixel_norm image x y (Pixel.Pixel px) =
+let set_pixel image x y (Pixel.Pixel px) =
   let c = channels image in
   for i = 0 to c - 1 do
     set_norm image x y i px.{i}

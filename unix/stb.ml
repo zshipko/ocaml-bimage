@@ -52,11 +52,11 @@ let stbi_load_f =
     ( string @-> ptr int @-> ptr int @-> ptr int @-> int
     @-> returning (ptr float) )
 
-let read f a b c color filename =
+let read (type color) f a b c (module C: Bimage.COLOR with type t = color) filename =
   let width = allocate int 0 in
   let height = allocate int 0 in
   let channels = allocate int 0 in
-  let n = Bimage.Color.channels color in
+  let n = C.channels C.t in
   let data = f filename width height channels n in
   if is_null data then
     Error (`Msg (Printf.sprintf "unable to open image: %s" filename))
@@ -66,16 +66,16 @@ let read f a b c color filename =
       Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data
     in
     let im =
-      Bimage.Image.of_data color !@width !@height Bimage.Image.Interleaved data'
+      Bimage.Image.of_data (module C) !@width !@height Bimage.Image.Interleaved data'
     in
     let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
     Ok im
 
-let read_from_memory f a b c color data =
+let read_from_memory (type color) f a b c (module C: Bimage.COLOR with type t = color) data =
   let width = allocate int 0 in
   let height = allocate int 0 in
   let channels = allocate int 0 in
-  let n = Bimage.Color.channels color in
+  let n = C.channels C.t in
   let data = f data width height channels n in
   if is_null data then Error (`Msg "unable to decode image")
   else
@@ -84,7 +84,7 @@ let read_from_memory f a b c color data =
       Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data
     in
     let im =
-      Bimage.Image.of_data color !@width !@height Bimage.Image.Interleaved data'
+      Bimage.Image.of_data (module C) !@width !@height Bimage.Image.Interleaved data'
     in
     let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
     Ok im

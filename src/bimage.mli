@@ -108,8 +108,8 @@ module type COLOR = sig
   val name: t -> string
   val channels: t -> int
   val has_alpha: t -> bool
-  val to_rgb: t -> Pixel.t -> Pixel.t
-  val from_rgb: t -> Pixel.t -> Pixel.t
+  val to_rgb: t -> (float, f64) Data.t ->  (float, f64) Data.t
+  val from_rgb: t -> (float, f64) Data.t ->  (float, f64) Data.t
 end
 
 (** Color contains methods for creating and inspecting color types *)
@@ -286,56 +286,58 @@ end
 
 (** Pixels are float vectors used to store image data *)
 module Pixel : sig
-  type t
+  type 'a t
 
-  val empty : int -> t
+  val empty : 'a Color.t -> 'a t
   (** Create a new pixel with all channels set to 0 *)
 
-  val length : t -> int
+  val length : 'a t -> int
   (** Get the number of channels in a pixel *)
 
-  val compare : t -> t -> int
+  val compare : 'a t -> 'a t -> int
 
-  val equal : t -> t -> bool
+  val equal : 'a t -> 'a t -> bool
 
-  val from_data : ('a, 'b) Data.t -> t
+  val from_data : 'c Color.t -> ('a, 'b) Data.t -> 'c t
   (** Create a new pixel from existing image data *)
 
-  val to_data : dest:('a, 'b) Data.t -> t -> unit
+  val to_data : dest:('a, 'b) Data.t -> 'c t -> unit
   (** Copy pixel data to existing image data *)
 
-  val data : t -> (float, f32) Data.t
+  val data : 'a t -> (float, f64) Data.t
   (** Returns the underlying pixel data *)
 
-  val rgb_to_xyz : t -> t
+  val to_rgb: 'a Pixel.t -> rgb Pixel.t
+
+  val from_rgb: 'a Color.t -> rgb Pixel.t -> 'a Pixel.t
+
+  (*val rgb_to_xyz : t -> t*)
   (** Convert pixel from RGB to XYZ *)
 
-  val rgb_to_yuv : t -> t
+  (*val rgb_to_yuv : t -> t*)
   (** Convert pixel from RGB to YUV *)
 
-  val map : (float -> float) -> t -> t
+  val map : (float -> float) -> 'a t -> 'a t
   (** [map f x] executes [f] for each value in [x], returning a new Pixel.t *)
 
-  val convert_in_place : ('a, 'b) kind -> ('c, 'd) kind -> t -> t
-
-  val map_inplace : (float -> float) -> t -> unit
+  val map_inplace : (float -> float) -> 'a t -> unit
   (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
    *  index *)
 
-  val map2 : (float -> float -> float) -> t -> t -> t
+  val map2 : (float -> float -> float) -> 'a t -> 'a t -> 'a t
   (** [map f x] executes [f] for each value in [x], returning a new Pixel.t *)
 
-  val map2_inplace : (float -> float -> float) -> t -> t -> unit
+  val map2_inplace : (float -> float -> float) -> 'a t -> 'a t -> unit
   (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
    *  index *)
 
-  val fold : (float -> 'a -> 'a) -> t -> 'a -> 'a
+  val fold : (float -> 'a -> 'a) -> 'b t -> 'a -> 'a
   (** Reduction over a pixel *)
 
-  val fold2 : (float -> float -> 'a -> 'a) -> t -> t -> 'a -> 'a
+  val fold2 : (float -> float -> 'a -> 'a) -> 'b t -> 'b t -> 'a -> 'a
   (** Reduction over two pixels *)
 
-  val pp : Format.formatter -> t -> unit
+  val pp : Format.formatter -> 'a t -> unit
 end
 
 (** The Image module defines a simple interface for manipulating image data *)
@@ -435,10 +437,10 @@ module Image : sig
   val set_norm : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
   (** Set a single channel of the given image at (x, y) using a normalized float value *)
 
-  val get_pixel : ('a, 'b, 'c) t -> ?dest:Pixel.t -> int -> int -> Pixel.t
+  val get_pixel : ('a, 'b, 'c) t -> ?dest:'c Pixel.t -> int -> int -> 'c Pixel.t
   (** [get_pixel image x y] returns a pixel representation of [image] data at ([x], [y]) *)
 
-  val set_pixel : ('a, 'b, 'c) t -> int -> int -> Pixel.t -> unit
+  val set_pixel : ('a, 'b, 'c) t -> int -> int -> 'c Pixel.t -> unit
   (** [set_pixel image x y px] sets the value of [image] at ([x], [y]) to [px] *)
 
   val get_data :
@@ -461,7 +463,7 @@ module Image : sig
       image data. *)
 
   val for_each_pixel :
-    (int -> int -> Pixel.t -> unit) ->
+    (int -> int -> 'c Pixel.t -> unit) ->
     ?x:int ->
     ?y:int ->
     ?width:int ->
@@ -687,7 +689,7 @@ module Expr : sig
     | Not : bool t -> bool t
     | Cond : bool t * 'a t * 'a t -> 'a t
     | Func : 'b t * (int -> int -> int -> 'b -> 'a t) -> 'a t
-    | Pixel : Input.index * int t * int t -> Pixel.t t
+    | Pixel : Input.index * int t * int t -> rgb Pixel.t t
     | Value : 'a -> 'a t
     | Pair : 'a t * 'b t -> ('a * 'b) t
     | Type_min: Input.index -> float t
@@ -745,7 +747,7 @@ module Expr : sig
   val pair : 'a t -> 'b t -> ('a * 'b) t
   (** Create a new Pair expr, used for joining existing expressions *)
 
-  val pixel : Input.index -> int t -> int t -> Pixel.t t
+  val pixel : Input.index -> int t -> int t -> rgb Pixel.t t
   (** Create a Pixel expr, for extracting pixels *)
 
   val kind_min : Input.index -> float t

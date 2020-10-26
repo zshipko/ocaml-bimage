@@ -68,7 +68,7 @@ let[@inline] length t =
 
 let data { data; _ } = data
 
-let empty_pixel image = Pixel.empty (channels image)
+let empty_pixel image = Pixel.empty image.color
 
 let empty_data image = Data.create (kind image) (channels image)
 
@@ -131,15 +131,15 @@ let set_norm image x y c v =
 
 let get_pixel image ?dest x y =
   let c = channels image in
-  let (Pixel.Pixel px) =
-    match dest with Some px -> px | None -> Pixel.empty c
+  let (Pixel.Pixel (color, px)) =
+    match dest with Some px -> px | None -> Pixel.empty image.color
   in
   for i = 0 to c - 1 do
     px.{i} <- get_norm image x y i
   done;
-  Pixel.Pixel px
+  Pixel.Pixel (color, px)
 
-let set_pixel image x y (Pixel.Pixel px) =
+let set_pixel image x y (Pixel.Pixel (_, px)) =
   let c = channels image in
   for i = 0 to c - 1 do
     set_norm image x y i px.{i}

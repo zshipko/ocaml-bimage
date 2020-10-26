@@ -32,7 +32,7 @@ type 'a t =
   | Not : bool t -> bool t
   | Cond : bool t * 'a t * 'a t -> 'a t
   | Func : 'b t * (int -> int -> int -> 'b -> 'a t) -> 'a t
-  | Pixel : Input.index * int t * int t -> Pixel.t t
+  | Pixel : Input.index * int t * int t -> Color.rgb Pixel.t t
   | Value : 'a -> 'a t
   | Pair : 'a t * 'b t -> ('a * 'b) t
   | Type_min : Input.index -> float t
@@ -358,7 +358,7 @@ let rec prepare :
    | Pixel (index, x', y') ->
        let x' = prepare x y c x' inputs in
        let y' = prepare x y c y' inputs in
-       Image.get_pixel inputs.(index) x' y'
+       Pixel.to_rgb (Image.get_pixel inputs.(index) x' y')
    | Value x -> x
    | Pair (a, b) ->
        let a = prepare x y c a inputs in

@@ -5,8 +5,8 @@ module type COLOR = sig
   val name: t -> string
   val channels: t -> int
   val has_alpha: t -> bool
-  val to_rgb: t -> Pixel.t -> Pixel.t
-  val from_rgb: t -> Pixel.t -> Pixel.t
+  val to_rgb: t -> (float, Type.f64) Data.t -> (float, Type.f64) Data.t
+  val from_rgb: t -> (float, Type.f64) Data.t -> (float, Type.f64) Data.t
 end
 
 module Rgb: COLOR with type t = [`Rgb] = struct
@@ -27,21 +27,21 @@ module Rgba: COLOR with type t = [`Rgba] = struct
   let name _ = "rgba"
   let channels _ = 4
   let has_alpha _ = true
-  let to_rgb _ (Pixel.Pixel x) =
+  let to_rgb _ x =
     let alpha = x.{3} in
     x.{0} <- x.{0} *. alpha;
     x.{1} <- x.{1} *. alpha;
     x.{2} <- x.{2} *. alpha;
     x.{3} <- 1.0;
-    Pixel.Pixel x
+     x
 
-  let from_rgb _ (Pixel.Pixel x) =
-    let Pixel.Pixel dest = Pixel.empty 4 in
+  let from_rgb _ x =
+    let dest = Data.create Type.f64 4 in
     dest.{0} <- x.{0};
     dest.{1} <- x.{1};
     dest.{2} <- x.{2};
     dest.{3} <- 1.0;
-    Pixel.Pixel dest
+    dest
 end
 
 module Gray: COLOR with type t = [`Gray] = struct
@@ -53,18 +53,17 @@ module Gray: COLOR with type t = [`Gray] = struct
   let channels _ = 1
   let has_alpha _ = false
 
-  let to_rgb _ (Pixel.Pixel px) =
-    let Pixel.Pixel dest = Pixel.empty 3 in
+  let to_rgb _ ( px) =
+    let  dest = Data.create Type.f64 3 in
     dest.{0} <- px.{0};
     dest.{1} <- px.{1};
     dest.{2} <- px.{2};
-    Pixel.Pixel dest
+    dest
 
-
-  let from_rgb _ (Pixel.Pixel px) =
-    let Pixel.Pixel dest = Pixel.empty 1 in
+  let from_rgb _ ( px) =
+    let dest = Data.create Type.f64 1 in
     dest.{0} <- (px.{0} *. 0.21) +. (px.{1} *. 0.72) +. (px.{2} *. 0.07);
-    Pixel.Pixel dest
+    dest
 end
 
 type 'a t = (module COLOR with type t = 'a)

@@ -14,7 +14,7 @@ open Bigarray
 exception Unsupported
 (** Raised when attempting to use Char, Int8_signed, Int16_signed Bigarray types *)
 
-type ('a, 'b) kind = ('a, 'b) Bigarray.kind
+type ('a, 'b) ty = ('a, 'b) Bigarray.kind
 
 type u8 = int8_unsigned_elt
 
@@ -177,7 +177,7 @@ val rgba : [`Rgba] Color.t
 (*val color : int -> any Color.t*)
 (** Generic color *)
 
-module Kind : sig
+module Type: sig
   val name : ('a, 'b) kind -> string
   (** [name k] returns the name of a given kind *)
 
@@ -690,8 +690,8 @@ module Expr : sig
     | Pixel : Input.index * int t * int t -> Pixel.t t
     | Value : 'a -> 'a t
     | Pair : 'a t * 'b t -> ('a * 'b) t
-    | Kind_min : Input.index -> float t
-    | Kind_max : Input.index -> float t
+    | Type_min: Input.index -> float t
+    | Type_max : Input.index -> float t
     | Channels : Input.index -> int t
     | Shape : Input.index -> (int * int * int) t
 

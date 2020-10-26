@@ -27,7 +27,7 @@ type base_type =
   | String
   | Ptr
 
-let base_type_of_kind : type a b. (a, b) kind -> (base_type, error) result = function
+let base_type_of_ty : type a b. (a, b) ty -> (base_type, error) result = function
   | Float64 -> Ok Double
   | Float32 -> Ok Float
   | Int8_signed -> Ok Int8
@@ -40,8 +40,8 @@ let base_type_of_kind : type a b. (a, b) kind -> (base_type, error) result = fun
 
 external image_spec: int -> int -> int -> base_type -> spec = "image_spec"
 
-let image_spec (type color) kind (module C: COLOR with type t = color) width height =
-  match base_type_of_kind kind with
+let image_spec (type color) ty (module C: COLOR with type t = color) width height =
+  match base_type_of_ty ty with
   | Ok base -> Ok (image_spec width height (C.channels C.t) base)
   | Error e -> Error e
 

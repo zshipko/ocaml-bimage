@@ -1,9 +1,7 @@
-open Type
-
-type t = Pixel : (float, f32) Data.t -> t [@@unboxed]
+type t = Pixel : (float, Type.f32) Data.t -> t [@@unboxed]
 
 let empty n =
-  let p = Data.create f32 n in
+  let p = Data.create Type.f32 n in
   Pixel p
 
 let length (Pixel p) = Data.length p
@@ -17,7 +15,7 @@ let from_data data =
   let (Pixel px) = empty len in
   let kind = Data.kind data in
   for i = 0 to len - 1 do
-    px.{i} <- Kind.(to_float kind data.{i} |> normalize kind)
+    px.{i} <- Type.(to_float kind data.{i} |> normalize kind)
   done;
   Pixel px
 
@@ -25,7 +23,7 @@ let to_data ~dest (Pixel px) =
   let len = Data.length dest in
   let kind = Data.kind dest in
   for i = 0 to min len (Data.length px) - 1 do
-    dest.{i} <- Kind.(of_float kind (denormalize kind px.{i}))
+    dest.{i} <- Type.(of_float kind (denormalize kind px.{i}))
   done
 
 let data (Pixel px) = px
@@ -64,8 +62,8 @@ let map2 f (Pixel a) (Pixel b) =
 let convert_in_place from to_ px =
   map
     (fun x ->
-      let x = Kind.normalize from x in
-      Kind.denormalize to_ x)
+      let x = Type.normalize from x in
+      Type.denormalize to_ x)
     px
 
 let fold f (Pixel px) a = Data.fold f px a

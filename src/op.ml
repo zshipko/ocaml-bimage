@@ -1,4 +1,3 @@
-open Type
 open Image
 
 type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
@@ -36,9 +35,9 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op :
  fun ~output inputs ->
    let width, height, channels = shape output in
    let kind = kind output in
-   let of_float f = Kind.of_float kind f in
-   let denormalize = Kind.denormalize (Image.kind output) in
-   let clamp = Kind.clamp kind in
+   let of_float f = Type.of_float kind f in
+   let denormalize = Type.denormalize (Image.kind output) in
+   let clamp = Type.clamp kind in
    let op = op inputs in
    for i = 0 to length output - 1 do
      let f = op !x !y !c in
@@ -81,16 +80,16 @@ let apply f a inputs x y c = f (Expr.float @@ a inputs x y c) inputs x y c
 let scalar : float -> ('a, 'b, 'c) t = fun f _inputs _x _y _c -> f
 
 let scalar_min : ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t =
- fun k -> scalar (Kind.min_f k)
+ fun k -> scalar (Type.min_f k)
 
 let scalar_max : ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t =
- fun k -> scalar (Kind.max_f k)
+ fun k -> scalar (Type.max_f k)
 
 let invert ?(input = 0) : ('a, 'b, 'c) t =
  fun inputs x y c ->
    let a = inputs.(input) in
    let kind = kind a in
-   if c = 4 then get_f a x y c else Kind.max_f kind -. get_f a x y c
+   if c = 4 then get_f a x y c else Type.max_f kind -. get_f a x y c
 
 module Infix = struct
   let ( $ ) a f = apply f a

@@ -35,8 +35,8 @@ type 'a t =
   | Pixel : Input.index * int t * int t -> Pixel.t t
   | Value : 'a -> 'a t
   | Pair : 'a t * 'b t -> ('a * 'b) t
-  | Kind_min : Input.index -> float t
-  | Kind_max : Input.index -> float t
+  | Type_min : Input.index -> float t
+  | Type_max : Input.index -> float t
   | Channels : Input.index -> int t
   | Shape : Input.index -> (int * int * int) t
 
@@ -64,9 +64,9 @@ let pair a b = Pair (a, b)
 
 let pixel input x y = Pixel (input, x, y)
 
-let kind_min input = Kind_min input
+let kind_min input = Type_min input
 
-let kind_max input = Kind_max input
+let kind_max input = Type_max input
 
 let channels input = Channels input
 
@@ -364,8 +364,8 @@ let rec prepare :
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        (a, b)
-   | Kind_min index -> Image.kind inputs.(index) |> Type.Kind.min_f
-   | Kind_max index -> Image.kind inputs.(index) |> Type.Kind.max_f
+   | Type_min index -> Image.kind inputs.(index) |> Type.min_f
+   | Type_max index -> Image.kind inputs.(index) |> Type.max_f
    | Channels index -> Image.channels inputs.(index)
    | Shape index -> Image.shape inputs.(index)
 

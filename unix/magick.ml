@@ -30,10 +30,10 @@ let read (type color) ?(create = fun _name -> Image.create) ?(layout = Image.Int
       in
       let input = Unix.open_process_in cmd in
       for i = 0 to (Image.(img.width * img.height) * channels) - 1 do
-        let x = Kind.to_float u8 (input_byte input) in
-        let x = Kind.normalize u8 x in
-        let x = Kind.denormalize t x in
-        img.Image.data.{i} <- Kind.of_float t x
+        let x = Type.to_float u8 (input_byte input) in
+        let x = Type.normalize u8 x in
+        let x = Type.denormalize t x in
+        img.Image.data.{i} <- Type.of_float t x
       done;
       close_in input
     in
@@ -78,7 +78,7 @@ let write (type color) ?quality ?format filename img =
     match quality with None -> "" | Some q -> Printf.sprintf "-quality %d" q
   in
   let kind = Image.kind img in
-  let _depth = Kind.depth kind in
+  let _depth = Type.depth kind in
   let cmd =
     Printf.sprintf "%s -interlace %s -size %dx%d -depth 8 %s:- %s %s:'%s'"
       !convert_command (interlace img.layout) width height f quality format
@@ -86,10 +86,10 @@ let write (type color) ?quality ?format filename img =
   in
   let output = Unix.open_process_out cmd in
   for i = 0 to (Image.(img.width * img.height) * channels) - 1 do
-    let x = Kind.to_float kind img.Image.data.{i} in
-    let x = Kind.normalize kind x in
-    let x = Kind.denormalize u8 x in
-    let x = Kind.of_float u8 x in
+    let x = Type.to_float kind img.Image.data.{i} in
+    let x = Type.normalize kind x in
+    let x = Type.denormalize u8 x in
+    let x = Type.of_float u8 x in
     output_byte output x
   done;
   close_out output

@@ -1,4 +1,3 @@
-open Type
 open Color
 
 type layout = Planar | Interleaved
@@ -77,7 +76,7 @@ let convert_to ~dest img =
   let dest_k = kind dest in
   let src_k = kind img in
   for i = 0 to length dest - 1 do
-    dest.data.{i} <- Kind.convert ~from:src_k dest_k img.data.{i}
+    dest.data.{i} <- Type.convert ~from:src_k dest_k img.data.{i}
   done
 
 let convert k img =
@@ -105,7 +104,7 @@ let index_at image offs =
 
 let[@inline] get image x y c =
   let index = index image x y c in
-  if index < 0 || index >= length image then Kind.min (kind image)
+  if index < 0 || index >= length image then Type.min (kind image)
   else image.data.{index}
 
 let[@inline] set image x y c v =
@@ -114,20 +113,20 @@ let[@inline] set image x y c v =
 
 let get_f image x y c =
   let kind = kind image in
-  get image x y c |> Kind.to_float kind
+  get image x y c |> Type.to_float kind
 
 let set_f image x y c v =
   let kind = kind image in
-  let v = Kind.of_float kind v in
+  let v = Type.of_float kind v in
   set image x y c v
 
 let get_norm image x y c =
   let kind = kind image in
-  get image x y c |> Kind.to_float kind |> Kind.normalize kind
+  get image x y c |> Type.to_float kind |> Type.normalize kind
 
 let set_norm image x y c v =
   let kind = kind image in
-  let v = Kind.denormalize kind v |> Kind.of_float kind in
+  let v = Type.denormalize kind v |> Type.of_float kind in
   set image x y c v
 
 let get_pixel image ?dest x y =
@@ -217,14 +216,14 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let height =
     match height with None -> img.height - y | Some h -> min h (img.width - y)
   in
-  let avg = Data.create f32 (channels img) in
+  let avg = Data.create Type.f32 (channels img) in
   let channels = channels img in
   let size = float_of_int (width * height) in
   let kind = kind img in
   for_each
     (fun _x _y px ->
       for i = 0 to channels - 1 do
-        avg.{i} <- avg.{i} +. Kind.to_float kind px.{i}
+        avg.{i} <- avg.{i} +. Type.to_float kind px.{i}
       done)
     ~x ~y ~width ~height img;
   for i = 0 to channels - 1 do
@@ -259,7 +258,7 @@ let mean_std ?(channel = 0) image =
   let x2 = ref 0. in
   for_each
     (fun _x _y px ->
-      let f = Kind.to_float kind px.{channel} in
+      let f = Type.to_float kind px.{channel} in
       x1 := !x1 +. f;
       x2 := !x2 +. (f *. f))
     image;
@@ -306,8 +305,8 @@ let diff a b =
     (fun x y px ->
       let pxb = get_data b x y in
       for i = 0 to channels a do
-        let a = Kind.to_float kind px.{i} |> Kind.normalize kind in
-        let b = Kind.to_float kind pxb.{i} |> Kind.normalize kind in
+        let a = Type.to_float kind px.{i} |> Type.normalize kind in
+        let b = Type.to_float kind pxb.{i} |> Type.normalize kind in
         if a <> b then Hashtbl.replace dest (x, y, i) (a -. b)
       done)
     a;

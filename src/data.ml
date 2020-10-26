@@ -1,5 +1,4 @@
 open Bigarray
-open Type
 
 type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
 
@@ -7,13 +6,13 @@ let[@inline] kind t = Array1.kind t
 
 let create kind n =
   let arr = Bigarray.Array1.create kind Bigarray.C_layout n in
-  Array1.fill arr (Kind.of_float kind 0.0);
+  Array1.fill arr (Type.of_float kind 0.0);
   arr
 
 let random kind n =
   let dest = create kind n in
   for i = 0 to n - 1 do
-    dest.{i} <- Kind.of_float kind (Random.float (Kind.max kind))
+    dest.{i} <- Type.of_float kind (Random.float (Type.max kind))
   done;
   dest
 
@@ -40,7 +39,7 @@ let compare a b = compare a b
 let equal a b = compare a b = 0
 
 let of_float ?dest t arr =
-  let of_float = Kind.of_float t in
+  let of_float = Type.of_float t in
   let size = length arr in
   let dest = match dest with None -> create t size | Some d -> d in
   for i = 0 to size - 1 do
@@ -49,9 +48,9 @@ let of_float ?dest t arr =
   dest
 
 let to_float ?dest arr =
-  let to_float = Kind.to_float (kind arr) in
+  let to_float = Type.to_float (kind arr) in
   let size = length arr in
-  let dest = match dest with None -> create f32 size | Some d -> d in
+  let dest = match dest with None -> create Type.f32 size | Some d -> d in
   for i = 0 to size - 1 do
     dest.{i} <- to_float arr.{i}
   done;

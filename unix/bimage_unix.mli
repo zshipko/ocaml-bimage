@@ -20,13 +20,13 @@ module Stb : sig
     'a Color.t -> bytes -> ((float, f32, 'a) Image.t, Error.t) result
 
   val read :
-    ('a, 'b) kind ->
+    ('a, 'b) ty ->
     'c Color.t ->
     string ->
     (('a, 'b, 'c) Image.t, Error.t) result
 
   val read_from_memory :
-    ('a, 'b) kind ->
+    ('a, 'b) ty ->
     'c Color.t ->
     bytes ->
     (('a, 'b, 'c) Image.t, Error.t) result
@@ -52,13 +52,13 @@ module Magick : sig
     ?create:
       (string ->
       ?layout:Image.layout ->
-      ('a, 'b) kind ->
+      ('a, 'b) ty ->
       'c Color.t ->
       int ->
       int ->
       ('a, 'b, 'c) Image.t) ->
     ?layout:Image.layout ->
-    ('a, 'b) kind ->
+    ('a, 'b) ty ->
     ([< `Gray | `Rgb | `Rgba ] as 'c) Color.t ->
     ?format:string ->
     string ->
@@ -77,13 +77,13 @@ module Magick : sig
     ?create:
       (string ->
       ?layout:Image.layout ->
-      ('a, 'b) kind ->
+      ('a, 'b) ty ->
       'c Color.t ->
       int ->
       int ->
       ('a, 'b, 'c) Image.t) ->
     ?layout:Image.layout ->
-    ('a, 'b) kind ->
+    ('a, 'b) ty ->
     ([< `Gray | `Rgb | `Rgba] as 'c) Color.t ->
     ?format:string ->
     string array ->
@@ -101,14 +101,14 @@ end
 
 module Data_unix : sig
   val create_mmap :
-    ?mode:int -> ('a, 'b) kind -> filename:string -> int -> ('a, 'b) Data.t
+    ?mode:int -> ('a, 'b) ty -> filename:string -> int -> ('a, 'b) Data.t
 end
 
 module Image_unix : sig
   val create_mmap :
     ?mode:int ->
     ?layout:Image.layout ->
-    ('a, 'b) kind ->
+    ('a, 'b) ty ->
     'c Color.t ->
     filename:string ->
     int ->

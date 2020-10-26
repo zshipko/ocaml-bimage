@@ -13,6 +13,7 @@ module Data = Data
 module Pixel = Pixel
 module Kernel = Kernel
 module Transform = Transform
+module Type = Type
 
 module Image = struct
   include Image

@@ -15,4 +15,4 @@ let make_output ?width ?height inputs =
   let a = get inputs 0 in
   let width = match width with None -> a.width | Some w -> w in
   let height = match height with None -> a.height | Some h -> h in
-  create (kind a) a.color width height
+  create (ty a) a.color width height

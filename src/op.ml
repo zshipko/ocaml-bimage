@@ -34,9 +34,9 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op :
     ('a, 'b, 'c, 'd, 'e, 'f) filter =
  fun ~output inputs ->
    let width, height, channels = shape output in
-   let kind = kind output in
+   let kind = ty output in
    let of_float f = Type.of_float kind f in
-   let denormalize = Type.denormalize (Image.kind output) in
+   let denormalize = Type.denormalize kind in
    let clamp = Type.clamp kind in
    let op = op inputs in
    for i = 0 to length output - 1 do
@@ -88,7 +88,7 @@ let scalar_max : ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t =
 let invert ?(input = 0) : ('a, 'b, 'c) t =
  fun inputs x y c ->
    let a = inputs.(input) in
-   let kind = kind a in
+   let kind = ty a in
    if c = 4 then get_f a x y c else Type.max_f kind -. get_f a x y c
 
 module Infix = struct

@@ -32,21 +32,21 @@ type c32 = complex32_elt
 
 type c64 = complex64_elt
 
-val u8 : (int, u8) kind
+val u8 : (int, u8) ty
 
-val u16 : (int, u16) kind
+val u16 : (int, u16) ty
 
-val i32 : (int32, i32) kind
+val i32 : (int32, i32) ty
 
-val i64 : (int64, i64) kind
+val i64 : (int64, i64) ty
 
-val f32 : (float, f32) kind
+val f32 : (float, f32) ty
 
-val f64 : (float, f64) kind
+val f64 : (float, f64) ty
 
-val c32 : (Complex.t, c32) kind
+val c32 : (Complex.t, c32) ty
 
-val c64 : (Complex.t, c64) kind
+val c64 : (Complex.t, c64) ty
 
 module Error : sig
   type t =
@@ -178,40 +178,40 @@ val rgba : [`Rgba] Color.t
 (** Generic color *)
 
 module Type: sig
-  val name : ('a, 'b) kind -> string
-  (** [name k] returns the name of a given kind *)
+  val name : ('a, 'b) ty -> string
+  (** [name k] returns the name of a given ty *)
 
-  val depth : ('a, 'b) kind -> int
-  (** returns the number of bits for a given kind *)
+  val depth : ('a, 'b) ty -> int
+  (** returns the number of bits for a given ty *)
 
-  val max : ('a, 'b) kind -> 'a
+  val max : ('a, 'b) ty -> 'a
   (** [max k] returns the maximum normalized value for [k] *)
 
-  val min : ('a, 'b) kind -> 'a
+  val min : ('a, 'b) ty -> 'a
   (** [min k] returns the minimum normalized value for [k] *)
 
-  val max_f : ('a, 'b) kind -> float
+  val max_f : ('a, 'b) ty -> float
   (** [max k] returns the maximum normalized value for [k] as a float *)
 
-  val min_f : ('a, 'b) kind -> float
+  val min_f : ('a, 'b) ty -> float
   (** [min k] returns the minimum normalized value for [k] as a float *)
 
-  val to_float : ('a, 'b) kind -> 'a -> float
-  (** [to_float k x] converts a value of kind [k] to float *)
+  val to_float : ('a, 'b) ty -> 'a -> float
+  (** [to_float k x] converts a value of ty [k] to float *)
 
-  val of_float : ('a, 'b) kind -> float -> 'a
-  (** [of_float k x] converts a float to a value of kind [k] *)
+  val of_float : ('a, 'b) ty -> float -> 'a
+  (** [of_float k x] converts a float to a value of ty [k] *)
 
-  val clamp : ('a, 'b) kind -> float -> float
-  (** Converts a float value to a value within the proper range for the given kind *)
+  val clamp : ('a, 'b) ty -> float -> float
+  (** Converts a float value to a value within the proper range for the given ty *)
 
-  val normalize : ('a, 'b) kind -> float -> float
+  val normalize : ('a, 'b) ty -> float -> float
   (** Scales a value to the range 0.0-1.0 *)
 
-  val denormalize : ('a, 'b) kind -> float -> float
-  (** Sclaes a value to the range (kind_min-kind_max) *)
+  val denormalize : ('a, 'b) ty -> float -> float
+  (** Sclaes a value to the range (type_min-type_max) *)
 
-  val convert : from:('a, 'b) kind -> ('c, 'd) kind -> 'a -> 'c
+  val convert : from:('a, 'b) ty -> ('c, 'd) ty -> 'a -> 'c
 end
 
 (** The Data module defines several operations on one dimensional image data *)
@@ -219,16 +219,16 @@ module Data : sig
   type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
   (** Data type *)
 
-  val kind : ('a, 'b) t -> ('a, 'b) kind
-  (** Get the [Bigarray.kind] *)
+  val ty : ('a, 'b) t -> ('a, 'b) ty
+  (** Get the [Bigarray.ty] *)
 
-  val of_array : ('a, 'b) kind -> 'a array -> ('a, 'b) t
-  (** Converts an array to a [Data.t] of the given kind *)
+  val of_array : ('a, 'b) ty -> 'a array -> ('a, 'b) t
+  (** Converts an array to a [Data.t] of the given ty *)
 
   val to_array : ('a, 'b) t -> 'a array
   (** Converts a [Data.t] to an array *)
 
-  val create : ('a, 'b) kind -> int -> ('a, 'b) t
+  val create : ('a, 'b) ty -> int -> ('a, 'b) t
   (** Create a new [Data.t] with the given length. *)
 
   val length : ('a, 'b) t -> int
@@ -259,14 +259,14 @@ module Data : sig
   val copy : ('a, 'b) t -> ('a, 'b) t
   (** Create a new copy of [Data.t] *)
 
-  val convert : ('c, 'd) kind -> ('a -> 'c) -> ('a, 'b) t -> ('c, 'd) t
+  val convert : ('c, 'd) ty -> ('a -> 'c) -> ('a, 'b) t -> ('c, 'd) t
   (** Convert between [Data.t] types *)
 
   val convert_to : ('a -> 'c) -> dest:('c, 'd) t -> ('a, 'b) t -> unit
   (** Convert between [Data.t] types with an existing destination image *)
 
   val of_float :
-    ?dest:('a, 'b) t -> ('a, 'b) kind -> (float, f32) t -> ('a, 'b) t
+    ?dest:('a, 'b) t -> ('a, 'b) ty -> (float, f32) t -> ('a, 'b) t
   (** [of_float ~dest k data] converts a [Data.t] from float to [k], storing the results in
       [dest] if provided. *)
 
@@ -358,12 +358,12 @@ module Image : sig
 
   val create :
     ?layout:layout ->
-    ('a, 'b) kind ->
+    ('a, 'b) ty ->
     'c Color.t ->
     int ->
     int ->
     ('a, 'b, 'c) t
-  (** [create kind color width height] makes a new image with the given [kind], [color] and dimensions *)
+  (** [create ty color width height] makes a new image with the given [ty], [color] and dimensions *)
 
   val compare : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> int
 
@@ -374,14 +374,14 @@ module Image : sig
 
   val of_data :
     'c Color.t -> int -> int -> layout -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
-  (** [of_data color width height layout data] makes a new image from existing image data with the given [kind], [color], [layout], and dimensions *)
+  (** [of_data color width height layout data] makes a new image from existing image data with the given [ty], [color], [layout], and dimensions *)
 
   val like : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  (** [like img] creates a new image with the same dimensions, color and kind as [img] *)
+  (** [like img] creates a new image with the same dimensions, color and ty as [img] *)
 
   val like_with_color : 'd Color.t -> ('a, 'b, 'c) t -> ('a, 'b, 'd) t
 
-  val like_with_kind : ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
+  val like_with_ty : ('d, 'e) ty -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
 
   val like_with_layout : layout -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 
@@ -400,8 +400,8 @@ module Image : sig
   val length : ('a, 'b, 'c) t -> int
   (** Returns the number of values contained in an image *)
 
-  val kind : ('a, 'b, 'c) t -> ('a, 'b) kind
-  (** Returns the image kind *)
+  val ty : ('a, 'b, 'c) t -> ('a, 'b) ty
+  (** Returns the image ty *)
 
   val color : ('a, 'b, 'c) t -> 'c Color.t
   (** Returns the image color type *)
@@ -410,10 +410,10 @@ module Image : sig
   (** Returns the width, height and channels *)
 
   val convert_to : dest:('d, 'e, 'c) t -> ('a, 'b, 'c) t -> unit
-  (** Convert an image to an existing image of another kind *)
+  (** Convert an image to an existing image of another ty *)
 
-  val convert : ('d, 'e) kind -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
-  (** Convert an image to a new image of another kind *)
+  val convert : ('d, 'e) ty -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
+  (** Convert an image to a new image of another ty *)
 
   (*val of_any_color :
     ('a, 'b, any) t -> 'c Color.t -> (('a, 'b, 'c) t, Error.t) result*)
@@ -650,7 +650,7 @@ module Input : sig
   val make_output :
     ?width:int -> ?height:int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) Image.t
   (** Create an output image width the given width and height if provided, otherwise the generated
-        image will match the first input image in size, kind and color *)
+        image will match the first input image in size, ty and color *)
 end
 
 (** Expr implements an operation combinator which can be used to build operations from low-level functions *)
@@ -750,9 +750,9 @@ module Expr : sig
   val pixel : Input.index -> int t -> int t -> rgb Pixel.t t
   (** Create a Pixel expr, for extracting pixels *)
 
-  val kind_min : Input.index -> float t
+  val type_min : Input.index -> float t
 
-  val kind_max : Input.index -> float t
+  val type_max : Input.index -> float t
 
   val channels : Input.index -> int t
 
@@ -907,11 +907,11 @@ module Op : sig
   val scalar : float -> ('a, 'b, 'c) t
   (** Builds an operation returning a single value *)
 
-  val scalar_max : ('a, 'b) kind -> ('a, 'b, 'c) t
-  (** Builds an operation returning the maximum value for a given kind *)
+  val scalar_max : ('a, 'b) ty -> ('a, 'b, 'c) t
+  (** Builds an operation returning the maximum value for a given ty *)
 
-  val scalar_min : ('a, 'b) kind -> ('a, 'b, 'c) t
-  (** Builds an operation returning the minimum value for a given kind *)
+  val scalar_min : ('a, 'b) ty -> ('a, 'b, 'c) t
+  (** Builds an operation returning the minimum value for a given ty *)
 
   val invert : ?input:Input.index -> ('a, 'b, 'c) t
   (** Invert the values in an image *)

@@ -10,9 +10,9 @@ type ('a, 'b, 'c) t = {
   data : ('a, 'b) Data.t;
 }
 
-let create (type color) ?(layout = Interleaved) kind (module C: COLOR with type t = color) width height =
+let create (type color) ?(layout = Interleaved) ty (module C: COLOR with type t = color) width height =
   let channels = C.channels C.t in
-  let data = Data.create kind (width * height * channels) in
+  let data = Data.create ty (width * height * channels) in
   { width; height; color = (module C); layout; data }
 
 let compare a b = Data.compare a.data b.data
@@ -25,18 +25,18 @@ let of_data (type color) (module C: COLOR with type t = color) width height layo
   else { width; height; color = (module C); layout; data }
 
 let like image =
-  create ~layout:image.layout (Data.kind image.data) image.color image.width
+  create ~layout:image.layout (Data.ty image.data) image.color image.width
     image.height
 
-let like_with_kind kind image =
-  create ~layout:image.layout kind image.color image.width image.height
+let like_with_ty ty image =
+  create ~layout:image.layout ty image.color image.width image.height
 
 let like_with_color color image =
-  create ~layout:image.layout (Data.kind image.data) color image.width
+  create ~layout:image.layout (Data.ty image.data) color image.width
     image.height
 
 let like_with_layout layout image =
-  create ~layout (Data.kind image.data) image.color image.width image.height
+  create ~layout (Data.ty image.data) image.color image.width image.height
 
 let copy image =
   let data = Data.copy image.data in
@@ -44,16 +44,16 @@ let copy image =
 
 let copy_to ~dest src = Data.copy_to ~dest:dest.data src.data
 
-let random (type color) ?(layout = Interleaved) kind (module C: COLOR with type t = color) width height =
+let random (type color) ?(layout = Interleaved) ty (module C: COLOR with type t = color) width height =
   let channels = C.channels C.t in
-  let data = Data.random kind (width * height * channels) in
+  let data = Data.random ty (width * height * channels) in
   { width; height; color = (module C); layout; data }
 
 let channels (type c) { color; _ } =
   let (module C: COLOR with type t = c) = color in
   C.channels C.t
 
-let[@inline] kind { data; _ } = Data.kind data
+let[@inline] ty { data; _ } = Data.ty data
 
 let color { color; _ } = color
 
@@ -70,11 +70,11 @@ let data { data; _ } = data
 
 let empty_pixel image = Pixel.empty image.color
 
-let empty_data image = Data.create (kind image) (channels image)
+let empty_data image = Data.create (ty image) (channels image)
 
 let convert_to ~dest img =
-  let dest_k = kind dest in
-  let src_k = kind img in
+  let dest_k = ty dest in
+  let src_k = ty img in
   for i = 0 to length dest - 1 do
     dest.data.{i} <- Type.convert ~from:src_k dest_k img.data.{i}
   done
@@ -104,7 +104,7 @@ let index_at image offs =
 
 let[@inline] get image x y c =
   let index = index image x y c in
-  if index < 0 || index >= length image then Type.min (kind image)
+  if index < 0 || index >= length image then Type.min (ty image)
   else image.data.{index}
 
 let[@inline] set image x y c v =
@@ -112,21 +112,21 @@ let[@inline] set image x y c v =
   image.data.{index} <- v
 
 let get_f image x y c =
-  let kind = kind image in
-  get image x y c |> Type.to_float kind
+  let ty = ty image in
+  get image x y c |> Type.to_float ty
 
 let set_f image x y c v =
-  let kind = kind image in
-  let v = Type.of_float kind v in
+  let ty = ty image in
+  let v = Type.of_float ty v in
   set image x y c v
 
 let get_norm image x y c =
-  let kind = kind image in
-  get image x y c |> Type.to_float kind |> Type.normalize kind
+  let ty = ty image in
+  get image x y c |> Type.to_float ty |> Type.normalize ty
 
 let set_norm image x y c v =
-  let kind = kind image in
-  let v = Type.denormalize kind v |> Type.of_float kind in
+  let ty = ty image in
+  let v = Type.denormalize ty v |> Type.of_float ty in
   set image x y c v
 
 let get_pixel image ?dest x y =
@@ -148,7 +148,7 @@ let set_pixel image x y (Pixel.Pixel (_, px)) =
 let get_data image ?dest x y =
   let c = channels image in
   let px =
-    match dest with Some px -> px | None -> Data.create (kind image) c
+    match dest with Some px -> px | None -> Data.create (ty image) c
   in
   for i = 0 to c - 1 do
     px.{i} <- get image x y i
@@ -219,11 +219,11 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let avg = Data.create Type.f32 (channels img) in
   let channels = channels img in
   let size = float_of_int (width * height) in
-  let kind = kind img in
+  let ty = ty img in
   for_each
     (fun _x _y px ->
       for i = 0 to channels - 1 do
-        avg.{i} <- avg.{i} +. Type.to_float kind px.{i}
+        avg.{i} <- avg.{i} +. Type.to_float ty px.{i}
       done)
     ~x ~y ~width ~height img;
   for i = 0 to channels - 1 do
@@ -233,7 +233,7 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
 
 let convert_layout layout im =
   let width, height, _ = shape im in
-  let dest = create ~layout (kind im) (color im) width height in
+  let dest = create ~layout (ty im) (color im) width height in
   for_each
     (fun x y px ->
       for i = 0 to Data.length px - 1 do
@@ -243,7 +243,7 @@ let convert_layout layout im =
   dest
 
 let crop im ~x ~y ~width ~height =
-  let dest = create ~layout:im.layout (kind im) im.color width height in
+  let dest = create ~layout:im.layout (ty im) im.color width height in
   for_each
     (fun i j _ ->
       for c = 0 to channels im - 1 do
@@ -253,12 +253,12 @@ let crop im ~x ~y ~width ~height =
   dest
 
 let mean_std ?(channel = 0) image =
-  let kind = kind image in
+  let ty = ty image in
   let x1 = ref 0. in
   let x2 = ref 0. in
   for_each
     (fun _x _y px ->
-      let f = Type.to_float kind px.{channel} in
+      let f = Type.to_float ty px.{channel} in
       x1 := !x1 +. f;
       x2 := !x2 +. (f *. f))
     image;
@@ -300,13 +300,13 @@ end
 
 let diff a b =
   let dest = Hashtbl.create 8 in
-  let kind = kind a in
+  let ty = ty a in
   for_each
     (fun x y px ->
       let pxb = get_data b x y in
       for i = 0 to channels a do
-        let a = Type.to_float kind px.{i} |> Type.normalize kind in
-        let b = Type.to_float kind pxb.{i} |> Type.normalize kind in
+        let a = Type.to_float ty px.{i} |> Type.normalize ty in
+        let b = Type.to_float ty pxb.{i} |> Type.normalize ty in
         if a <> b then Hashtbl.replace dest (x, y, i) (a -. b)
       done)
     a;

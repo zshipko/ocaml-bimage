@@ -4,11 +4,7 @@ type input
 type output
 type spec
 
-type error =
-  | Unsupoorted_color
-  | Unsupported_type
-  | Error of string
-  | File_not_found of string
+type error = [ Error.t | `File_not_found of string]
 
 type base_type =
   | Unknown
@@ -36,7 +32,7 @@ let base_type_of_ty : type a b. (a, b) ty -> (base_type, error) result = functio
   | Int16_unsigned -> Ok UInt16
   | Int32 -> Ok Int32
   | Int64 -> Ok Int64
-  | _ -> Error Unsupported_type
+  | _ -> raise Unsupported
 
 external image_spec: int -> int -> int -> base_type -> spec = "image_spec"
 
@@ -45,18 +41,73 @@ let image_spec (type color) ty (module C: COLOR with type t = color) width heigh
   | Ok base -> Ok (image_spec width height (C.channels C.t) base)
   | Error e -> Error e
 
-external input_open: string -> (input, error) result = "input_open"
-external input_get_spec: input -> spec = "input_get_spec"
-external input_read: input -> ('a, 'b, 'c) Image.t -> (unit, error) result = "input_read"
+external spec_shape: spec -> int * int * int = "spec_shape"
+external spec_base_type : spec -> base_type = "spec_base_type"
 
-external output_create: string -> (output, error) result = "output_create"
-external output_open: output -> spec -> (unit, error) result = "output_open"
-external output_write_image: output -> ('a, 'b, 'c) Image.t -> (unit, error) result = "output_write_image"
+external input_open: string -> input = "input_open"
+external input_get_spec: input -> spec = "input_get_spec"
+external input_read: input -> ('a, 'b) Data.t -> unit = "input_read"
+
+external output_create: string -> output = "output_create"
+external output_set_spec: output -> spec -> unit = "output_open"
+external output_write_image: output -> ('a, 'b) Data.t -> unit = "output_write_image"
+
+module Spec = struct
+  type t = spec
+
+  let shape t = spec_shape t
+  let base_type t = spec_base_type t
+end
 
 module Input = struct
   type t = input
+
+  let init filename =
+    try
+      Ok (input_open filename)
+    with Failure reason -> Error (`Msg reason)
+
+  let spec input = input_get_spec input
+
+  let read input image =
+    try
+       Ok (input_read input (Image.data image))
+    with Failure reason -> Error (`Msg reason)
+
+  (*let read_image input =
+    let spec = spec input in
+    let (width, height, _channels) = Spec.shape spec in
+    let bt = Spec.base_type spec in
+    let image = Image.create ty color width height in
+    read input image*)
 end
 
 module Output = struct
   type t = output
+
+  let create filename =
+    try
+      Ok (output_create filename)
+    with Failure reason -> Error (`Msg reason)
+
+  let spec output s =
+    try
+      Ok (output_set_spec output s)
+    with Failure reason -> Error (`Msg reason)
+
+  let write output image =
+    try
+        let () = output_write_image output (Image.data image) in
+        Ok ()
+    with Failure reason -> Error (`Msg reason)
+
+  let write_image output image =
+    try
+      (match image_spec (Image.ty image) image.color image.width image.height with
+      | Ok spec ->
+          let () = output_set_spec output spec in
+          let () = output_write_image output (Image.data image) in
+          Ok ()
+      | Error e -> Error e)
+    with Failure reason -> Error (`Msg reason)
 end

@@ -2,7 +2,7 @@ open Util
 open Image
 
 let rotate_90 image =
-  let output = create (kind image) image.color image.height image.width in
+  let output = create (ty image) image.color image.height image.width in
   let center =
     (float_of_int output.width /. 2., float_of_int image.height /. 2.)
   in
@@ -10,7 +10,7 @@ let rotate_90 image =
   output
 
 let rotate_180 image =
-  let output = create (kind image) image.color image.width image.height in
+  let output = create (ty image) image.color image.width image.height in
   let center =
     (float_of_int image.width /. 2., float_of_int image.height /. 2.)
   in
@@ -18,7 +18,7 @@ let rotate_180 image =
   output
 
 let rotate_270 image =
-  let output = create (kind image) image.color image.height image.width in
+  let output = create (ty image) image.color image.height image.width in
   let center =
     (float_of_int image.width /. 2., float_of_int output.height /. 2.)
   in
@@ -26,7 +26,7 @@ let rotate_270 image =
   output
 
 let resize width height image =
-  let output = create (kind image) image.color width height in
+  let output = create (ty image) image.color width height in
   let x = float_of_int width /. float_of_int image.width in
   let y = float_of_int height /. float_of_int image.height in
   Op.(eval (scale x y) ~output [| image |]);

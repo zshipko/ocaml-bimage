@@ -22,17 +22,17 @@ let from_rgb (type color) color (Pixel (_rgb, a)) =
 let from_data color data =
   let len = Data.length data in
   let (Pixel (_, px)) = empty color in
-  let kind = Data.kind data in
+  let ty = Data.ty data in
   for i = 0 to len - 1 do
-    px.{i} <- Type.(to_float kind data.{i} |> normalize kind)
+    px.{i} <- Type.(to_float ty data.{i} |> normalize ty)
   done;
   Pixel (color, px)
 
 let to_data ~dest (Pixel (_, px)) =
   let len = Data.length dest in
-  let kind = Data.kind dest in
+  let ty = Data.ty dest in
   for i = 0 to min len (Data.length px) - 1 do
-    dest.{i} <- Type.(of_float kind (denormalize kind px.{i}))
+    dest.{i} <- Type.(of_float ty (denormalize ty px.{i}))
   done
 
 let data (Pixel (_, px)) = px

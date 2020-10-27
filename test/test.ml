@@ -85,7 +85,7 @@ let test_rotate_270 ~output input =
 
 let grayscale_invert =
   let open Expr in
-  map (fun (a, b) -> float (a -. b)) (pair (kind_max ~@0) (grayscale ~@0))
+  map (fun (a, b) -> float (a -. b)) (pair (type_max ~@0) (grayscale ~@0))
 
 let test_grayscale_invert ~output input =
   Op.eval_expr grayscale_invert ~output [| input |]

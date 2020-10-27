@@ -77,7 +77,7 @@ let write (type color) ?quality ?format filename img =
   let quality =
     match quality with None -> "" | Some q -> Printf.sprintf "-quality %d" q
   in
-  let kind = Image.kind img in
+  let kind = Image.ty img in
   let _depth = Type.depth kind in
   let cmd =
     Printf.sprintf "%s -interlace %s -size %dx%d -depth 8 %s:- %s %s:'%s'"

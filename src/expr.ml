@@ -64,9 +64,9 @@ let pair a b = Pair (a, b)
 
 let pixel input x y = Pixel (input, x, y)
 
-let kind_min input = Type_min input
+let type_min input = Type_min input
 
-let kind_max input = Type_max input
+let type_max input = Type_max input
 
 let channels input = Channels input
 
@@ -226,7 +226,7 @@ let threshold input thresh =
   func (value ()) (fun _ _ c _ ->
       cond
         (Lt (v, float thresh.(c mod Array.length thresh)))
-        (float 0.0) (kind_max input))
+        (float 0.0) (type_max input))
 
 let rec prepare :
     type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
@@ -364,8 +364,8 @@ let rec prepare :
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        (a, b)
-   | Type_min index -> Image.kind inputs.(index) |> Type.min_f
-   | Type_max index -> Image.kind inputs.(index) |> Type.max_f
+   | Type_min index -> Image.ty inputs.(index) |> Type.min_f
+   | Type_max index -> Image.ty inputs.(index) |> Type.max_f
    | Channels index -> Image.channels inputs.(index)
    | Shape index -> Image.shape inputs.(index)
 

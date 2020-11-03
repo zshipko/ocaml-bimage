@@ -28,3 +28,11 @@ value input_open(value filename) {
   };
   CAMLreturn(input);
 }
+
+value input_get_spec(value input) {
+  CAMLparam1(input);
+  CAMLlocal1(spec);
+  ImageSpec s = ImageInput_val(input)->spec();
+  spec = alloc_spec(s);
+  CAMLreturn(spec);
+}

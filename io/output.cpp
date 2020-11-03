@@ -28,3 +28,9 @@ value output_create(value filename) {
   }
   CAMLreturn(output);
 }
+
+value output_set_spec(value output, value filename, value spec) {
+  CAMLparam3(output, filename, spec);
+  ImageOutput_val(output)->open(String_val(filename), *ImageSpec_val(spec));
+  CAMLreturn(Val_unit);
+}

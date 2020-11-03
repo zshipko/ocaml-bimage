@@ -112,16 +112,16 @@ let tests =
     test "gaussian-blur" test_gausssian_blur ~input ~output;
     test "rotate-270" test_rotate_270 ~input
       ~output:
-        (Image.create ~layout:input.Image.layout u8 rgb input.Image.height
+        (Image.create u8 rgb input.Image.height
            input.Image.width);
     test "resize" test_resize ~input
-      ~output:(Image.create ~layout:input.Image.layout u8 rgb 123 456);
+      ~output:(Image.create u8 rgb 123 456);
     test "invert" test_invert ~input ~output;
     test "blend" test_blend ~input ~output;
     test "grayscale" test_grayscale ~input
       ~output:(Image.like_with_color gray input);
     test "crop" test_crop ~input
-      ~output:(Image.create ~layout:input.Image.layout u8 rgb 200 400);
+      ~output:(Image.create u8 rgb 200 400);
   ]
 
 let () =

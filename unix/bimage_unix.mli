@@ -51,13 +51,11 @@ module Magick : sig
   val read :
     ?create:
       (string ->
-      ?layout:Image.layout ->
       ('a, 'b) ty ->
       'c Color.t ->
       int ->
       int ->
       ('a, 'b, 'c) Image.t) ->
-    ?layout:Image.layout ->
     ('a, 'b) ty ->
     ([< `Gray | `Rgb | `Rgba ] as 'c) Color.t ->
     ?format:string ->
@@ -76,13 +74,11 @@ module Magick : sig
   val read_all :
     ?create:
       (string ->
-      ?layout:Image.layout ->
       ('a, 'b) ty ->
       'c Color.t ->
       int ->
       int ->
       ('a, 'b, 'c) Image.t) ->
-    ?layout:Image.layout ->
     ('a, 'b) ty ->
     ([< `Gray | `Rgb | `Rgba] as 'c) Color.t ->
     ?format:string ->
@@ -107,7 +103,6 @@ end
 module Image_unix : sig
   val create_mmap :
     ?mode:int ->
-    ?layout:Image.layout ->
     ('a, 'b) ty ->
     'c Color.t ->
     filename:string ->

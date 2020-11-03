@@ -6,48 +6,44 @@ type ('a, 'b, 'c) t = {
   width : int;
   height : int;
   color : 'c Color.t;
-  layout : layout;
   data : ('a, 'b) Data.t;
 }
 
-let create (type color) ?(layout = Interleaved) ty (module C: COLOR with type t = color) width height =
+let create (type color) ty (module C: COLOR with type t = color) width height =
   let channels = C.channels C.t in
   let data = Data.create ty (width * height * channels) in
-  { width; height; color = (module C); layout; data }
+  { width; height; color = (module C); data }
 
 let compare a b = Data.compare a.data b.data
 
 let equal a b = Data.equal a.data b.data
 
-let of_data (type color) (module C: COLOR with type t = color) width height layout data =
+let of_data (type color) (module C: COLOR with type t = color) width height data =
   let channels = C.channels C.t in
   if width * height * channels <> Data.length data then Error.exc `Invalid_shape
-  else { width; height; color = (module C); layout; data }
+  else { width; height; color = (module C); data }
 
 let like image =
-  create ~layout:image.layout (Data.ty image.data) image.color image.width
+  create (Data.ty image.data) image.color image.width
     image.height
 
 let like_with_ty ty image =
-  create ~layout:image.layout ty image.color image.width image.height
+  create ty image.color image.width image.height
 
 let like_with_color color image =
-  create ~layout:image.layout (Data.ty image.data) color image.width
+  create (Data.ty image.data) color image.width
     image.height
-
-let like_with_layout layout image =
-  create ~layout (Data.ty image.data) image.color image.width image.height
 
 let copy image =
   let data = Data.copy image.data in
-  of_data image.color image.width image.height image.layout data
+  of_data image.color image.width image.height data
 
 let copy_to ~dest src = Data.copy_to ~dest:dest.data src.data
 
-let random (type color) ?(layout = Interleaved) ty (module C: COLOR with type t = color) width height =
+let random (type color) ty (module C: COLOR with type t = color) width height =
   let channels = C.channels C.t in
   let data = Data.random ty (width * height * channels) in
-  { width; height; color = (module C); layout; data }
+  { width; height; color = (module C); data }
 
 let channels (type c) { color; _ } =
   let (module C: COLOR with type t = c) = color in
@@ -56,8 +52,6 @@ let channels (type c) { color; _ } =
 let[@inline] ty { data; _ } = Data.ty data
 
 let color { color; _ } = color
-
-let layout { layout; _ } = layout
 
 let shape (type c) { width; height; color; _ } =
   let (module C: COLOR with type t = c) = color in
@@ -80,23 +74,20 @@ let convert_to ~dest img =
   done
 
 let convert k img =
-  let dest = create ~layout:img.layout k img.color img.width img.height in
+  let dest = create k img.color img.width img.height in
   convert_to ~dest img;
   dest
 
 let of_any_color (type color) im (module C: COLOR with type t = color) : (('a, 'b, color) t, Error.t) result =
   if channels im = C.channels C.t then
-    Ok (of_data (module C: COLOR with type t = color) im.width im.height im.layout im.data)
+    Ok (of_data (module C: COLOR with type t = color) im.width im.height im.data)
   else Error `Invalid_color
 
 let[@inline] index image x y c =
-  match image.layout with
-  | Planar -> (image.width * image.height * c) + (y * image.width) + x
-  | Interleaved ->
-      let channels = channels image in
-      (y * image.width * channels)
-      + (channels * x)
-      + c
+    let channels = channels image in
+    (y * image.width * channels)
+    + (channels * x)
+    + c
 
 let index_at image offs =
   let channels = channels image in
@@ -231,19 +222,8 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   done;
   avg
 
-let convert_layout layout im =
-  let width, height, _ = shape im in
-  let dest = create ~layout (ty im) (color im) width height in
-  for_each
-    (fun x y px ->
-      for i = 0 to Data.length px - 1 do
-        dest.data.{index dest x y i} <- px.{i}
-      done)
-    im;
-  dest
-
 let crop im ~x ~y ~width ~height =
-  let dest = create ~layout:im.layout (ty im) im.color width height in
+  let dest = create (ty im) im.color width height in
   for_each
     (fun i j _ ->
       for c = 0 to channels im - 1 do

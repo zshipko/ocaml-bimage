@@ -53,7 +53,6 @@ module Error : sig
     [ `Invalid_shape
     | `Invalid_kernel_shape of int * int
     | `Invalid_input of int
-    | `Invalid_layout
     | `Invalid_color
     | `Msg of string ]
 
@@ -342,22 +341,15 @@ end
 
 (** The Image module defines a simple interface for manipulating image data *)
 module Image : sig
-  type layout =
-    | Planar
-    | Interleaved
-        (** Image pixel layout. Planar is [RRRGGGBBB] and Interleaved is [RGBRGBRGB] *)
-
   type ('a, 'b, 'c) t = {
     width : int;
     height : int;
     color : 'c Color.t;
-    layout : layout;
     data : ('a, 'b) Data.t;
   }
   (** Image type *)
 
   val create :
-    ?layout:layout ->
     ('a, 'b) ty ->
     'c Color.t ->
     int ->
@@ -373,8 +365,8 @@ module Image : sig
   (** Get image data *)
 
   val of_data :
-    'c Color.t -> int -> int -> layout -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
-  (** [of_data color width height layout data] makes a new image from existing image data with the given [ty], [color], [layout], and dimensions *)
+    'c Color.t -> int -> int -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
+  (** [of_data color width height data] makes a new image from existing image data with the given [ty], [color], and dimensions *)
 
   val like : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** [like img] creates a new image with the same dimensions, color and ty as [img] *)
@@ -382,8 +374,6 @@ module Image : sig
   val like_with_color : 'd Color.t -> ('a, 'b, 'c) t -> ('a, 'b, 'd) t
 
   val like_with_ty : ('d, 'e) ty -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
-
-  val like_with_layout : layout -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 
   val copy : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Makes a copy of an image and underlying image data *)
@@ -393,9 +383,6 @@ module Image : sig
 
   val channels : ('a, 'b, 'c) t -> int
   (** Returns the number of channels in an image *)
-
-  val layout : ('a, 'b, 'c) t -> layout
-  (** Returns the image layout type *)
 
   val length : ('a, 'b, 'c) t -> int
   (** Returns the number of values contained in an image *)
@@ -479,9 +466,6 @@ module Image : sig
     ('a, 'b, 'c) t ->
     (float, f32) Data.t
   (** Get the average pixel of an image or region of an image *)
-
-  val convert_layout : layout -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  (** Convert an image to the given layout *)
 
   val crop :
     ('a, 'b, 'c) t ->

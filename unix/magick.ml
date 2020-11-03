@@ -1,7 +1,5 @@
 open Bimage
 
-let interlace = function Image.Planar -> "Plane" | Image.Interleaved -> "None"
-
 let convert_command = ref "convert"
 
 let identify_command = ref "identify"
@@ -10,7 +8,7 @@ let use_graphicsmagick () =
   convert_command := "gm convert";
   identify_command := "gm identify"
 
-let read (type color) ?(create = fun _name -> Image.create) ?(layout = Image.Interleaved) t
+let read (type color) ?(create = fun _name -> Image.create) t
     (module C: COLOR with type t = color) ?format filename =
   let format =
     match format with
@@ -23,10 +21,9 @@ let read (type color) ?(create = fun _name -> Image.create) ?(layout = Image.Int
     let read_image_data filename img =
       let f = C.name C.t in
       let channels = Image.channels img in
-      let interlace = interlace layout in
       let cmd =
-        Printf.sprintf "%s %s:'%s' -interlace %s -depth 8 %s:-" !convert_command
-          format filename interlace f
+        Printf.sprintf "%s %s:'%s' -depth 8 %s:-" !convert_command
+          format filename f
       in
       let input = Unix.open_process_in cmd in
       for i = 0 to (Image.(img.width * img.height) * channels) - 1 do
@@ -47,7 +44,7 @@ let read (type color) ?(create = fun _name -> Image.create) ?(layout = Image.Int
     let shape = String.split_on_char ' ' (String.trim s) in
     match List.map int_of_string shape with
     | [ x; y ] ->
-        let img = create filename ~layout t (module C) x y in
+        let img = create filename t (module C) x y in
         let () = read_image_data filename img in
         Ok img
     | _ -> Error `Invalid_shape
@@ -55,11 +52,11 @@ let read (type color) ?(create = fun _name -> Image.create) ?(layout = Image.Int
   | End_of_file -> Error (`Msg "end of file")
   | Failure msg -> Error (`Msg msg)
 
-let read_all ?create ?layout kind color ?format filenames =
+let read_all ?create kind color ?format filenames =
   try
     Ok
       (Array.map
-         (fun f -> read ?create ?layout kind color ?format f |> Error.unwrap)
+         (fun f -> read ?create kind color ?format f |> Error.unwrap)
          filenames)
   with Error.Exc err -> Error err
 
@@ -80,8 +77,8 @@ let write (type color) ?quality ?format filename img =
   let kind = Image.ty img in
   let _depth = Type.depth kind in
   let cmd =
-    Printf.sprintf "%s -interlace %s -size %dx%d -depth 8 %s:- %s %s:'%s'"
-      !convert_command (interlace img.layout) width height f quality format
+    Printf.sprintf "%s -size %dx%d -depth 8 %s:- %s %s:'%s'"
+      !convert_command width height f quality format
       filename
   in
   let output = Unix.open_process_out cmd in

@@ -66,7 +66,7 @@ let read (type color) f a b c (module C: Bimage.COLOR with type t = color) filen
       Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data
     in
     let im =
-      Bimage.Image.of_data (module C) !@width !@height Bimage.Image.Interleaved data'
+      Bimage.Image.of_data (module C) !@width !@height data'
     in
     let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
     Ok im
@@ -84,7 +84,7 @@ let read_from_memory (type color) f a b c (module C: Bimage.COLOR with type t = 
       Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data
     in
     let im =
-      Bimage.Image.of_data (module C) !@width !@height Bimage.Image.Interleaved data'
+      Bimage.Image.of_data (module C) !@width !@height data'
     in
     let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
     Ok im
@@ -133,11 +133,6 @@ let stbi_write_hdr =
     (string @-> int @-> int @-> int @-> ptr float @-> returning int)
 
 let write_png filename image =
-  let image =
-    match image.Bimage.Image.layout with
-    | Planar -> Bimage.Image.convert_layout Interleaved image
-    | Interleaved -> image
-  in
   let width, height, channels = Bimage.Image.shape image in
   let ptr = Ctypes.bigarray_start array1 (Bimage.Image.data image) in
   if stbi_write_png filename width height channels ptr (width * channels) = 0
@@ -145,11 +140,6 @@ let write_png filename image =
   else Ok ()
 
 let write_jpg ?(quality = 95) filename image =
-  let image =
-    match image.Bimage.Image.layout with
-    | Planar -> Bimage.Image.convert_layout Interleaved image
-    | Interleaved -> image
-  in
   let width, height, channels = Bimage.Image.shape image in
   let ptr = Ctypes.bigarray_start array1 (Bimage.Image.data image) in
   if stbi_write_jpg filename width height channels ptr quality = 0 then
@@ -157,11 +147,6 @@ let write_jpg ?(quality = 95) filename image =
   else Ok ()
 
 let write_hdr filename image =
-  let image =
-    match image.Bimage.Image.layout with
-    | Planar -> Bimage.Image.convert_layout Interleaved image
-    | Interleaved -> image
-  in
   let width, height, channels = Bimage.Image.shape image in
   let ptr = Ctypes.bigarray_start array1 (Bimage.Image.data image) in
   if stbi_write_hdr filename width height channels ptr = 0 then

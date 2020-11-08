@@ -5,8 +5,8 @@ module type COLOR = sig
   val name: t -> string
   val channels: t -> int
   val has_alpha: t -> bool
-  val to_rgb: t -> (float, Type.f64) Data.t -> (float, Type.f64) Data.t
-  val from_rgb: t -> (float, Type.f64) Data.t -> (float, Type.f64) Data.t
+  val to_rgb: t -> (float, Type.F64.elt) Data.t -> (float, Type.F64.elt) Data.t
+  val from_rgb: t -> (float, Type.F64.elt) Data.t -> (float, Type.F64.elt) Data.t
 end
 
 module Rgb: COLOR with type t = [`Rgb] = struct

@@ -2,17 +2,17 @@ open Bigarray
 
 type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
 
-let[@inline] ty t = Array1.kind t
+let[@inline] ty t = Array1.kind t |> Type.of_kind
 
-let create ty n =
-  let arr = Bigarray.Array1.create ty Bigarray.C_layout n in
-  Array1.fill arr (Type.of_float ty 0.0);
+let create (type a b) (module T: Type.TYPE with type t = a and type elt = b) n =
+  let arr = Bigarray.Array1.create T.kind Bigarray.C_layout n in
+  Array1.fill arr (T.of_float 0.0);
   arr
 
-let random ty n =
-  let dest = create ty n in
+let random t n =
+  let dest = create t n in
   for i = 0 to n - 1 do
-    dest.{i} <- Type.of_float ty (Random.float (Type.max ty))
+    dest.{i} <- Type.of_float t (Random.float (Type.max_f t))
   done;
   dest
 
@@ -38,25 +38,7 @@ let compare a b = compare a b
 
 let equal a b = compare a b = 0
 
-let of_float ?dest t arr =
-  let of_float = Type.of_float t in
-  let size = length arr in
-  let dest = match dest with None -> create t size | Some d -> d in
-  for i = 0 to size - 1 do
-    dest.{i} <- of_float arr.{i}
-  done;
-  dest
-
-let to_float ?dest arr =
-  let to_float = Type.to_float (ty arr) in
-  let size = length arr in
-  let dest = match dest with None -> create Type.f32 size | Some d -> d in
-  for i = 0 to size - 1 do
-    dest.{i} <- to_float arr.{i}
-  done;
-  dest
-
-let of_array t arr = Array1.of_array t C_layout arr
+let of_array t arr = Array1.of_array (Type.kind t) C_layout arr
 
 let to_array data =
   let size = length data in
@@ -83,7 +65,7 @@ let map2_inplace f a b =
 let copy_to ~dest src = Bigarray.Array1.blit src dest
 
 let copy data =
-  let dest = create (Bigarray.Array1.kind data) (length data) in
+  let dest = create (ty data) (length data) in
   copy_to ~dest data;
   dest
 

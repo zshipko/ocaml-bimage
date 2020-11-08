@@ -2,17 +2,29 @@ open Color
 
 type layout = Planar | Interleaved
 
+
 type ('a, 'b, 'c) t = {
   width : int;
   height : int;
   color : 'c Color.t;
+  ty: ('a, 'b) Type.t;
   data : ('a, 'b) Data.t;
 }
+
+module type TYPE = sig
+  type t
+  type repr
+  type storage
+
+  val kind: (repr, storage) Bigarray.kind
+  val to_float : repr -> float
+  val of_float : float -> repr
+end
 
 let create (type color) ty (module C: COLOR with type t = color) width height =
   let channels = C.channels C.t in
   let data = Data.create ty (width * height * channels) in
-  { width; height; color = (module C); data }
+  { width; height; ty; color = (module C); data }
 
 let compare a b = Data.compare a.data b.data
 
@@ -20,8 +32,9 @@ let equal a b = Data.equal a.data b.data
 
 let of_data (type color) (module C: COLOR with type t = color) width height data =
   let channels = C.channels C.t in
+  let ty = Data.ty data in
   if width * height * channels <> Data.length data then Error.exc `Invalid_shape
-  else { width; height; color = (module C); data }
+  else { width; height; ty; color = (module C); data }
 
 let like image =
   create (Data.ty image.data) image.color image.width
@@ -43,7 +56,7 @@ let copy_to ~dest src = Data.copy_to ~dest:dest.data src.data
 let random (type color) ty (module C: COLOR with type t = color) width height =
   let channels = C.channels C.t in
   let data = Data.random ty (width * height * channels) in
-  { width; height; color = (module C); data }
+  { width; height; ty; color = (module C); data }
 
 let channels (type c) { color; _ } =
   let (module C: COLOR with type t = c) = color in
@@ -207,7 +220,7 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let height =
     match height with None -> img.height - y | Some h -> min h (img.width - y)
   in
-  let avg = Data.create Type.f32 (channels img) in
+  let avg = Data.create Type.f64 (channels img) in
   let channels = channels img in
   let size = float_of_int (width * height) in
   let ty = ty img in

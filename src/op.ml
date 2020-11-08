@@ -67,10 +67,10 @@ let apply f a inputs x y c = f (Expr.float @@ a inputs x y c) inputs x y c
 
 let scalar : float -> ('a, 'b, 'c) t = fun f _inputs _x _y _c -> f
 
-let scalar_min : ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t =
+let scalar_min : ('a, 'b) Type.t -> ('a, 'b, 'c) t =
  fun k -> scalar (Type.min_f k)
 
-let scalar_max : ('a, 'b) Bigarray.kind -> ('a, 'b, 'c) t =
+let scalar_max : ('a, 'b) Type.t -> ('a, 'b, 'c) t =
  fun k -> scalar (Type.max_f k)
 
 let invert ?(input = 0) : ('a, 'b, 'c) t =

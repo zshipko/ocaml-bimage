@@ -23,23 +23,23 @@ type base_type =
   | String
   | Ptr
 
-let base_type_of_ty : type a b. (a, b) ty -> (base_type, error) result = function
-  | Float64 -> Ok Double
-  | Float32 -> Ok Float
-  | Int8_signed -> Ok Int8
-  | Int16_signed -> Ok Int16
-  | Int8_unsigned -> Ok UInt8
-  | Int16_unsigned -> Ok UInt16
-  | Int32 -> Ok Int32
-  | Int64 -> Ok Int64
+let base_type_of_ty : type a b. (a, b) Type.t -> base_type = fun (module T) ->
+  match T.kind with
+  | Float64 -> Double
+  | Float32 -> Float
+  | Int8_signed -> Int8
+  | Int16_signed -> Int16
+  | Int8_unsigned -> UInt8
+  | Int16_unsigned -> UInt16
+  | Int32 -> Int32
+  | Int64 -> Int64
   | _ -> raise Unsupported
 
 external image_spec: int -> int -> int -> base_type -> spec = "image_spec"
 
 let image_spec (type color) ty (module C: COLOR with type t = color) width height =
-  match base_type_of_ty ty with
-  | Ok base -> Ok (image_spec width height (C.channels C.t) base)
-  | Error e -> Error e
+  let base = base_type_of_ty ty in
+  image_spec width height (C.channels C.t) base
 
 external spec_shape: spec -> int * int * int = "spec_shape"
 external spec_base_type : spec -> base_type = "spec_base_type"
@@ -103,11 +103,9 @@ module Output = struct
 
   let write_image output image =
     try
-      (match image_spec (Image.ty image) image.color image.width image.height with
-      | Ok spec ->
-          let () = output_set_spec output spec in
-          let () = output_write_image output (Image.data image) in
-          Ok ()
-      | Error e -> Error e)
+      let spec = image_spec (Image.ty image) image.color image.width image.height in
+        let () = output_set_spec output spec in
+        let () = output_write_image output (Image.data image) in
+        Ok ()
     with Failure reason -> Error (`Msg reason)
 end

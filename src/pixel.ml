@@ -1,4 +1,4 @@
-type 'a t = Pixel : ('a Color.t * (float, Type.f64) Data.t) -> 'a t [@@unboxed]
+type 'a t = Pixel : ('a Color.t * (float, Type.F64.elt) Data.t) -> 'a t [@@unboxed]
 
 let empty (type c) color =
   let (module C: Color.COLOR with type t = c) = color in
@@ -19,12 +19,12 @@ let from_rgb (type color) color (Pixel (_rgb, a)) =
   let (module C: Color.COLOR with type t = color) = color in
   Pixel (color, C.from_rgb C.t a)
 
-let from_data color data =
+let from_data (type a b) color data =
   let len = Data.length data in
   let (Pixel (_, px)) = empty color in
-  let ty = Data.ty data in
+  let (module T: Type.TYPE with type t = a and type elt = b) = Data.ty data in
   for i = 0 to len - 1 do
-    px.{i} <- Type.(to_float ty data.{i} |> normalize ty)
+    px.{i} <- T.(to_float data.{i} |> Type.normalize (module T))
   done;
   Pixel (color, px)
 

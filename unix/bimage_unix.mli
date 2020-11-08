@@ -1,37 +1,38 @@
 open Bimage
+open Bigarray
 
 (** Stb contains image I/O operationgs using stb_image *)
 module Stb : sig
-  val read_u8 : 'a Color.t -> string -> ((int, u8, 'a) Image.t, Error.t) result
+  val read_u8 : 'a Color.t -> string -> ((int, int8_unsigned_elt, 'a) Image.t, Error.t) result
 
   val read_u8_from_memory :
-    'a Color.t -> bytes -> ((int, u8, 'a) Image.t, Error.t) result
+    'a Color.t -> bytes -> ((int, int8_unsigned_elt, 'a) Image.t, Error.t) result
 
   val read_u16 :
-    'a Color.t -> string -> ((int, u16, 'a) Image.t, Error.t) result
+    'a Color.t -> string -> ((int, int16_unsigned_elt, 'a) Image.t, Error.t) result
 
   val read_u16_from_memory :
-    'a Color.t -> bytes -> ((int, u16, 'a) Image.t, Error.t) result
+    'a Color.t -> bytes -> ((int, int16_unsigned_elt, 'a) Image.t, Error.t) result
 
   val read_f32 :
-    'a Color.t -> string -> ((float, f32, 'a) Image.t, Error.t) result
+    'a Color.t -> string -> ((float, float32_elt, 'a) Image.t, Error.t) result
 
   val read_f32_from_memory :
-    'a Color.t -> bytes -> ((float, f32, 'a) Image.t, Error.t) result
+    'a Color.t -> bytes -> ((float, float32_elt, 'a) Image.t, Error.t) result
 
   val read :
-    ('a, 'b) ty ->
+    ('a, 'b) Type.t ->
     'c Color.t ->
     string ->
     (('a, 'b, 'c) Image.t, Error.t) result
 
   val read_from_memory :
-    ('a, 'b) ty ->
+    ('a, 'b) Type.t ->
     'c Color.t ->
     bytes ->
     (('a, 'b, 'c) Image.t, Error.t) result
 
-  val write_png : string -> (int, u8, 'c) Image.t -> (unit, Error.t) result
+  val write_png : string -> (int, int8_unsigned_elt, 'c) Image.t -> (unit, Error.t) result
 
   val write_jpg :
     ?quality:int -> string -> (int, u8, 'c) Image.t -> (unit, Error.t) result
@@ -51,12 +52,12 @@ module Magick : sig
   val read :
     ?create:
       (string ->
-      ('a, 'b) ty ->
+      ('a, 'b) Type.t ->
       'c Color.t ->
       int ->
       int ->
       ('a, 'b, 'c) Image.t) ->
-    ('a, 'b) ty ->
+    ('a, 'b) Type.t ->
     ([< `Gray | `Rgb | `Rgba ] as 'c) Color.t ->
     ?format:string ->
     string ->
@@ -74,12 +75,12 @@ module Magick : sig
   val read_all :
     ?create:
       (string ->
-      ('a, 'b) ty ->
+      ('a, 'b) Type.t ->
       'c Color.t ->
       int ->
       int ->
       ('a, 'b, 'c) Image.t) ->
-    ('a, 'b) ty ->
+    ('a, 'b) Type.t ->
     ([< `Gray | `Rgb | `Rgba] as 'c) Color.t ->
     ?format:string ->
     string array ->
@@ -97,13 +98,13 @@ end
 
 module Data_unix : sig
   val create_mmap :
-    ?mode:int -> ('a, 'b) ty -> filename:string -> int -> ('a, 'b) Data.t
+    ?mode:int -> ('a, 'b) Type.t -> filename:string -> int -> ('a, 'b) Data.t
 end
 
 module Image_unix : sig
   val create_mmap :
     ?mode:int ->
-    ('a, 'b) ty ->
+    ('a, 'b) Type.t ->
     'c Color.t ->
     filename:string ->
     int ->

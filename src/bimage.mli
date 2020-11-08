@@ -11,42 +11,21 @@
 open Bigarray
 (** {1 Bimage} *)
 
+module type TYPE = sig
+  type t
+  type elt
+  type kind = (t, elt) Bigarray.kind
+
+  val name: string
+  val kind: kind
+  val of_float: float -> t
+  val to_float: t -> float
+end
+
+type ('a, 'b) kind = ('a, 'b) Bigarray.kind
+
 exception Unsupported
-(** Raised when attempting to use Char, Int8_signed, Int16_signed Bigarray types *)
-
-type ('a, 'b) ty = ('a, 'b) Bigarray.kind
-
-type u8 = int8_unsigned_elt
-
-type u16 = int16_unsigned_elt
-
-type i32 = int32_elt
-
-type i64 = int64_elt
-
-type f32 = float32_elt
-
-type f64 = float64_elt
-
-type c32 = complex32_elt
-
-type c64 = complex64_elt
-
-val u8 : (int, u8) ty
-
-val u16 : (int, u16) ty
-
-val i32 : (int32, i32) ty
-
-val i64 : (int64, i64) ty
-
-val f32 : (float, f32) ty
-
-val f64 : (float, f64) ty
-
-val c32 : (Complex.t, c32) ty
-
-val c64 : (Complex.t, c64) ty
+(** Raised when attempting to use Bigarray types other than u8, u16, f32, f64, i32, i64*)
 
 module Error : sig
   type t =
@@ -107,8 +86,8 @@ module type COLOR = sig
   val name: t -> string
   val channels: t -> int
   val has_alpha: t -> bool
-  val to_rgb: t -> (float, f64) Data.t ->  (float, f64) Data.t
-  val from_rgb: t -> (float, f64) Data.t ->  (float, f64) Data.t
+  val to_rgb: t -> (float, float64_elt) Data.t ->  (float, float64_elt) Data.t
+  val from_rgb: t -> (float, float64_elt) Data.t ->  (float, float64_elt) Data.t
 end
 
 (** Color contains methods for creating and inspecting color types *)
@@ -177,57 +156,93 @@ val rgba : [`Rgba] Color.t
 (** Generic color *)
 
 module Type: sig
-  val name : ('a, 'b) ty -> string
+  type ('a, 'b) t = (module TYPE with type t = 'a and type elt = 'b)
+
+  val kind : ('a, 'b) t -> ('a, 'b) Bigarray.kind
+  (** Get Bigarray kind *)
+
+  val name : ('a, 'b) t -> string
   (** [name k] returns the name of a given ty *)
 
-  val depth : ('a, 'b) ty -> int
+  val depth : ('a, 'b) t -> int
   (** returns the number of bits for a given ty *)
 
-  val max : ('a, 'b) ty -> 'a
+  val max : ('a, 'b) Type.t -> 'a
   (** [max k] returns the maximum normalized value for [k] *)
 
-  val min : ('a, 'b) ty -> 'a
+  val min : ('a, 'b) Type.t -> 'a
   (** [min k] returns the minimum normalized value for [k] *)
 
-  val max_f : ('a, 'b) ty -> float
+  val max_f : ('a, 'b) Type.t -> float
   (** [max k] returns the maximum normalized value for [k] as a float *)
 
-  val min_f : ('a, 'b) ty -> float
+  val min_f : ('a, 'b) Type.t -> float
   (** [min k] returns the minimum normalized value for [k] as a float *)
 
-  val to_float : ('a, 'b) ty -> 'a -> float
-  (** [to_float k x] converts a value of ty [k] to float *)
+  val to_float : ('a, 'b) Type.t -> 'a -> float
+  (** [to_float k x] converts a value of type [k] to float *)
 
-  val of_float : ('a, 'b) ty -> float -> 'a
+  val of_float : ('a, 'b) Type.t -> float -> 'a
   (** [of_float k x] converts a float to a value of ty [k] *)
 
-  val clamp : ('a, 'b) ty -> float -> float
-  (** Converts a float value to a value within the proper range for the given ty *)
+  val clamp : ('a, 'b) Type.t -> float -> float
+  (** Converts a float value to a value within the proper range for the given type *)
 
-  val normalize : ('a, 'b) ty -> float -> float
+  val normalize : ('a, 'b) Type.t -> float -> float
   (** Scales a value to the range 0.0-1.0 *)
 
-  val denormalize : ('a, 'b) ty -> float -> float
+  val denormalize : ('a, 'b) Type.t -> float -> float
   (** Sclaes a value to the range (type_min-type_max) *)
 
-  val convert : from:('a, 'b) ty -> ('c, 'd) ty -> 'a -> 'c
+  val convert : from:('a, 'b) Type.t -> ('c, 'd) Type.t -> 'a -> 'c
 end
+
+type u8_elt = int8_unsigned_elt
+type u8 = (int, u8_elt) Type.t
+
+type u16_elt = int16_unsigned_elt
+type u16 = (int, u16_elt) Type.t
+
+type i32_elt = int32_elt
+type i32 = (int32, i32_elt) Type.t
+
+type i64_elt = int64_elt
+type i64 = (int64, i64_elt) Type.t
+
+type f32_elt = float32_elt
+type f32 = (float, f32_elt) Type.t
+
+type f64_elt = float64_elt
+type f64 = (float, f64_elt) Type.t
+
+val u8 : u8
+
+val u16 : u16
+
+val i32 : i32
+
+val i64 : i64
+
+val f32 : f32
+
+val f64 : f64
+
 
 (** The Data module defines several operations on one dimensional image data *)
 module Data : sig
   type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
   (** Data type *)
 
-  val ty : ('a, 'b) t -> ('a, 'b) ty
+  val ty : ('a, 'b) t -> ('a, 'b) Type.t
   (** Get the [Bigarray.ty] *)
 
-  val of_array : ('a, 'b) ty -> 'a array -> ('a, 'b) t
+  val of_array : ('a, 'b) Type.t -> 'a array -> ('a, 'b) t
   (** Converts an array to a [Data.t] of the given ty *)
 
   val to_array : ('a, 'b) t -> 'a array
   (** Converts a [Data.t] to an array *)
 
-  val create : ('a, 'b) ty -> int -> ('a, 'b) t
+  val create : ('a, 'b) Type.t -> int -> ('a, 'b) t
   (** Create a new [Data.t] with the given length. *)
 
   val length : ('a, 'b) t -> int
@@ -258,20 +273,11 @@ module Data : sig
   val copy : ('a, 'b) t -> ('a, 'b) t
   (** Create a new copy of [Data.t] *)
 
-  val convert : ('c, 'd) ty -> ('a -> 'c) -> ('a, 'b) t -> ('c, 'd) t
+  val convert : ('c, 'd) Type.t -> ('a -> 'c) -> ('a, 'b) t -> ('c, 'd) t
   (** Convert between [Data.t] types *)
 
   val convert_to : ('a -> 'c) -> dest:('c, 'd) t -> ('a, 'b) t -> unit
   (** Convert between [Data.t] types with an existing destination image *)
-
-  val of_float :
-    ?dest:('a, 'b) t -> ('a, 'b) ty -> (float, f32) t -> ('a, 'b) t
-  (** [of_float ~dest k data] converts a [Data.t] from float to [k], storing the results in
-      [dest] if provided. *)
-
-  val to_float : ?dest:(float, f32) t -> ('a, 'b) t -> (float, f32) t
-  (** [to_float ~dest data] converts a [Data.t] to float values, storing the results in
-      [dest] if provided. *)
 
   val hash : ('a, 'b) t -> int
   (** Default hash function *)
@@ -303,7 +309,7 @@ module Pixel : sig
   val to_data : dest:('a, 'b) Data.t -> 'c t -> unit
   (** Copy pixel data to existing image data *)
 
-  val data : 'a t -> (float, f64) Data.t
+  val data : 'a t -> (float, f64_elt) Data.t
   (** Returns the underlying pixel data *)
 
   val to_rgb: 'a Pixel.t -> rgb Pixel.t
@@ -345,12 +351,13 @@ module Image : sig
     width : int;
     height : int;
     color : 'c Color.t;
+    ty: ('a, 'b) Type.t;
     data : ('a, 'b) Data.t;
   }
   (** Image type *)
 
   val create :
-    ('a, 'b) ty ->
+    ('a, 'b) Type.t ->
     'c Color.t ->
     int ->
     int ->
@@ -373,7 +380,7 @@ module Image : sig
 
   val like_with_color : 'd Color.t -> ('a, 'b, 'c) t -> ('a, 'b, 'd) t
 
-  val like_with_ty : ('d, 'e) ty -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
+  val like_with_ty : ('d, 'e) Type.t -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
 
   val copy : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Makes a copy of an image and underlying image data *)
@@ -387,7 +394,7 @@ module Image : sig
   val length : ('a, 'b, 'c) t -> int
   (** Returns the number of values contained in an image *)
 
-  val ty : ('a, 'b, 'c) t -> ('a, 'b) ty
+  val ty : ('a, 'b, 'c) t -> ('a, 'b) Type.t
   (** Returns the image ty *)
 
   val color : ('a, 'b, 'c) t -> 'c Color.t
@@ -399,7 +406,7 @@ module Image : sig
   val convert_to : dest:('d, 'e, 'c) t -> ('a, 'b, 'c) t -> unit
   (** Convert an image to an existing image of another ty *)
 
-  val convert : ('d, 'e) ty -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
+  val convert : ('d, 'e) Type.t -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
   (** Convert an image to a new image of another ty *)
 
   (*val of_any_color :
@@ -464,7 +471,7 @@ module Image : sig
     ?width:int ->
     ?height:int ->
     ('a, 'b, 'c) t ->
-    (float, f32) Data.t
+    (float, f64_elt) Data.t
   (** Get the average pixel of an image or region of an image *)
 
   val crop :
@@ -891,10 +898,10 @@ module Op : sig
   val scalar : float -> ('a, 'b, 'c) t
   (** Builds an operation returning a single value *)
 
-  val scalar_max : ('a, 'b) ty -> ('a, 'b, 'c) t
+  val scalar_max : ('a, 'b) Type.t -> ('a, 'b, 'c) t
   (** Builds an operation returning the maximum value for a given ty *)
 
-  val scalar_min : ('a, 'b) ty -> ('a, 'b, 'c) t
+  val scalar_min : ('a, 'b) Type.t -> ('a, 'b, 'c) t
   (** Builds an operation returning the minimum value for a given ty *)
 
   val invert : ?input:Input.index -> ('a, 'b, 'c) t

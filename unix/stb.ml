@@ -63,7 +63,7 @@ let read (type color) f a b c (module C: Bimage.COLOR with type t = color) filen
   else
     let data = coerce (ptr a) (ptr b) data in
     let data' =
-      Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data
+      Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) (Bimage.Type.kind c) data
     in
     let im =
       Bimage.Image.of_data (module C) !@width !@height data'
@@ -81,7 +81,7 @@ let read_from_memory (type color) f a b c (module C: Bimage.COLOR with type t = 
   else
     let data = coerce (ptr a) (ptr b) data in
     let data' =
-      Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) c data
+      Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) (Bimage.Type.kind c) data
     in
     let im =
       Bimage.Image.of_data (module C) !@width !@height data'

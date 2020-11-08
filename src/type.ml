@@ -83,35 +83,24 @@ module I64 = struct
 end
 
 
-type u8_elt = int8_unsigned_elt
-type u8 = (module TYPE with type t = int and type elt = u8_elt)
+type u8 = int8_unsigned_elt
+type u16 = int16_unsigned_elt
+type i32 = int32_elt
+type i64 = int64_elt
+type f32 = float32_elt
+type f64 = float64_elt
 
-type u16_elt = int16_unsigned_elt
-type u16 = (module TYPE with type t = int and type elt = u16_elt)
+let u8: (int, u8) t = (module U8)
 
-type i32_elt = int32_elt
-type i32 = (module TYPE with type t = int32 and type elt = i32_elt)
+let u16: (int, u16) t = (module U16)
 
-type i64_elt = int64_elt
-type i64 = (module TYPE with type t = int64 and type elt = i64_elt)
+let i32: (int32, i32) t = (module I32)
 
-type f32_elt = float32_elt
-type f32 = (module TYPE with type t = float and type elt = f32_elt)
+let i64: (int64, i64) t = (module I64)
 
-type f64_elt = float64_elt
-type f64 = (module TYPE with type t = float and type elt = f64_elt)
+let f32: (float, f32) t = (module F32)
 
-let u8: u8 = (module U8)
-
-let u16: u16 = (module U16)
-
-let i32: i32 = (module I32)
-
-let i64: i64 = (module I64)
-
-let f32: f32 = (module F32)
-
-let f64: f64 = (module F64)
+let f64: (float, f64) t = (module F64)
 
 let name : type a b. (a, b) t -> string = fun (module T) ->
   T.name

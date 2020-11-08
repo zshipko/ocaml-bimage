@@ -197,35 +197,19 @@ module Type: sig
   val convert : from:('a, 'b) Type.t -> ('c, 'd) Type.t -> 'a -> 'c
 end
 
-type u8_elt = int8_unsigned_elt
-type u8 = (int, u8_elt) Type.t
+type u8 = int8_unsigned_elt
+type u16 = int16_unsigned_elt
+type i32 = int32_elt
+type i64 = int64_elt
+type f32 = float32_elt
+type f64 = float64_elt
 
-type u16_elt = int16_unsigned_elt
-type u16 = (int, u16_elt) Type.t
-
-type i32_elt = int32_elt
-type i32 = (int32, i32_elt) Type.t
-
-type i64_elt = int64_elt
-type i64 = (int64, i64_elt) Type.t
-
-type f32_elt = float32_elt
-type f32 = (float, f32_elt) Type.t
-
-type f64_elt = float64_elt
-type f64 = (float, f64_elt) Type.t
-
-val u8 : u8
-
-val u16 : u16
-
-val i32 : i32
-
-val i64 : i64
-
-val f32 : f32
-
-val f64 : f64
+val u8 : (int, u8) Type.t
+val u16 : (int, u16) Type.t
+val i32 : (int32, i32) Type.t
+val i64 : (int64, i64) Type.t
+val f32 : (float, f32) Type.t
+val f64 : (float, f64) Type.t
 
 
 (** The Data module defines several operations on one dimensional image data *)
@@ -309,7 +293,7 @@ module Pixel : sig
   val to_data : dest:('a, 'b) Data.t -> 'c t -> unit
   (** Copy pixel data to existing image data *)
 
-  val data : 'a t -> (float, f64_elt) Data.t
+  val data : 'a t -> (float, f64) Data.t
   (** Returns the underlying pixel data *)
 
   val to_rgb: 'a Pixel.t -> rgb Pixel.t
@@ -471,7 +455,7 @@ module Image : sig
     ?width:int ->
     ?height:int ->
     ('a, 'b, 'c) t ->
-    (float, f64_elt) Data.t
+    (float, f64) Data.t
   (** Get the average pixel of an image or region of an image *)
 
   val crop :

@@ -229,7 +229,7 @@ let threshold input thresh =
         (float 0.0) (type_max input))
 
 let rec prepare :
-    type a. int ref -> int ref -> int ref -> a t -> ('b, 'c, 'd) Input.t -> a =
+    type a. int ref -> int ref -> int ref -> a t -> Input.t -> a =
  fun x y c expr inputs ->
    match expr with
    | Kernel (i, k) -> prepare x y c (kernel i k) inputs
@@ -237,7 +237,8 @@ let rec prepare :
        let x' = prepare x y c x' inputs in
        let y' = prepare x y c y' inputs in
        let c' = prepare x y c c' inputs in
-       let f : float = Image.get_norm (Input.get inputs input) x' y' c' in
+       let Input input = Input.get inputs input in
+       let f : float = Image.get_norm input x' y' c' in
        f
    | X -> !x
    | Y -> !y
@@ -358,16 +359,25 @@ let rec prepare :
    | Pixel (index, x', y') ->
        let x' = prepare x y c x' inputs in
        let y' = prepare x y c y' inputs in
-       Pixel.to_rgb (Image.get_pixel inputs.(index) x' y')
+       let Input input = inputs.(index) in
+       Pixel.to_rgb (Image.get_pixel input x' y')
    | Value x -> x
    | Pair (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        (a, b)
-   | Type_min index -> Image.ty inputs.(index) |> Type.min_f
-   | Type_max index -> Image.ty inputs.(index) |> Type.max_f
-   | Channels index -> Image.channels inputs.(index)
-   | Shape index -> Image.shape inputs.(index)
+   | Type_min index ->
+       let Input input = inputs.(index) in
+       Image.ty input |> Type.min_f
+   | Type_max index ->
+       let Input input = inputs.(index) in
+       Image.ty input |> Type.max_f
+   | Channels index ->
+       let Input input = inputs.(index) in
+       Image.channels input
+   | Shape index ->
+       let Input input = inputs.(index) in
+       Image.shape input
 
 let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body =
   let f = prepare x y c body in

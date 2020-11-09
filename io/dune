@@ -5,5 +5,5 @@
   (language cxx)
   (names input output spec))
  (c_library_flags (-lOpenImageIO -lstdc++))
- (libraries bimage)
+ (libraries bimage threads)
 )

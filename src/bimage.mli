@@ -563,8 +563,27 @@ module Kernel : sig
   (** [gassian n] generates a new [n]x[n] gaussian kernel *)
 end
 
-type ('a, 'b, 'c, 'd, 'e, 'f) filter =
-  output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
+(** Defines the type used as input to operations *)
+module Input : sig
+  type input = Input: ('a, 'b, 'c) Image.t -> input
+  type t = input array
+
+  type index = private int
+
+  val index : int -> index
+  val input: ('a, 'b, 'c) Image.t -> input
+
+  val int_of_index : index -> int
+
+  val get : t -> index -> input
+  (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
+      if the provided index is out of bounds. *)
+
+  val shape: t -> int * int * int
+end
+
+type ('a, 'b, 'c) filter =
+  output:('a, 'b, 'c) Image.t -> Input.t -> unit
 
 module Transform : sig
   type t
@@ -610,25 +629,6 @@ module Transform : sig
   val transform : t -> Point.t -> Point.t
 end
 
-(** Defines the type used as input to operations *)
-module Input : sig
-  type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array
-
-  type index = private int
-
-  val index : int -> index
-
-  val int_of_index : index -> int
-
-  val get : ('a, 'b, 'c) t -> index -> ('a, 'b, 'c) Image.t
-  (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
-      if the provided index is out of bounds. *)
-
-  val make_output :
-    ?width:int -> ?height:int -> ('a, 'b, 'c) t -> ('a, 'b, 'c) Image.t
-  (** Create an output image width the given width and height if provided, otherwise the generated
-        image will match the first input image in size, ty and color *)
-end
 
 (** Expr implements an operation combinator which can be used to build operations from low-level functions *)
 module Expr : sig
@@ -679,7 +679,7 @@ module Expr : sig
     ?y:int ref ->
     ?c:int ref ->
     float t ->
-    ('a, 'b, 'c) Image.t array ->
+    Input.t ->
     int ->
     int ->
     int ->
@@ -836,31 +836,31 @@ end
 
 (** Op is used to define pixel-level operations. These operations are performed on normalized floating-point values *)
 module Op : sig
-  type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+  type t = Input.t -> int -> int -> int -> float
 
-  type ('a, 'b, 'c) f = float Expr.t -> ('a, 'b, 'c) t
+  type f = float Expr.t -> t
 
-  val blend : ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
+  val blend : ?input:Input.index -> ?input1:Input.index -> t
   (** Blend two images: [a + b / 2] *)
 
-  val min : ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
+  val min : ?input:Input.index -> ?input1:Input.index -> t
   (** Minimum pixel value of two images *)
 
-  val max : ?input:Input.index -> ?input1:Input.index -> ('a, 'b, 'c) t
+  val max : ?input:Input.index -> ?input1:Input.index -> t
   (** Maximum pixel value of two images *)
 
-  val grayscale : ?input:Input.index -> ('a, 'b, [< `Rgb | `Rgba ]) t
+  val grayscale : ?input:Input.index -> t
   (** Convert a color image to grayscale *)
 
-  val color : ?input:Input.index -> ('a, 'b, [ `Gray ]) t
+  val color : ?input:Input.index -> t
   (** Convert a grayscale image to color *)
 
   val eval :
     ?x:int ref ->
     ?y:int ref ->
     ?c:int ref ->
-    ('a, 'b, 'c) t ->
-    ('a, 'b, 'c, 'd, 'e, 'f) filter
+    t ->
+    ('a, 'b, 'c) filter
   (** Evaluate an operation *)
 
   val eval_expr :
@@ -868,80 +868,80 @@ module Op : sig
     ?y:int ref ->
     ?c:int ref ->
     float Expr.t ->
-    ('a, 'b, 'c, 'd, 'e, 'f) filter
+    ('a, 'b, 'c) filter
   (** Convert an [Expr] to a filter *)
 
   val join :
     (float -> float -> float) ->
-    ('a, 'b, 'c) t ->
-    ('a, 'b, 'c) t ->
-    ('a, 'b, 'c) t
+    t ->
+    t ->
+    t
   (** [join f a b] builds a new operation of [f(a, b)] *)
 
-  val apply : ('a, 'b, 'c) f -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val apply : f -> t -> t
   (** [map f a] builds a new operation of [f(a)] *)
 
-  val scalar : float -> ('a, 'b, 'c) t
+  val scalar : float -> t
   (** Builds an operation returning a single value *)
 
-  val scalar_max : ('a, 'b) Type.t -> ('a, 'b, 'c) t
+  val scalar_max : ('a, 'b) Type.t -> t
   (** Builds an operation returning the maximum value for a given ty *)
 
-  val scalar_min : ('a, 'b) Type.t -> ('a, 'b, 'c) t
+  val scalar_min : ('a, 'b) Type.t -> t
   (** Builds an operation returning the minimum value for a given ty *)
 
-  val invert : ?input:Input.index -> ('a, 'b, 'c) t
+  val invert : ?input:Input.index -> t
   (** Invert the values in an image *)
 
   val cond :
-    (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool) ->
-    ('a, 'b, 'c) t ->
-    ('a, 'b, 'c) t ->
-    ('a, 'b, 'c) t
+    (Input.t -> int -> int -> int -> bool) ->
+    t ->
+    t ->
+    t
   (** Conditional operation *)
 
-  val sobel_x : ?input:Input.index -> ('a, 'b, 'c) t
+  val sobel_x : ?input:Input.index -> t
   (** Sobel in the X direction *)
 
-  val sobel_y : ?input:Input.index -> ('a, 'b, 'c) t
+  val sobel_y : ?input:Input.index -> t
   (** Sobel in the Y direction *)
 
-  val sobel : ?input:Input.index -> ('a, 'b, 'c) t
+  val sobel : ?input:Input.index -> t
   (** Sobel kernel *)
 
-  val gaussian_blur : ?input:Input.index -> ?std:float -> int -> ('a, 'b, 'c) t
+  val gaussian_blur : ?input:Input.index -> ?std:float -> int -> t
   (** Blur using gaussian kernel. The size must be an odd number. *)
 
-  val transform : ?input:Input.index -> Transform.t -> ('a, 'b, 'c) t
+  val transform : ?input:Input.index -> Transform.t -> t
   (** Apply a transformation *)
 
   val rotate :
-    ?input:Input.index -> ?center:float * float -> Angle.t -> ('a, 'b, 'c) t
+    ?input:Input.index -> ?center:float * float -> Angle.t -> t
   (** Rotation operation *)
 
-  val scale : ?input:Input.index -> float -> float -> ('a, 'b, 'c) t
+  val scale : ?input:Input.index -> float -> float -> t
   (** Scale an image by the given amount *)
 
-  val brightness : ?input:Input.index -> float Expr.t -> ('a, 'b, 'c) t
+  val brightness : ?input:Input.index -> float Expr.t -> t
   (** Adjust the brightness of an image. 0.0 will remove all brightness and 1.0 will keep the image as-is. *)
 
-  val threshold : ?input:Input.index -> float array -> ('a, 'b, 'c) t
+  val threshold : ?input:Input.index -> float array -> t
   (** Per-channel threshold -- each entry in the given array is the threshold for the channel with the same index *)
 
   module Infix : sig
-    val ( &+ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+    val ( &+ ) : t -> t -> t
     (** Infix operator for [join] using addition *)
 
-    val ( &- ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+    val ( &- ) : t -> t -> t
     (** Infix operator for [join] using subtraction *)
 
-    val ( &* ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+    val ( &* ) : t -> t -> t
     (** Infix operator for [join] using multiplication *)
 
-    val ( &/ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+    val ( &/ ) : t -> t -> t
     (** Infix operator for [join] using division *)
 
-    val ( $ ) : ('a, 'b, 'c) t -> ('a, 'b, 'c) f -> ('a, 'b, 'c) t
+    val ( $ ) : t -> f -> t
     (** Infix operator for [map] *)
   end
 end

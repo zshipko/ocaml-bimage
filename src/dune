@@ -1,4 +1,4 @@
 (library
  (name bimage)
  (public_name bimage)
- (libraries bigarray))
+ (libraries bigarray lwt))

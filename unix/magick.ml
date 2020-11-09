@@ -56,7 +56,7 @@ let read_all ?create kind color ?format filenames =
   try
     Ok
       (Array.map
-         (fun f -> read ?create kind color ?format f |> Error.unwrap)
+         (fun f -> read ?create kind color ?format f |> Error.unwrap |> Input.input)
          filenames)
   with Error.Exc err -> Error err
 

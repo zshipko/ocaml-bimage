@@ -11,6 +11,7 @@
 #include <caml/fail.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
+#include <caml/threads.h>
 
 using namespace OIIO;
 using std::unique_ptr;

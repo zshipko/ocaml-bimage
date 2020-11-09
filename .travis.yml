@@ -1,23 +1,12 @@
-language: c
-install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/master/.travis-opam.sh
-script: bash -ex .travis-opam.sh
 env:
   global:
-    - PINS="bimage.dev:. bimage-unix.dev:. bimage-gtk.dev:. bimage-sdl.dev:."
+    - 'PINS="bimage.dev:. bimage-unix.dev:. bimage-io.dev:."'
   matrix:
-    - OCAML_VERSION=4.07 PACKAGE="bimage.dev" TESTS=false
-    - OCAML_VERSION=4.07 PACKAGE="bimage-gtk.dev" TESTS=false
-    - OCAML_VERSION=4.08 PACKAGE="bimage.dev" TESTS=false
-    - OCAML_VERSION=4.08 PACKAGE="bimage-gtk.dev" TESTS=false
-    - OCAML_VERSION=4.09 PACKAGE="bimage.dev" TESTS=false
-    - OCAML_VERSION=4.09 PACKAGE="bimage-gtk.dev" TESTS=false
-    - OCAML_VERSION=4.10 PACKAGE="bimage.dev" TESTS=false
-    - OCAML_VERSION=4.10 PACKAGE="bimage-gtk.dev" TESTS=false
-    #- OCAML_VERSION=4.10 PACKAGE="bimage-sdl.dev" TESTS=false
-    #- OCAML_VERSION=4.06 PACKAGE="bimage-unix.dev" TESTS=true
-    - OCAML_VERSION=4.07 PACKAGE="bimage-unix.dev" TESTS=true
-    - OCAML_VERSION=4.08 PACKAGE="bimage-unix.dev" TESTS=true
-    - OCAML_VERSION=4.09 PACKAGE="bimage-unix.dev" TESTS=true
-    - OCAML_VERSION=4.10 PACKAGE="bimage-unix.dev" TESTS=true
-
-
+    - 'OCAML_VERSION=4.07 PACKAGE="bimage-unix.dev" TESTS=true'
+    - 'OCAML_VERSION=4.08 PACKAGE="bimage-unix.dev" TESTS=true'
+    - 'OCAML_VERSION=4.09 PACKAGE="bimage-unix.dev" TESTS=true'
+    - 'OCAML_VERSION=4.10 PACKAGE="bimage-unix.dev" TESTS=true'
+    - 'OCAML_VERSION=4.11 PACKAGE="bimage-unix.dev" TESTS=true'
+install: 'wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/master/.travis-opam.sh'
+language: c
+script: 'bash -ex .travis-opam.sh'

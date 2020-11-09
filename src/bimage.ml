@@ -25,7 +25,7 @@ module Op = Op
 module Expr = Expr
 module Hash = Hash
 
-type ('a, 'b, 'c, 'd, 'e, 'f) filter = ('a, 'b, 'c, 'd, 'e, 'f) Op.filter
+type ('a, 'b, 'c) filter = ('a, 'b, 'c) Op.filter
 
 let ( ~@ ) = Input.index
 

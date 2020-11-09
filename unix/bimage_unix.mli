@@ -83,7 +83,7 @@ module Magick : sig
     ([< `Gray | `Rgb | `Rgba] as 'c) Color.t ->
     ?format:string ->
     string array ->
-    (('a, 'b, 'c) Input.t, Error.t) result
+    (Input.t, Error.t) result
   (** Read multiple images directly into an Input array *)
 
   val convert_command : string ref

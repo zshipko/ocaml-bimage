@@ -1,37 +1,37 @@
 open Image
 
-type ('a, 'b, 'c) t = ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+type t = Input.input array -> int -> int -> int -> float
 
-type ('a, 'b, 'c) f =
-  float Expr.t -> ('a, 'b, 'c) Image.t array -> int -> int -> int -> float
+type f =
+  float Expr.t -> Input.input array -> int -> int -> int -> float
 
-type ('a, 'b, 'c, 'd, 'e, 'f) filter =
-  output:('d, 'e, 'f) Image.t -> ('a, 'b, 'c) Image.t array -> unit
+type ('a, 'b, 'c) filter =
+  output:('a, 'b, 'c) Image.t -> Input.input array -> unit
 
-let blend ?(input = 0) ?(input1 = 1) : ('a, 'b, 'c) t =
+let blend ?(input = 0) ?(input1 = 1) : t =
   Expr.op (Expr.blend input input1)
 
-let max ?(input = 0) ?(input1 = 1) : ('a, 'b, 'c) t =
+let max ?(input = 0) ?(input1 = 1) : t =
   Expr.op (Expr.max input input1)
 
-let min ?(input = 0) ?(input1 = 1) : ('a, 'b, 'c) t =
+let min ?(input = 0) ?(input1 = 1) : t =
   Expr.op (Expr.min input input1)
 
-let grayscale ?(input = 0) : ('a, 'b, [< `Rgb | `Rgba ]) t =
+let grayscale ?(input = 0) : t =
   Expr.op (Expr.grayscale input)
 
-let color ?(input = 0) : ('a, 'b, [ `Gray ]) t = Expr.op (Expr.color input)
+let color ?(input = 0) : t = Expr.op (Expr.color input)
 
 let cond :
-    (('a, 'b, 'c) Image.t array -> int -> int -> int -> bool) ->
-    ('a, 'b, 'c) t ->
-    ('a, 'b, 'c) t ->
-    ('a, 'b, 'c) t =
+    (Input.input array -> int -> int -> int -> bool) ->
+    t ->
+    t ->
+    t =
  fun cond a b inputs x y c ->
    if cond inputs x y c then a inputs x y c else b inputs x y c
 
 let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op :
-    ('a, 'b, 'c, 'd, 'e, 'f) filter =
+    ('a, 'b, 'c) filter =
  fun ~output inputs ->
    let width, _height, channels = shape output in
    let kind = ty output in
@@ -65,17 +65,17 @@ let join f a b inputs x y c = f (a inputs x y c) (b inputs x y c)
 
 let apply f a inputs x y c = f (Expr.float @@ a inputs x y c) inputs x y c
 
-let scalar : float -> ('a, 'b, 'c) t = fun f _inputs _x _y _c -> f
+let scalar : float -> t = fun f _inputs _x _y _c -> f
 
-let scalar_min : ('a, 'b) Type.t -> ('a, 'b, 'c) t =
+let scalar_min : ('a, 'b) Type.t ->  t =
  fun k -> scalar (Type.min_f k)
 
-let scalar_max : ('a, 'b) Type.t -> ('a, 'b, 'c) t =
+let scalar_max : ('a, 'b) Type.t -> t =
  fun k -> scalar (Type.max_f k)
 
-let invert ?(input = 0) : ('a, 'b, 'c) t =
+let invert ?(input = 0) : t =
  fun inputs x y c ->
-   let a = inputs.(input) in
+   let Input a = inputs.(input) in
    let kind = ty a in
    if c = 4 then get_f a x y c else Type.max_f kind -. get_f a x y c
 
@@ -91,10 +91,10 @@ module Infix = struct
   let ( &/ ) a b = join ( /. ) a b
 end
 
-let sobel_x ?(input = 0) : ('a, 'b, 'c) t =
+let sobel_x ?(input = 0) : t =
   Expr.op (Expr.kernel_3x3 input Kernel.sobel_x)
 
-let sobel_y ?(input = 0) : ('a, 'b, 'c) t =
+let sobel_y ?(input = 0) : t =
   Expr.op (Expr.kernel_3x3 input Kernel.sobel_y)
 
 let[@inline] sobel ?(input = 0) =

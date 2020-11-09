@@ -41,10 +41,15 @@ extern "C" value output_open(value output, value filename, value spec) {
 
 extern "C" value output_write_image(value output, value spec, value ba) {
   CAMLparam3(output, spec, ba);
+  auto out = ImageOutput_val(output);
+  void *data = Caml_ba_data_val(ba);
+  auto format = ImageSpec_val(spec)->format;
+  caml_release_runtime_system();
   try {
-    auto out = ImageOutput_val(output);
-    out->write_image(ImageSpec_val(spec)->format, Caml_ba_data_val(ba));
+    out->write_image(format, data);
+    caml_acquire_runtime_system();
   } catch (std::exception exc) {
+    caml_acquire_runtime_system();
     caml_failwith(exc.what());
   }
 

@@ -52,11 +52,11 @@ let test name f ~input ~output =
 
 let test_write ~output input = Image.copy_to ~dest:output input
 
-let test_invert ~output input = Op.(eval invert) ~output [| input |]
+let test_invert ~output input = Op.(eval invert) ~output [| Input.input input |]
 
-let test_blend ~output input = Op.eval Op.blend ~output [| input; input |]
+let test_blend ~output input = Op.eval Op.blend ~output [| Input.input input; Input.input input |]
 
-let test_grayscale ~output input = Op.(eval grayscale ~output [| input |])
+let test_grayscale ~output input = Op.(eval grayscale ~output [| Input.input input |])
 
 let test_blur ~output input =
   let b =
@@ -64,9 +64,9 @@ let test_blur ~output input =
       [| [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |] |]
   in
   let h = Expr.kernel_3x3 ~@0 b in
-  Op.eval_expr h ~output [| input |]
+  Op.eval_expr h ~output [| Input.input input |]
 
-let test_sobel ~output input = Op.(eval Op.sobel ~output [| input |])
+let test_sobel ~output input = Op.(eval Op.sobel ~output [| Input.input input |])
 
 let test_sobel_x ~output input =
   let k =
@@ -74,10 +74,10 @@ let test_sobel_x ~output input =
       [| [| 1.0; 0.0; -1.0 |]; [| 2.0; 0.0; -2.0 |]; [| 1.0; 0.0; -1.0 |] |]
   in
   let h = Expr.kernel_3x3 ~@0 k in
-  Op.eval_expr h ~output [| input |]
+  Op.eval_expr h ~output [| Input.input input |]
 
 let test_gausssian_blur ~output input =
-  Op.eval (Op.gaussian_blur 3) ~output [| input |]
+  Op.eval (Op.gaussian_blur 3) ~output [| Input.input input |]
 
 let test_rotate_270 ~output input =
   let tmp = Image.rotate_270 input in
@@ -88,7 +88,7 @@ let grayscale_invert =
   map (fun (a, b) -> float (a -. b)) (pair (type_max ~@0) (grayscale ~@0))
 
 let test_grayscale_invert ~output input =
-  Op.eval_expr grayscale_invert ~output [| input |]
+  Op.eval_expr grayscale_invert ~output [| Input.input input |]
 
 let test_resize ~output input =
   let im = Image.resize 123 456 input in

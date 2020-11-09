@@ -44,11 +44,14 @@ extern "C" value input_read(value input, value channels, value index,
                             value spec, value ba) {
   CAMLparam5(input, channels, index, spec, ba);
   ImageSpec *s = ImageSpec_val(spec);
-  ;
+  auto i = ImageInput_val(input);
+  void *data = Caml_ba_data_val(ba);
+  caml_release_runtime_system();
   try {
-    ImageInput_val(input)->read_image(Int_val(index), 0, 0, Int_val(channels),
-                                      s->format, Caml_ba_data_val(ba));
+    i->read_image(Int_val(index), 0, 0, Int_val(channels), s->format, data);
+    caml_acquire_runtime_system();
   } catch (std::exception exc) {
+    caml_acquire_runtime_system();
     caml_failwith(exc.what());
   }
   CAMLreturn(Val_unit);

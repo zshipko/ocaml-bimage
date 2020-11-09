@@ -35,20 +35,20 @@ let base_type_of_ty : type a b. (a, b) Type.t -> base_type = fun (module T) ->
 
 external image_spec: int -> int -> int -> base_type -> spec = "image_spec"
 
-let image_spec (type color) ty (module C: COLOR with type t = color) width height =
+let make_spec ty color width height =
   let base = base_type_of_ty ty in
-  image_spec width height (C.channels C.t) base
+  image_spec width height (Color.channels color) base
 
 external spec_shape: spec -> int * int * int = "spec_shape"
 external spec_base_type : spec -> base_type = "spec_base_type"
 
 external input_open: string -> input = "input_open"
 external input_get_spec: input -> spec = "input_get_spec"
-external input_read: input -> int -> ('a, 'b) Data.t -> unit = "input_read"
+external input_read: input -> channels:int -> index:int -> spec -> ('a, 'b) Data.t -> unit = "input_read"
 
 external output_create: string -> output = "output_create"
-external output_set_spec: output -> spec -> unit = "output_open"
-external output_write_image: output -> ('a, 'b) Data.t -> unit = "output_write_image"
+external output_open: output -> string -> spec -> unit = "output_open"
+external output_write_image: output -> spec -> ('a, 'b) Data.t -> unit = "output_write_image"
 
 module Spec = struct
   type t = spec
@@ -67,45 +67,50 @@ module Input = struct
 
   let spec input = input_get_spec input
 
-  let read input image =
+  let read ?(index = 0) input image =
     try
-       Ok (input_read input (Image.channels image) (Image.data image))
+      let w, h, _c = Image.shape image in
+      let spec = make_spec (Image.ty image) (Image.color image) w h in
+       Ok (input_read input ~channels:(Image.channels image) ~index spec (Image.data image))
     with Failure reason -> Error (`Msg reason)
 
-  let read_image input ty (module C: COLOR) =
+  let read_image ?index input ty color =
     let spec = spec input in
     let (width, height, channels) = Spec.shape spec in
-    if channels > C.channels C.t then
+    if channels > Color.channels color then
       Error `Invalid_color
     else
-      let image = Image.create ty (module C) width height in
-      read input image
+      let image = Image.create ty color width height in
+      match read ?index input image with
+      | Ok () -> Ok image
+      | Error e -> Error e
 end
 
 module Output = struct
-  type t = output
+  type t = string * output
 
   let create filename =
     try
-      Ok (output_create filename)
+      Ok (filename, output_create filename)
     with Failure reason -> Error (`Msg reason)
 
-  let set_spec output s =
+  let set_spec (filename, output) s =
     try
-      Ok (output_set_spec output s)
+      Ok (output_open filename output s)
     with Failure reason -> Error (`Msg reason)
 
-  let write output image =
+  let write (_filename, output) image =
     try
-        let () = output_write_image output (Image.data image) in
+        let spec = make_spec (Image.ty image) image.color image.width image.height in
+        let () = output_write_image output spec (Image.data image) in
         Ok ()
     with Failure reason -> Error (`Msg reason)
 
-  let write_image output image =
+  let write_image (filename, output) image =
     try
-      let spec = image_spec (Image.ty image) image.color image.width image.height in
-        let () = output_set_spec output spec in
-        let () = output_write_image output (Image.data image) in
+      let spec = make_spec (Image.ty image) image.color image.width image.height in
+        let () = output_open output filename spec in
+        let () = output_write_image output spec (Image.data image) in
         Ok ()
     with Failure reason -> Error (`Msg reason)
 end

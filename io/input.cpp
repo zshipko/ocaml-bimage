@@ -17,11 +17,14 @@ static value alloc_input(ImageInput *input) {
   return v;
 }
 
-value input_open(value filename) {
+extern "C" value input_open(value filename) {
   CAMLparam1(filename);
   CAMLlocal1(input);
   try {
     auto image_input = ImageInput::open(String_val(filename));
+    if (!image_input) {
+      caml_failwith("Invalid image");
+    }
     input = alloc_input(image_input.release());
   } catch (std::exception exc) {
     caml_failwith(exc.what());
@@ -29,10 +32,24 @@ value input_open(value filename) {
   CAMLreturn(input);
 }
 
-value input_get_spec(value input) {
+extern "C" value input_get_spec(value input) {
   CAMLparam1(input);
   CAMLlocal1(spec);
   ImageSpec s = ImageInput_val(input)->spec();
   spec = alloc_spec(s);
   CAMLreturn(spec);
+}
+
+extern "C" value input_read(value input, value channels, value index,
+                            value spec, value ba) {
+  CAMLparam5(input, channels, index, spec, ba);
+  ImageSpec *s = ImageSpec_val(spec);
+  ;
+  try {
+    ImageInput_val(input)->read_image(Int_val(index), 0, 0, Int_val(channels),
+                                      s->format, Caml_ba_data_val(ba));
+  } catch (std::exception exc) {
+    caml_failwith(exc.what());
+  }
+  CAMLreturn(Val_unit);
 }

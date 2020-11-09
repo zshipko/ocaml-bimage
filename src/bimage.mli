@@ -99,6 +99,8 @@ module Color : sig
   type 'a t = (module COLOR with type t = 'a)
   (** Used to specify the color model of an image *)
 
+  val channels: 'a t -> int
+  val name: 'a t -> string
 
   (*val create : has_alpha:bool -> channels:int -> 'a -> 'a t*)
   (** Create a new color type *)

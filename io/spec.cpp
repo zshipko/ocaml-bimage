@@ -1,18 +1,24 @@
 #include "io.hpp"
 
-static struct custom_operations Output_ops = {
-    "zshipko.bimage.Spec",      custom_finalize_default,
+static void free_spec(value i) {
+  ImageSpec *spec = ImageSpec_val(i);
+  delete spec;
+}
+
+static struct custom_operations Spec_ops = {
+    "zshipko.bimage.Spec",      free_spec,
     custom_compare_default,     custom_hash_default,
     custom_serialize_default,   custom_deserialize_default,
     custom_compare_ext_default, custom_fixed_length_default};
 
 value alloc_spec(ImageSpec spec) {
-  value v = caml_alloc_custom(&Output_ops, sizeof(ImageSpec), 0, 1);
-  *ImageSpec_val(v) = spec;
+  value v = caml_alloc_custom(&Spec_ops, sizeof(ImageSpec *), 0, 1);
+  ImageSpec_val(v) = new ImageSpec(spec);
   return v;
 }
 
-value image_spec(value width, value height, value channels, value base_type) {
+extern "C" value image_spec(value width, value height, value channels,
+                            value base_type) {
   CAMLparam4(width, height, channels, base_type);
   CAMLlocal1(spec);
   spec =
@@ -21,7 +27,7 @@ value image_spec(value width, value height, value channels, value base_type) {
   CAMLreturn(spec);
 }
 
-value spec_shape(value s) {
+extern "C" value spec_shape(value s) {
   CAMLparam1(s);
   CAMLlocal1(shape);
   auto spec = ImageSpec_val(s);
@@ -32,7 +38,7 @@ value spec_shape(value s) {
   CAMLreturn(shape);
 }
 
-value spec_base_type(value s) {
+extern "C" value spec_base_type(value s) {
   CAMLparam1(s);
   CAMLlocal1(bt);
   auto spec = ImageSpec_val(s);

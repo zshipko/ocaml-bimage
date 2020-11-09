@@ -76,6 +76,12 @@ let rgb: rgb t = (module Rgb)
 let rgba: rgba t = (module Rgba)
 let gray: gray t = (module Gray)
 
+let channels (type a) (module C: COLOR with type t = a) =
+  C.channels C.t
+
+let name (type a) (module C: COLOR with type t = a) =
+  C.name C.t
+
 (*type 'a t = { t : 'a; channels : int; has_alpha : bool }
 
 let create ~has_alpha ~channels t = { t; channels; has_alpha }

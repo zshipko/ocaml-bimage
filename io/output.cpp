@@ -17,7 +17,7 @@ static value alloc_output(ImageOutput *output) {
   return v;
 }
 
-value output_create(value filename) {
+extern "C" value output_create(value filename) {
   CAMLparam1(filename);
   CAMLlocal1(output);
   try {
@@ -29,8 +29,24 @@ value output_create(value filename) {
   CAMLreturn(output);
 }
 
-value output_set_spec(value output, value filename, value spec) {
+extern "C" value output_open(value output, value filename, value spec) {
   CAMLparam3(output, filename, spec);
-  ImageOutput_val(output)->open(String_val(filename), *ImageSpec_val(spec));
+  try {
+    ImageOutput_val(output)->open(String_val(filename), *ImageSpec_val(spec));
+  } catch (std::exception exc) {
+    caml_failwith(exc.what());
+  }
+  CAMLreturn(Val_unit);
+}
+
+extern "C" value output_write_image(value output, value spec, value ba) {
+  CAMLparam3(output, spec, ba);
+  try {
+    auto out = ImageOutput_val(output);
+    out->write_image(ImageSpec_val(spec)->format, Caml_ba_data_val(ba));
+  } catch (std::exception exc) {
+    caml_failwith(exc.what());
+  }
+
   CAMLreturn(Val_unit);
 }

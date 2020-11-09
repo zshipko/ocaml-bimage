@@ -6,6 +6,7 @@
 #include <OpenImageIO/imageio.h>
 
 #include <caml/alloc.h>
+#include <caml/bigarray.h>
 #include <caml/custom.h>
 #include <caml/fail.h>
 #include <caml/memory.h>

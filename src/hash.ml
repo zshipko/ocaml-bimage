@@ -12,9 +12,7 @@ let bit_check number n =
 
 (* Get average pixel value *)
 let pixel_avg px =
-  let px = Pixel.data px in
-  let len = Data.length px in
-  Data.fold ( +. ) px 0.0 /. float_of_int len
+  Pixel.fold (fun a b -> a +. b) px 0.0 /. float_of_int (Pixel.length px)
 
 let phash im =
   let im = Impl.resize 8 8 im in

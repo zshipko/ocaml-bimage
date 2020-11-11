@@ -5,9 +5,11 @@ module type COLOR = sig
   val name: t -> string
   val channels: t -> int
   val has_alpha: t -> bool
-  val to_rgb: t -> (float, Type.F64.elt) Data.t -> (float, Type.F64.elt) Data.t
-  val from_rgb: t -> (float, Type.F64.elt) Data.t -> (float, Type.F64.elt) Data.t
+  val to_rgb: t -> floatarray -> floatarray
+  val from_rgb: t -> floatarray -> floatarray
 end
+
+open Float.Array
 
 module Rgb: COLOR with type t = [`Rgb] = struct
   type t = [`Rgb]
@@ -28,19 +30,19 @@ module Rgba: COLOR with type t = [`Rgba] = struct
   let channels _ = 4
   let has_alpha _ = true
   let to_rgb _ x =
-    let alpha = x.{3} in
-    x.{0} <- x.{0} *. alpha;
-    x.{1} <- x.{1} *. alpha;
-    x.{2} <- x.{2} *. alpha;
-    x.{3} <- 1.0;
-     x
+    let alpha = get x 3 in
+    set x 0 (get x 0 *. alpha);
+    set x 1 (get x 1 *. alpha);
+    set x 2 (get x 2 *. alpha);
+    set x 3 1.0;
+    x
 
   let from_rgb _ x =
-    let dest = Data.create Type.f64 4 in
-    dest.{0} <- x.{0};
-    dest.{1} <- x.{1};
-    dest.{2} <- x.{2};
-    dest.{3} <- 1.0;
+    let dest = Float.Array.create 4 in
+    set dest 0 (get x 0);
+    set dest 1 (get x 1);
+    set dest 2 (get x 2);
+    set dest 3 1.0;
     dest
 end
 
@@ -53,17 +55,11 @@ module Gray: COLOR with type t = [`Gray] = struct
   let channels _ = 1
   let has_alpha _ = false
 
-  let to_rgb _ ( px) =
-    let  dest = Data.create Type.f64 3 in
-    dest.{0} <- px.{0};
-    dest.{1} <- px.{1};
-    dest.{2} <- px.{2};
-    dest
+  let to_rgb _ (px: floatarray) =
+    make 3 (get px 0)
 
-  let from_rgb _ ( px) =
-    let dest = Data.create Type.f64 1 in
-    dest.{0} <- (px.{0} *. 0.21) +. (px.{1} *. 0.72) +. (px.{2} *. 0.07);
-    dest
+  let from_rgb _ (px: floatarray) =
+    make 1 ((get px 0 *. 0.21) +. (get px 1 *. 0.72) +. (get px 2 *. 0.07))
 end
 
 type 'a t = (module COLOR with type t = 'a)

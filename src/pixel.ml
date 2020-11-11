@@ -1,15 +1,19 @@
-type 'a t = Pixel : ('a Color.t * (float, Type.F64.elt) Data.t) -> 'a t [@@unboxed]
+type 'a t = Pixel : ('a Color.t * floatarray) -> 'a t [@@unboxed]
 
 let empty (type c) color =
   let (module C: Color.COLOR with type t = c) = color in
-  let p = Data.create Type.f64 (C.channels C.t) in
+  let p = Float.Array.create (C.channels C.t) in
   Pixel (color, p)
 
-let length (Pixel (_color, p)) = Data.length p
+let length (Pixel (_color, p)) = Float.Array.length p
 
-let compare (Pixel a) (Pixel b) = Data.compare a b
+let compare (Pixel a) (Pixel b) = if a < b then -1 else if a > b then 1 else 0
 
 let equal (Pixel a) (Pixel b) = Data.equal a b
+
+let get (Pixel (_, a)) = Float.Array.get a
+
+let set (Pixel (_, a)) = Float.Array.set a
 
 let to_rgb (type color) (Pixel (color, a)) =
   let (module C: Color.COLOR with type t = color) = color in
@@ -21,22 +25,19 @@ let from_rgb (type color) color (Pixel (_rgb, a)) =
 
 let from_data (type a b) color data =
   let len = Data.length data in
-  let (Pixel (_, px)) = empty color in
+  let px = empty color in
   let (module T: Type.TYPE with type t = a and type elt = b) = Data.ty data in
   for i = 0 to len - 1 do
-    px.{i} <- T.(to_float data.{i} |> Type.normalize (module T))
+    set px i T.(to_float data.{i} |> Type.normalize (module T))
   done;
-  Pixel (color, px)
+  px
 
-let to_data ~dest (Pixel (_, px)) =
+let to_data ~dest px =
   let len = Data.length dest in
   let ty = Data.ty dest in
-  for i = 0 to min len (Data.length px) - 1 do
-    dest.{i} <- Type.(of_float ty (denormalize ty px.{i}))
+  for i = 0 to min len (length px) - 1 do
+    dest.{i} <- Type.(of_float ty (denormalize ty (get px i)))
   done
-
-let data (Pixel (_, px)) = px
-let color (Pixel (color, _)) = color
 
 (*let rgb_to_xyz (Pixel px) =
   let (Pixel (_, dest)) = empty 3 in
@@ -55,19 +56,18 @@ let rgb_to_yuv (Pixel px) =
   dest.{2} <- (0.615 *. px.{0}) -. (0.515 *. px.{1}) -. (0.100 *. px.{2});
   Pixel dest*)
 
-let map_inplace f (Pixel (_, px)) = Data.map_inplace f px
+let data (Pixel (_, px)) = px
+let color (Pixel (c, _)) = c
+
+let map_inplace f px =
+  Float.Array.iteri (fun i x ->
+    set px i (f x)
+  ) (data px)
 
 let map f (Pixel (color, px)) =
-  let dest = Data.copy px in
-  Data.map_inplace f dest;
-  Pixel (color, dest)
-
-let map2_inplace f (Pixel (_, a)) (Pixel (_, b)) = Data.map2_inplace f a b
-
-let map2 f (Pixel (color, a)) (Pixel (_, b)) =
-  let dest = Data.copy a in
-  Data.map2_inplace f dest b;
-  Pixel (color, dest)
+  let dest = Pixel (color, Float.Array.copy px) in
+  map_inplace f dest;
+  dest
 
 let convert_in_place from to_ px =
   map
@@ -76,15 +76,13 @@ let convert_in_place from to_ px =
       Type.denormalize to_ x)
     px
 
-let fold f (Pixel (_, px)) a = Data.fold f px a
+let fold f (Pixel (_, px)) a = Float.Array.fold_left (fun a b -> f b a) a px
 
-let fold2 f (Pixel (_, px)) (Pixel (_, px')) a = Data.fold2 f px px' a
-
-let pp fmt (Pixel (_, px)) =
-  let len = Data.length px - 1 in
+let pp fmt px =
+  let len = length px - 1 in
   Format.fprintf fmt "Pixel(";
   for p = 0 to len do
-    let () = Format.fprintf fmt "%f" px.{p} in
+    let () = Format.fprintf fmt "%f" (get px p) in
     if p < len then
       Format.fprintf fmt ","
   done;

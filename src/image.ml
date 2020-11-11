@@ -117,36 +117,27 @@ let[@inline] set image x y c v =
 
 let get_f image x y c =
   let ty = ty image in
-  get image x y c |> Type.to_float ty
-
-let set_f image x y c v =
-  let ty = ty image in
-  let v = Type.of_float ty v in
-  set image x y c v
-
-let get_norm image x y c =
-  let ty = ty image in
   get image x y c |> Type.to_float ty |> Type.normalize ty
 
-let set_norm image x y c v =
+let set_f image x y c v =
   let ty = ty image in
   let v = Type.denormalize ty v |> Type.of_float ty in
   set image x y c v
 
 let get_pixel image ?dest x y =
   let c = channels image in
-  let (Pixel.Pixel (color, px)) =
+  let px =
     match dest with Some px -> px | None -> Pixel.empty image.color
   in
   for i = 0 to c - 1 do
-    px.{i} <- get_norm image x y i
+    Pixel.set px i (get_f image x y i)
   done;
-  Pixel.Pixel (color, px)
+  px
 
-let set_pixel image x y (Pixel.Pixel (_, px)) =
+let set_pixel image x y px =
   let c = channels image in
   for i = 0 to c - 1 do
-    set_norm image x y i px.{i}
+    set_f image x y i (Pixel.get px i)
   done
 
 let get_data image ?dest x y =
@@ -305,8 +296,8 @@ module Diff = struct
   let apply diff image =
     Hashtbl.iter
       (fun (x, y, c) v ->
-        let v' = get_norm image x y c in
-        set_norm image x y c (v' +. v))
+        let v' = get_f image x y c in
+        set_f image x y c (v' +. v))
       diff
 
   let length x = Hashtbl.length x

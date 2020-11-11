@@ -54,8 +54,6 @@ let y = Y
 
 let c = C
 
-(*let kernel k = Kernel k*)
-
 let func i f = Func (i, f)
 
 let map f x = Func (x, fun _ _ _ x -> f x)
@@ -120,13 +118,12 @@ let brightness i scale : float t =
 
 let grayscale input : float t =
   func (pixel input X Y) (fun _ _ _ px ->
-      let px = Pixel.data px in
-      Float ((px.{0} *. 0.21) +. (px.{1} *. 0.72) +. (px.{2} *. 0.07)))
+      let g = Color.Gray.from_rgb `Gray (Pixel.data px) in
+      Float (Float.Array.get g 0))
 
 let color input : float t =
   func (pixel input X Y) (fun _ _ _ px ->
-      let px = Pixel.data px in
-      Float px.{0})
+      Float (Pixel.get px 0))
 
 module Infix = struct
   let ( && ) a b = And (a, b)
@@ -238,7 +235,7 @@ let rec prepare :
        let y' = prepare x y c y' inputs in
        let c' = prepare x y c c' inputs in
        let Input input = Input.get inputs input in
-       let f : float = Image.get_norm input x' y' c' in
+       let f : float = Image.get_f input x' y' c' in
        f
    | X -> !x
    | Y -> !y

@@ -58,6 +58,14 @@ let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op :
        incr y
    done
 
+let eval_all ops : ('a, 'b, 'c) filter =
+  fun ~output inputs ->
+    Array.iteri (fun i op ->
+      if i > 0 then
+        inputs.(0) <- Input.input (Image.copy output);
+      eval op ~output inputs;
+    ) ops
+
 let eval_expr ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body ~output inputs =
   eval ~x ~y ~c (Expr.op ~x ~y ~c body) ~output inputs
 
@@ -76,8 +84,7 @@ let scalar_max : ('a, 'b) Type.t -> t =
 let invert ?(input = 0) : t =
  fun inputs x y c ->
    let Input a = inputs.(input) in
-   let kind = ty a in
-   if c = 4 then get_f a x y c else Type.max_f kind -. get_f a x y c
+   if c = 4 then get_f a x y c else 1.0 -. get_f a x y c
 
 module Infix = struct
   let ( $ ) a f = apply f a
@@ -117,3 +124,4 @@ let brightness ?(input = 0) n inputs x y c =
   Expr.op (Expr.brightness input n) inputs x y c
 
 let threshold ?(input = 0) thresh = Expr.op (Expr.threshold input thresh)
+

@@ -86,8 +86,8 @@ module type COLOR = sig
   val name: t -> string
   val channels: t -> int
   val has_alpha: t -> bool
-  val to_rgb: t -> (float, float64_elt) Data.t ->  (float, float64_elt) Data.t
-  val from_rgb: t -> (float, float64_elt) Data.t ->  (float, float64_elt) Data.t
+  val to_rgb: t -> floatarray ->  floatarray
+  val from_rgb: t -> floatarray ->  floatarray
 end
 
 (** Color contains methods for creating and inspecting color types *)
@@ -99,7 +99,6 @@ module Color : sig
   type 'a t = (module COLOR with type t = 'a)
   (** Used to specify the color model of an image *)
 
-  val channels: 'a t -> int
   val name: 'a t -> string
 
   (*val create : has_alpha:bool -> channels:int -> 'a -> 'a t*)
@@ -108,7 +107,7 @@ module Color : sig
   (*val has_alpha : 'a t -> bool*)
   (** Returns true if the color has an alpha channel *)
 
-  (*val channels : 'a t -> int*)
+  val channels : 'a t -> int
   (** Returns the number of channels for a color *)
 
   (*val t : 'a t -> 'a*)
@@ -285,6 +284,9 @@ module Pixel : sig
   val length : 'a t -> int
   (** Get the number of channels in a pixel *)
 
+  val get : 'a t -> int -> float
+  val set: 'a t -> int -> float -> unit
+
   val compare : 'a t -> 'a t -> int
 
   val equal : 'a t -> 'a t -> bool
@@ -295,12 +297,14 @@ module Pixel : sig
   val to_data : dest:('a, 'b) Data.t -> 'c t -> unit
   (** Copy pixel data to existing image data *)
 
-  val data : 'a t -> (float, f64) Data.t
+  val data : 'a t -> floatarray
   (** Returns the underlying pixel data *)
 
-  val to_rgb: 'a Pixel.t -> rgb Pixel.t
+  val color : 'a t -> 'a Color.t
 
-  val from_rgb: 'a Color.t -> rgb Pixel.t -> 'a Pixel.t
+  val to_rgb: 'a t -> rgb t
+
+  val from_rgb: 'a Color.t -> rgb t -> 'a t
 
   (*val rgb_to_xyz : t -> t*)
   (** Convert pixel from RGB to XYZ *)
@@ -315,18 +319,8 @@ module Pixel : sig
   (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
    *  index *)
 
-  val map2 : (float -> float -> float) -> 'a t -> 'a t -> 'a t
-  (** [map f x] executes [f] for each value in [x], returning a new Pixel.t *)
-
-  val map2_inplace : (float -> float -> float) -> 'a t -> 'a t -> unit
-  (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
-   *  index *)
-
   val fold : (float -> 'a -> 'a) -> 'b t -> 'a -> 'a
   (** Reduction over a pixel *)
-
-  val fold2 : (float -> float -> 'a -> 'a) -> 'b t -> 'b t -> 'a -> 'a
-  (** Reduction over two pixels *)
 
   val pp : Format.formatter -> 'a t -> unit
 end
@@ -406,15 +400,9 @@ module Image : sig
   (** Set a single channel of the given image at (x, y) *)
 
   val get_f : ('a, 'b, 'c) t -> int -> int -> int -> float
-  (** [get_f image x y c] returns the float value at (x, y, c) *)
-
-  val set_f : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
-  (** Set a single channel of the given image at (x, y) using a float value *)
-
-  val get_norm : ('a, 'b, 'c) t -> int -> int -> int -> float
   (** [get_f image x y c] returns the normalized float value at (x, y, c) *)
 
-  val set_norm : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
+  val set_f : ('a, 'b, 'c) t -> int -> int -> int -> float -> unit
   (** Set a single channel of the given image at (x, y) using a normalized float value *)
 
   val get_pixel : ('a, 'b, 'c) t -> ?dest:'c Pixel.t -> int -> int -> 'c Pixel.t
@@ -871,6 +859,10 @@ module Op : sig
     ('a, 'b, 'c) filter
   (** Convert an [Expr] to a filter *)
 
+  val eval_all :
+    t array ->
+    ('a, 'b, 'c) filter
+
   val join :
     (float -> float -> float) ->
     t ->
@@ -879,7 +871,7 @@ module Op : sig
   (** [join f a b] builds a new operation of [f(a, b)] *)
 
   val apply : f -> t -> t
-  (** [map f a] builds a new operation of [f(a)] *)
+  (** [apply f a] builds a new operation of [f(a)] *)
 
   val scalar : float -> t
   (** Builds an operation returning a single value *)

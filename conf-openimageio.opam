@@ -5,8 +5,9 @@ authors: "OpenImageIO"
 bug-reports: "https://github.com/ocaml/opam-repository/issues"
 license: "MIT"
 build: [
-  [pkg-config --cflags --libs OpenImageIO]
+  ["pkg-config" "--atleast-version=2" "OpenImageIO"]
 ]
+depends: ["conf-pkg-config" {build}]
 depexts: [
   ["libopenimageio-dev"] {os-family = "debian"}
   ["openimageio-devel"] {os-distribution = "fedora"}

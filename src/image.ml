@@ -129,32 +129,36 @@ let get_pixel image ?dest x y =
   let px =
     match dest with Some px -> px | None -> Pixel.empty image.color
   in
+  let index = index image x y 0 in
+  let ty = ty image in
   for i = 0 to c - 1 do
-    Pixel.set px i (get_f image x y i)
+    Pixel.set px i (Type.to_float ty image.data.{index + i} |> Type.normalize ty)
   done;
   px
 
 let set_pixel image x y px =
   let c = channels image in
+  let index = index image x y 0 in
+  let ty = ty image in
   for i = 0 to c - 1 do
-    set_f image x y i (Pixel.get px i)
+    image.data.{index + i} <- Type.denormalize ty (Pixel.get px i) |> Type.of_float ty;
   done
 
 let get_data image ?dest x y =
+  let index = index image x y 0 in
   let c = channels image in
-  let px =
-    match dest with Some px -> px | None -> Data.create (ty image) c
-  in
-  for i = 0 to c - 1 do
-    px.{i} <- get image x y i
-  done;
-  px
+  let data = Data.slice image.data ~offs:index ~length:c in
+  match dest with
+  | Some dest ->
+    Data.copy_to ~dest data;
+    dest
+  | None -> data
 
 let set_data image x y px =
+  let index = index image x y 0 in
   let c = channels image in
-  for i = 0 to c - 1 do
-    set image x y i px.{i}
-  done
+  let data = Data.slice image.data ~offs:index ~length:c in
+  Data.copy_to ~dest:px data
 
 let map_inplace f img = Data.map_inplace f img.data
 

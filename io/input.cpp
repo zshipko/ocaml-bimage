@@ -1,4 +1,4 @@
-#include "io.hpp"
+#include "io.h"
 
 static void free_input(value i) {
   ImageInput *input = ImageInput_val(i);

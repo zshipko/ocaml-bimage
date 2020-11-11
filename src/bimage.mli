@@ -570,8 +570,18 @@ module Input : sig
   val shape: t -> int * int * int
 end
 
+module type FILTER = sig
+  type 'a io
+  type ('a, 'b, 'c) t =
+    output:('a, 'b, 'c) Image.t -> Input.t -> unit io
+end
+
+module Filter: sig
+  module Make(S: sig type 'a io end) : FILTER with type 'a io = 'a S.io
+end
+
 type ('a, 'b, 'c) filter =
-  output:('a, 'b, 'c) Image.t -> Input.t -> unit
+    output:('a, 'b, 'c) Image.t -> Input.t -> unit
 
 module Transform : sig
   type t

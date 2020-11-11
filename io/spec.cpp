@@ -1,4 +1,4 @@
-#include "io.hpp"
+#include "io.h"
 
 static void free_spec(value i) {
   ImageSpec *spec = ImageSpec_val(i);

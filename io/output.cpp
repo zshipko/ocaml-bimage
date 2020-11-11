@@ -1,4 +1,4 @@
-#include "io.hpp"
+#include "io.h"
 
 static void free_output(value x) {
   ImageOutput *output = ImageOutput_val(x);

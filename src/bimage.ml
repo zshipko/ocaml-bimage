@@ -7,6 +7,7 @@
 include Type
 include Color
 include Util
+include Filter
 module Error = Error
 module Color = Color
 module Data = Data
@@ -24,6 +25,7 @@ module Input = Input
 module Op = Op
 module Expr = Expr
 module Hash = Hash
+module Filter = Filter
 
 type ('a, 'b, 'c) filter = ('a, 'b, 'c) Op.filter
 

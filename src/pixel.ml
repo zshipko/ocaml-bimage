@@ -9,7 +9,11 @@ let length (Pixel (_color, p)) = Float.Array.length p
 
 let compare (Pixel a) (Pixel b) = if a < b then -1 else if a > b then 1 else 0
 
-let equal (Pixel a) (Pixel b) = Data.equal a b
+let equal (Pixel (_, a)) (Pixel (_, b)) =
+  let result = ref true in
+  Float.Array.iter2 (fun a b ->
+    result := !result && Float.equal a b) a b;
+  !result
 
 let get (Pixel (_, a)) = Float.Array.get a
 

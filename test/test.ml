@@ -8,8 +8,9 @@ open Bimage
 open Bimage_unix
 
 exception Assert of string
+
 let check name a b =
-  if a +. 0.1 >= b && a -. 0.1 <= b then () else raise (Assert (Printf.sprintf "%s: %f = %f" name a b))
+  if a + 1 >= b || a - 1 <= b then () else raise (Assert name)
 
 let only_generate_images =
   try Unix.getenv "ONLY_GENERATE_IMAGES" = "1" with _ -> false
@@ -21,17 +22,16 @@ let image_eq a b =
     in
     let w, h, c = Image.shape a in
     let w', h', c' = Image.shape b in
-    let ty = Image.ty a in
-    check "image: same width" (float_of_int w) (float_of_int w');
-    check "image: same height" (float_of_int h) (float_of_int h');
-    check "image: same channels" (float_of_int c) (float_of_int c');
+    check "image: same width" w w';
+    check "image: same height" h h';
+    check "image: same channels" c c';
     Image.for_each
       (fun x y px ->
         let px' = Image.get_data b x y in
         for i = 0 to c - 1 do
           check
-            (Printf.sprintf "image: pixel %dx%d" x y)
-            (Type.to_float ty px.{i} |> Type.normalize ty) (Type.to_float ty px'.{i} |> Type.normalize ty)
+            (Printf.sprintf "image: pixel %dx%d %d=%d" x y px.{i} px'.{i})
+            px.{i} px'.{i}
         done)
       a )
 
@@ -54,11 +54,14 @@ let test name f ~input ~output =
 
 let test_write ~output input = Image.copy_to ~dest:output input
 
-let test_invert ~output input = Filter.make Op.invert ~output [| Input.input input |]
+let test_invert ~output input =
+  Filter.make Op.invert ~output [| Input.input input |]
 
-let test_blend ~output input = Filter.make Op.blend ~output [| Input.input input; Input.input input |]
+let test_blend ~output input =
+  Filter.make Op.blend ~output [| Input.input input; Input.input input |]
 
-let test_grayscale ~output input = Op.(Filter.make grayscale ~output [| Input.input input |])
+let test_grayscale ~output input =
+  Op.(Filter.make grayscale ~output [| Input.input input |])
 
 let test_blur ~output input =
   let b =
@@ -68,7 +71,8 @@ let test_blur ~output input =
   let h = Expr.kernel_3x3 ~@0 b in
   Filter.of_expr h ~output [| Input.input input |]
 
-let test_sobel ~output input = Op.(Filter.make sobel ~output [| Input.input input |])
+let test_sobel ~output input =
+  Op.(Filter.make sobel ~output [| Input.input input |])
 
 let test_sobel_x ~output input =
   let k =
@@ -113,17 +117,13 @@ let tests =
     test "sobel_x" test_sobel_x ~input ~output;
     test "gaussian-blur" test_gausssian_blur ~input ~output;
     test "rotate-270" test_rotate_270 ~input
-      ~output:
-        (Image.create u8 rgb input.Image.height
-           input.Image.width);
-    test "resize" test_resize ~input
-      ~output:(Image.create u8 rgb 123 456);
+      ~output:(Image.create u8 rgb input.Image.height input.Image.width);
+    test "resize" test_resize ~input ~output:(Image.create u8 rgb 123 456);
     test "invert" test_invert ~input ~output;
     test "blend" test_blend ~input ~output;
     test "grayscale" test_grayscale ~input
       ~output:(Image.like_with_color gray input);
-    test "crop" test_crop ~input
-      ~output:(Image.create u8 rgb 200 400);
+    test "crop" test_crop ~input ~output:(Image.create u8 rgb 200 400);
   ]
 
 let () =

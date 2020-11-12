@@ -52,7 +52,8 @@ let stbi_load_f =
     ( string @-> ptr int @-> ptr int @-> ptr int @-> int
     @-> returning (ptr float) )
 
-let read (type color) f a b c (module C: Bimage.COLOR with type t = color) filename =
+let read (type color) f a b c (module C : Bimage.COLOR with type t = color)
+    filename =
   let width = allocate int 0 in
   let height = allocate int 0 in
   let channels = allocate int 0 in
@@ -63,15 +64,16 @@ let read (type color) f a b c (module C: Bimage.COLOR with type t = color) filen
   else
     let data = coerce (ptr a) (ptr b) data in
     let data' =
-      Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) (Bimage.Type.kind c) data
+      Ctypes.bigarray_of_ptr array1
+        (!@width * !@height * !@channels)
+        (Bimage.Type.kind c) data
     in
-    let im =
-      Bimage.Image.of_data (module C) !@width !@height data'
-    in
+    let im = Bimage.Image.of_data (module C) !@width !@height data' in
     let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
     Ok im
 
-let read_from_memory (type color) f a b c (module C: Bimage.COLOR with type t = color) data =
+let read_from_memory (type color) f a b c
+    (module C : Bimage.COLOR with type t = color) data =
   let width = allocate int 0 in
   let height = allocate int 0 in
   let channels = allocate int 0 in
@@ -81,11 +83,11 @@ let read_from_memory (type color) f a b c (module C: Bimage.COLOR with type t = 
   else
     let data = coerce (ptr a) (ptr b) data in
     let data' =
-      Ctypes.bigarray_of_ptr array1 (!@width * !@height * !@channels) (Bimage.Type.kind c) data
+      Ctypes.bigarray_of_ptr array1
+        (!@width * !@height * !@channels)
+        (Bimage.Type.kind c) data
     in
-    let im =
-      Bimage.Image.of_data (module C) !@width !@height data'
-    in
+    let im = Bimage.Image.of_data (module C) !@width !@height data' in
     let () = Gc.finalise (fun _ -> free (coerce (ptr b) (ptr void) data)) im in
     Ok im
 

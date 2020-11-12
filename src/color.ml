@@ -1,34 +1,48 @@
 module type COLOR = sig
   type t
-  val t: t
 
-  val name: t -> string
-  val channels: t -> int
-  val has_alpha: t -> bool
-  val to_rgb: t -> floatarray -> floatarray
-  val from_rgb: t -> floatarray -> floatarray
+  val t : t
+
+  val name : t -> string
+
+  val channels : t -> int
+
+  val has_alpha : t -> bool
+
+  val to_rgb : t -> floatarray -> floatarray
+
+  val from_rgb : t -> floatarray -> floatarray
 end
 
 open Float.Array
 
-module Rgb: COLOR with type t = [`Rgb] = struct
-  type t = [`Rgb]
+module Rgb : COLOR with type t = [ `Rgb ] = struct
+  type t = [ `Rgb ]
+
   let t = `Rgb
 
   let name _ = "rgb"
+
   let channels _ = 3
+
   let has_alpha _ = false
+
   let to_rgb _ x = x
+
   let from_rgb _ x = x
 end
 
-module Rgba: COLOR with type t = [`Rgba] = struct
-  type t = [`Rgba]
+module Rgba : COLOR with type t = [ `Rgba ] = struct
+  type t = [ `Rgba ]
+
   let t = `Rgba
 
   let name _ = "rgba"
+
   let channels _ = 4
+
   let has_alpha _ = true
+
   let to_rgb _ x =
     let alpha = get x 3 in
     set x 0 (get x 0 *. alpha);
@@ -46,34 +60,37 @@ module Rgba: COLOR with type t = [`Rgba] = struct
     dest
 end
 
-module Gray: COLOR with type t = [`Gray] = struct
-  type t = [`Gray]
+module Gray : COLOR with type t = [ `Gray ] = struct
+  type t = [ `Gray ]
+
   let t = `Gray
 
   let name _ = "gray"
 
   let channels _ = 1
+
   let has_alpha _ = false
 
-  let to_rgb _ (px: floatarray) =
-    make 3 (get px 0)
+  let to_rgb _ (px : floatarray) = make 3 (get px 0)
 
-  let from_rgb _ (px: floatarray) =
+  let from_rgb _ (px : floatarray) =
     make 1 ((get px 0 *. 0.21) +. (get px 1 *. 0.72) +. (get px 2 *. 0.07))
 end
 
 type 'a t = (module COLOR with type t = 'a)
 
 type rgb = Rgb.t
+
 type rgba = Rgba.t
+
 type gray = Gray.t
 
-let rgb: rgb t = (module Rgb)
-let rgba: rgba t = (module Rgba)
-let gray: gray t = (module Gray)
+let rgb : rgb t = (module Rgb)
 
-let channels (type a) (module C: COLOR with type t = a) =
-  C.channels C.t
+let rgba : rgba t = (module Rgba)
 
-let name (type a) (module C: COLOR with type t = a) =
-  C.name C.t
+let gray : gray t = (module Gray)
+
+let channels (type a) (module C : COLOR with type t = a) = C.channels C.t
+
+let name (type a) (module C : COLOR with type t = a) = C.name C.t

@@ -67,7 +67,7 @@ module Magick : sig
     ?quality:int ->
     ?format:string ->
     string ->
-    ('a, 'b, [< `Gray | `Rgb | `Rgba]) Image.t ->
+    ('a, 'b, [< `Gray | `Rgb | `Rgba ]) Image.t ->
     unit
   (** [write filename image] saves an image to [filename] *)
 
@@ -80,7 +80,7 @@ module Magick : sig
       int ->
       ('a, 'b, 'c) Image.t) ->
     ('a, 'b) Type.t ->
-    ([< `Gray | `Rgb | `Rgba] as 'c) Color.t ->
+    ([< `Gray | `Rgb | `Rgba ] as 'c) Color.t ->
     ?format:string ->
     string array ->
     (Input.t, Error.t) result

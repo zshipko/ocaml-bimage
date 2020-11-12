@@ -9,7 +9,7 @@ let use_graphicsmagick () =
   identify_command := "gm identify"
 
 let read (type color) ?(create = fun _name -> Image.create) t
-    (module C: COLOR with type t = color) ?format filename =
+    (module C : COLOR with type t = color) ?format filename =
   let format =
     match format with
     | Some f -> f
@@ -22,8 +22,8 @@ let read (type color) ?(create = fun _name -> Image.create) t
       let f = C.name C.t in
       let channels = Image.channels img in
       let cmd =
-        Printf.sprintf "%s %s:'%s' -depth 8 %s:-" !convert_command
-          format filename f
+        Printf.sprintf "%s %s:'%s' -depth 8 %s:-" !convert_command format
+          filename f
       in
       let input = Unix.open_process_in cmd in
       for i = 0 to (Image.(img.width * img.height) * channels) - 1 do
@@ -56,7 +56,8 @@ let read_all ?create kind color ?format filenames =
   try
     Ok
       (Array.map
-         (fun f -> read ?create kind color ?format f |> Error.unwrap |> Input.input)
+         (fun f ->
+           read ?create kind color ?format f |> Error.unwrap |> Input.input)
          filenames)
   with Error.Exc err -> Error err
 
@@ -69,7 +70,7 @@ let write (type color) ?quality ?format filename img =
         String.sub s 1 (String.length s - 1)
   in
   let width, height, channels = Image.shape img in
-  let (module C: COLOR with type t = color) = img.Image.color in
+  let (module C : COLOR with type t = color) = img.Image.color in
   let f = C.name C.t in
   let quality =
     match quality with None -> "" | Some q -> Printf.sprintf "-quality %d" q
@@ -77,9 +78,8 @@ let write (type color) ?quality ?format filename img =
   let kind = Image.ty img in
   let _depth = Type.depth kind in
   let cmd =
-    Printf.sprintf "%s -size %dx%d -depth 8 %s:- %s %s:'%s'"
-      !convert_command width height f quality format
-      filename
+    Printf.sprintf "%s -size %dx%d -depth 8 %s:- %s %s:'%s'" !convert_command
+      width height f quality format filename
   in
   let output = Unix.open_process_out cmd in
   for i = 0 to (Image.(img.width * img.height) * channels) - 1 do

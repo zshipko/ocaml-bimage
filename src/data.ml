@@ -4,7 +4,8 @@ type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
 
 let[@inline] ty t = Array1.kind t |> Type.of_kind
 
-let create (type a b) (module T: Type.TYPE with type t = a and type elt = b) n =
+let create (type a b) (module T : Type.TYPE with type t = a and type elt = b) n
+    =
   let arr = Bigarray.Array1.create T.kind Bigarray.C_layout n in
   Array1.fill arr (T.of_float 0.0);
   arr

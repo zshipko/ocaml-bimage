@@ -4,45 +4,50 @@ type ('a, 'b, 'c) t = {
   width : int;
   height : int;
   color : 'c Color.t;
-  ty: ('a, 'b) Type.t;
+  ty : ('a, 'b) Type.t;
   data : ('a, 'b) Data.t;
 }
 
 module type TYPE = sig
   type t
+
   type repr
+
   type storage
 
-  val kind: (repr, storage) Bigarray.kind
+  val kind : (repr, storage) Bigarray.kind
+
   val to_float : repr -> float
+
   val of_float : float -> repr
 end
 
-let create (type color) ty (module C: COLOR with type t = color) width height =
+let create (type color) ty (module C : COLOR with type t = color) width height =
   let channels = C.channels C.t in
   let data = Data.create ty (width * height * channels) in
   { width; height; ty; color = (module C); data }
 
 let compare a b = Data.compare a.data b.data
 
-let equal a b = Data.equal a.data b.data
+let equal a b =
+  a.width = b.width && a.height = b.height
+  && Color.name a.color = Color.name b.color
+  && Data.equal a.data b.data
 
-let of_data (type color) (module C: COLOR with type t = color) width height data =
+let of_data (type color) (module C : COLOR with type t = color) width height
+    data =
   let channels = C.channels C.t in
   let ty = Data.ty data in
   if width * height * channels <> Data.length data then Error.exc `Invalid_shape
   else { width; height; ty; color = (module C); data }
 
 let like image =
-  create (Data.ty image.data) image.color image.width
-    image.height
+  create (Data.ty image.data) image.color image.width image.height
 
-let like_with_ty ty image =
-  create ty image.color image.width image.height
+let like_with_ty ty image = create ty image.color image.width image.height
 
 let like_with_color color image =
-  create (Data.ty image.data) color image.width
-    image.height
+  create (Data.ty image.data) color image.width image.height
 
 let copy image =
   let data = Data.copy image.data in
@@ -50,13 +55,13 @@ let copy image =
 
 let copy_to ~dest src = Data.copy_to ~dest:dest.data src.data
 
-let random (type color) ty (module C: COLOR with type t = color) width height =
+let random (type color) ty (module C : COLOR with type t = color) width height =
   let channels = C.channels C.t in
   let data = Data.random ty (width * height * channels) in
   { width; height; ty; color = (module C); data }
 
 let channels (type c) { color; _ } =
-  let (module C: COLOR with type t = c) = color in
+  let (module C : COLOR with type t = c) = color in
   C.channels C.t
 
 let[@inline] ty { data; _ } = Data.ty data
@@ -64,11 +69,10 @@ let[@inline] ty { data; _ } = Data.ty data
 let color { color; _ } = color
 
 let shape (type c) { width; height; color; _ } =
-  let (module C: COLOR with type t = c) = color in
+  let (module C : COLOR with type t = c) = color in
   (width, height, C.channels C.t)
 
-let[@inline] length t =
-  t.width * t.height * channels t
+let[@inline] length t = t.width * t.height * channels t
 
 let data { data; _ } = data
 
@@ -88,16 +92,18 @@ let convert k img =
   convert_to ~dest img;
   dest
 
-let of_any_color (type color) im (module C: COLOR with type t = color) : (('a, 'b, color) t, Error.t) result =
+let of_any_color (type color) im (module C : COLOR with type t = color) :
+    (('a, 'b, color) t, Error.t) result =
   if channels im = C.channels C.t then
-    Ok (of_data (module C: COLOR with type t = color) im.width im.height im.data)
+    Ok
+      (of_data
+         (module C : COLOR with type t = color)
+         im.width im.height im.data)
   else Error `Invalid_color
 
 let[@inline] index image x y c =
-    let channels = channels image in
-    (y * image.width * channels)
-    + (channels * x)
-    + c
+  let channels = channels image in
+  (y * image.width * channels) + (channels * x) + c
 
 let index_at image offs =
   let channels = channels image in
@@ -123,9 +129,7 @@ let set_f image x y c v =
 
 let get_pixel image ?dest x y =
   let c = channels image in
-  let px =
-    match dest with Some px -> px | None -> Pixel.empty image.color
-  in
+  let px = match dest with Some px -> px | None -> Pixel.empty image.color in
   let index = index image x y 0 in
   let ty = ty image in
   for i = 0 to c - 1 do
@@ -138,7 +142,8 @@ let set_pixel image x y px =
   let index = index image x y 0 in
   let ty = ty image in
   for i = 0 to c - 1 do
-    image.data.{index + i} <- Type.denormalize ty (Pixel.get px i) |> Type.of_float ty;
+    image.data.{index + i} <-
+      Type.denormalize ty (Pixel.get px i) |> Type.of_float ty
   done
 
 let get_data image ?dest x y =
@@ -147,8 +152,8 @@ let get_data image ?dest x y =
   let data = Data.slice image.data ~offs:index ~length:c in
   match dest with
   | Some dest ->
-    Data.copy_to ~dest data;
-    dest
+      Data.copy_to ~dest data;
+      dest
   | None -> data
 
 let set_data image x y px =

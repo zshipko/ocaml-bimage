@@ -1,7 +1,7 @@
 type 'a t = Pixel : ('a Color.t * floatarray) -> 'a t [@@unboxed]
 
 let empty (type c) color =
-  let (module C: Color.COLOR with type t = c) = color in
+  let (module C : Color.COLOR with type t = c) = color in
   let p = Float.Array.create (C.channels C.t) in
   Pixel (color, p)
 
@@ -11,8 +11,7 @@ let compare (Pixel a) (Pixel b) = if a < b then -1 else if a > b then 1 else 0
 
 let equal (Pixel (_, a)) (Pixel (_, b)) =
   let result = ref true in
-  Float.Array.iter2 (fun a b ->
-    result := !result && Float.equal a b) a b;
+  Float.Array.iter2 (fun a b -> result := !result && Float.equal a b) a b;
   !result
 
 let get (Pixel (_, a)) = Float.Array.get a
@@ -20,17 +19,17 @@ let get (Pixel (_, a)) = Float.Array.get a
 let set (Pixel (_, a)) = Float.Array.set a
 
 let to_rgb (type color) (Pixel (color, a)) =
-  let (module C: Color.COLOR with type t = color) = color in
+  let (module C : Color.COLOR with type t = color) = color in
   Pixel ((module Color.Rgb), C.to_rgb C.t a)
 
 let from_rgb (type color) color (Pixel (_rgb, a)) =
-  let (module C: Color.COLOR with type t = color) = color in
+  let (module C : Color.COLOR with type t = color) = color in
   Pixel (color, C.from_rgb C.t a)
 
 let from_data (type a b) color data =
   let len = Data.length data in
   let px = empty color in
-  let (module T: Type.TYPE with type t = a and type elt = b) = Data.ty data in
+  let (module T : Type.TYPE with type t = a and type elt = b) = Data.ty data in
   for i = 0 to len - 1 do
     set px i T.(to_float data.{i} |> Type.normalize (module T))
   done;
@@ -61,12 +60,10 @@ let rgb_to_yuv (Pixel px) =
   Pixel dest*)
 
 let data (Pixel (_, px)) = px
+
 let color (Pixel (c, _)) = c
 
-let map_inplace f px =
-  Float.Array.iteri (fun i x ->
-    set px i (f x)
-  ) (data px)
+let map_inplace f px = Float.Array.iteri (fun i x -> set px i (f x)) (data px)
 
 let map f (Pixel (color, px)) =
   let dest = Pixel (color, Float.Array.copy px) in
@@ -87,7 +84,6 @@ let pp fmt px =
   Format.fprintf fmt "Pixel(";
   for p = 0 to len do
     let () = Format.fprintf fmt "%f" (get px p) in
-    if p < len then
-      Format.fprintf fmt ","
+    if p < len then Format.fprintf fmt ","
   done;
-  Format.fprintf fmt ")";
+  Format.fprintf fmt ")"

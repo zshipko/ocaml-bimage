@@ -122,8 +122,7 @@ let grayscale input : float t =
       Float (Float.Array.get g 0))
 
 let color input : float t =
-  func (pixel input X Y) (fun _ _ _ px ->
-      Float (Pixel.get px 0))
+  func (pixel input X Y) (fun _ _ _ px -> Float (Pixel.get px 0))
 
 module Infix = struct
   let ( && ) a b = And (a, b)
@@ -225,8 +224,7 @@ let threshold input thresh =
         (Lt (v, float thresh.(c mod Array.length thresh)))
         (float 0.0) (type_max input))
 
-let rec prepare :
-    type a. int ref -> int ref -> int ref -> a t -> Input.t -> a =
+let rec prepare : type a. int ref -> int ref -> int ref -> a t -> Input.t -> a =
  fun x y c expr inputs ->
    match expr with
    | Kernel (i, k) -> prepare x y c (kernel i k) inputs
@@ -234,7 +232,7 @@ let rec prepare :
        let x' = prepare x y c x' inputs in
        let y' = prepare x y c y' inputs in
        let c' = prepare x y c c' inputs in
-       let Input input = Input.get inputs input in
+       let (Input input) = Input.get inputs input in
        let f : float = Image.get_f input x' y' c' in
        f
    | X -> !x
@@ -250,14 +248,14 @@ let rec prepare :
        let a = prepare x y c f inputs in
        Float.to_int a
    | Fadd (Kernel (i, a), Kernel (_, b)) ->
-       let a = join_kernel i (+.) a b in
+       let a = join_kernel i ( +. ) a b in
        prepare x y c a inputs
    | Fadd (a, b) ->
        let a = prepare x y c a inputs in
        let b = prepare x y c b inputs in
        a +. b
    | Fsub (Kernel (i, a), Kernel (_, b)) ->
-       let a = join_kernel i (-.) a b in
+       let a = join_kernel i ( -. ) a b in
        prepare x y c a inputs
    | Fsub (a, b) ->
        let a = prepare x y c a inputs in
@@ -271,7 +269,7 @@ let rec prepare :
        let b = prepare x y c b inputs in
        a *. b
    | Fdiv (Kernel (i, a), Kernel (_, b)) ->
-       let a = join_kernel i (/.) a b in
+       let a = join_kernel i ( /. ) a b in
        prepare x y c a inputs
    | Fdiv (a, b) ->
        let a = prepare x y c a inputs in
@@ -356,7 +354,7 @@ let rec prepare :
    | Pixel (index, x', y') ->
        let x' = prepare x y c x' inputs in
        let y' = prepare x y c y' inputs in
-       let Input input = inputs.(index) in
+       let (Input input) = inputs.(index) in
        Pixel.to_rgb (Image.get_pixel input x' y')
    | Value x -> x
    | Pair (a, b) ->
@@ -364,16 +362,16 @@ let rec prepare :
        let b = prepare x y c b inputs in
        (a, b)
    | Type_min index ->
-       let Input input = inputs.(index) in
+       let (Input input) = inputs.(index) in
        Image.ty input |> Type.min_f
    | Type_max index ->
-       let Input input = inputs.(index) in
+       let (Input input) = inputs.(index) in
        Image.ty input |> Type.max_f
    | Channels index ->
-       let Input input = inputs.(index) in
+       let (Input input) = inputs.(index) in
        Image.channels input
    | Shape index ->
-       let Input input = inputs.(index) in
+       let (Input input) = inputs.(index) in
        Image.shape input
 
 let op ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body =

@@ -13,13 +13,18 @@ open Bigarray
 
 module type TYPE = sig
   type t
+
   type elt
+
   type kind = (t, elt) Bigarray.kind
 
-  val name: string
-  val kind: kind
-  val of_float: float -> t
-  val to_float: t -> float
+  val name : string
+
+  val kind : kind
+
+  val of_float : float -> t
+
+  val to_float : t -> float
 end
 
 type ('a, 'b) kind = ('a, 'b) Bigarray.kind
@@ -81,25 +86,32 @@ end
 
 module type COLOR = sig
   type t
-  val t: t
 
-  val name: t -> string
-  val channels: t -> int
-  val has_alpha: t -> bool
-  val to_rgb: t -> floatarray ->  floatarray
-  val from_rgb: t -> floatarray ->  floatarray
+  val t : t
+
+  val name : t -> string
+
+  val channels : t -> int
+
+  val has_alpha : t -> bool
+
+  val to_rgb : t -> floatarray -> floatarray
+
+  val from_rgb : t -> floatarray -> floatarray
 end
 
 (** Color contains methods for creating and inspecting color types *)
 module Color : sig
-  module Rgb: COLOR with type t = [`Rgb]
-  module Rgba: COLOR with type t = [`Rgba]
-  module Gray: COLOR with type t = [`Gray]
+  module Rgb : COLOR with type t = [ `Rgb ]
+
+  module Rgba : COLOR with type t = [ `Rgba ]
+
+  module Gray : COLOR with type t = [ `Gray ]
 
   type 'a t = (module COLOR with type t = 'a)
   (** Used to specify the color model of an image *)
 
-  val name: 'a t -> string
+  val name : 'a t -> string
 
   (*val create : has_alpha:bool -> channels:int -> 'a -> 'a t*)
   (** Create a new color type *)
@@ -135,10 +147,10 @@ type rgba = Color.Rgba.t
 (*type any = [ `Any ]*)
 (** Any color image *)
 
-val gray : [`Gray] Color.t
+val gray : [ `Gray ] Color.t
 (** Gray color *)
 
-val rgb : [`Rgb] Color.t
+val rgb : [ `Rgb ] Color.t
 (** RGB color *)
 
 (*val rgb_packed : rgb_packed Color.t
@@ -150,13 +162,13 @@ val xyz : xyz Color.t
 val yuv : yuv Color.t
 (** YUV color *)*)
 
-val rgba : [`Rgba] Color.t
+val rgba : [ `Rgba ] Color.t
 (** RGBA color *)
 
 (*val color : int -> any Color.t*)
 (** Generic color *)
 
-module Type: sig
+module Type : sig
   type ('a, 'b) t = (module TYPE with type t = 'a and type elt = 'b)
 
   val kind : ('a, 'b) t -> ('a, 'b) Bigarray.kind
@@ -199,19 +211,28 @@ module Type: sig
 end
 
 type u8 = int8_unsigned_elt
+
 type u16 = int16_unsigned_elt
+
 type i32 = int32_elt
+
 type i64 = int64_elt
+
 type f32 = float32_elt
+
 type f64 = float64_elt
 
 val u8 : (int, u8) Type.t
-val u16 : (int, u16) Type.t
-val i32 : (int32, i32) Type.t
-val i64 : (int64, i64) Type.t
-val f32 : (float, f32) Type.t
-val f64 : (float, f64) Type.t
 
+val u16 : (int, u16) Type.t
+
+val i32 : (int32, i32) Type.t
+
+val i64 : (int64, i64) Type.t
+
+val f32 : (float, f32) Type.t
+
+val f64 : (float, f64) Type.t
 
 (** The Data module defines several operations on one dimensional image data *)
 module Data : sig
@@ -285,7 +306,8 @@ module Pixel : sig
   (** Get the number of channels in a pixel *)
 
   val get : 'a t -> int -> float
-  val set: 'a t -> int -> float -> unit
+
+  val set : 'a t -> int -> float -> unit
 
   val compare : 'a t -> 'a t -> int
 
@@ -302,9 +324,9 @@ module Pixel : sig
 
   val color : 'a t -> 'a Color.t
 
-  val to_rgb: 'a t -> rgb t
+  val to_rgb : 'a t -> rgb t
 
-  val from_rgb: 'a Color.t -> rgb t -> 'a t
+  val from_rgb : 'a Color.t -> rgb t -> 'a t
 
   (*val rgb_to_xyz : t -> t*)
   (** Convert pixel from RGB to XYZ *)
@@ -331,17 +353,12 @@ module Image : sig
     width : int;
     height : int;
     color : 'c Color.t;
-    ty: ('a, 'b) Type.t;
+    ty : ('a, 'b) Type.t;
     data : ('a, 'b) Data.t;
   }
   (** Image type *)
 
-  val create :
-    ('a, 'b) Type.t ->
-    'c Color.t ->
-    int ->
-    int ->
-    ('a, 'b, 'c) t
+  val create : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
   (** [create ty color width height] makes a new image with the given [ty], [color] and dimensions *)
 
   val compare : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> int
@@ -351,8 +368,7 @@ module Image : sig
   val data : ('a, 'b, 'c) t -> ('a, 'b) Data.t
   (** Get image data *)
 
-  val of_data :
-    'c Color.t -> int -> int -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
+  val of_data : 'c Color.t -> int -> int -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
   (** [of_data color width height data] makes a new image from existing image data with the given [ty], [color], and dimensions *)
 
   val like : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
@@ -519,7 +535,7 @@ module Kernel : sig
   val cols : t -> int
   (** Returns the number of columns in a kernel *)
 
-  val join: (float -> float -> float) -> t -> t -> t
+  val join : (float -> float -> float) -> t -> t -> t
   (** Joins two kernels using the given operation *)
 
   val of_array : ?norm:bool -> float array array -> t
@@ -553,13 +569,15 @@ end
 
 (** Defines the type used as input to operations *)
 module Input : sig
-  type input = Input: ('a, 'b, 'c) Image.t -> input
+  type input = Input : ('a, 'b, 'c) Image.t -> input
+
   type t = input array
 
   type index = private int
 
   val index : int -> index
-  val input: ('a, 'b, 'c) Image.t -> input
+
+  val input : ('a, 'b, 'c) Image.t -> input
 
   val int_of_index : index -> int
 
@@ -567,7 +585,7 @@ module Input : sig
   (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
       if the provided index is out of bounds. *)
 
-  val shape: t -> int * int * int
+  val shape : t -> int * int * int
 end
 
 module Transform : sig
@@ -614,7 +632,6 @@ module Transform : sig
   val transform : t -> Point.t -> Point.t
 end
 
-
 (** Expr implements an operation combinator which can be used to build operations from low-level functions *)
 module Expr : sig
   type _ t =
@@ -654,7 +671,7 @@ module Expr : sig
     | Pixel : Input.index * int t * int t -> rgb Pixel.t t
     | Value : 'a -> 'a t
     | Pair : 'a t * 'b t -> ('a * 'b) t
-    | Type_min: Input.index -> float t
+    | Type_min : Input.index -> float t
     | Type_max : Input.index -> float t
     | Channels : Input.index -> int t
     | Shape : Input.index -> (int * int * int) t
@@ -690,11 +707,7 @@ module Expr : sig
   (** Create a kernel expr from an existing kernel *)
 
   val join_kernel :
-    Input.index ->
-    (float -> float -> float) ->
-    Kernel.t ->
-    Kernel.t ->
-    float t
+    Input.index -> (float -> float -> float) -> Kernel.t -> Kernel.t -> float t
   (** Create a kernel expession using two kernels combined using the designated operation *)
 
   val transform : Input.index -> Transform.t -> float t
@@ -840,11 +853,7 @@ module Op : sig
   val color : ?input:Input.index -> t
   (** Convert a grayscale image to color *)
 
-  val join :
-    (float -> float -> float) ->
-    t ->
-    t ->
-    t
+  val join : (float -> float -> float) -> t -> t -> t
   (** [join f a b] builds a new operation of [f(a, b)] *)
 
   val apply : f -> t -> t
@@ -862,11 +871,7 @@ module Op : sig
   val invert : ?input:Input.index -> t
   (** Invert the values in an image *)
 
-  val cond :
-    (Input.t -> int -> int -> int -> bool) ->
-    t ->
-    t ->
-    t
+  val cond : (Input.t -> int -> int -> int -> bool) -> t -> t -> t
   (** Conditional operation *)
 
   val sobel_x : ?input:Input.index -> t
@@ -884,8 +889,7 @@ module Op : sig
   val transform : ?input:Input.index -> Transform.t -> t
   (** Apply a transformation *)
 
-  val rotate :
-    ?input:Input.index -> ?center:float * float -> Angle.t -> t
+  val rotate : ?input:Input.index -> ?center:float * float -> Angle.t -> t
   (** Rotation operation *)
 
   val scale : ?input:Input.index -> float -> float -> t
@@ -917,34 +921,31 @@ end
 
 module type FILTER = sig
   type 'a io
-  type ('a, 'b, 'c) t =
-    output:('a, 'b, 'c) Image.t -> Input.t -> unit io
 
-  val join: ('a, 'b, 'c) t array -> ('a, 'b, 'c) t
-  val make:
-    ?x: int ref ->
-    ?y: int ref ->
-    ?c: int ref ->
-    Op.t -> ('a, 'b, 'c) t
-  val of_expr:
-    float Expr.t -> ('a, 'b, 'c) t
+  type ('a, 'b, 'c) t = output:('a, 'b, 'c) Image.t -> Input.t -> unit io
+
+  val join : ('a, 'b, 'c) t array -> ('a, 'b, 'c) t
+
+  val make : ?x:int ref -> ?y:int ref -> ?c:int ref -> Op.t -> ('a, 'b, 'c) t
+
+  val of_expr : float Expr.t -> ('a, 'b, 'c) t
 end
 
-module Filter: sig
+module Filter : sig
   include FILTER with type 'a io = 'a
-  module Make(S: sig
+
+  module Make (S : sig
     type 'a io
 
-    val bind: 'a io -> ('a -> 'b io) -> 'b io
-    val return: 'a -> 'a io
-    val detach: ('a -> 'b) -> 'a -> 'b io
+    val bind : 'a io -> ('a -> 'b io) -> 'b io
+
+    val return : 'a -> 'a io
+
+    val detach : ('a -> 'b) -> 'a -> 'b io
   end) : FILTER with type 'a io = 'a S.io
 end
 
-type ('a, 'b, 'c) filter =
-    output:('a, 'b, 'c) Image.t -> Input.t -> unit
-
-
+type ('a, 'b, 'c) filter = output:('a, 'b, 'c) Image.t -> Input.t -> unit
 
 module Hash : sig
   type t

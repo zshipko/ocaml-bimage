@@ -1,8 +1,5 @@
 open Color
 
-type layout = Planar | Interleaved
-
-
 type ('a, 'b, 'c) t = {
   width : int;
   height : int;

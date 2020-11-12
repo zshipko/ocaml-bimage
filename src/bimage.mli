@@ -570,19 +570,6 @@ module Input : sig
   val shape: t -> int * int * int
 end
 
-module type FILTER = sig
-  type 'a io
-  type ('a, 'b, 'c) t =
-    output:('a, 'b, 'c) Image.t -> Input.t -> unit io
-end
-
-module Filter: sig
-  module Make(S: sig type 'a io end) : FILTER with type 'a io = 'a S.io
-end
-
-type ('a, 'b, 'c) filter =
-    output:('a, 'b, 'c) Image.t -> Input.t -> unit
-
 module Transform : sig
   type t
 
@@ -853,26 +840,6 @@ module Op : sig
   val color : ?input:Input.index -> t
   (** Convert a grayscale image to color *)
 
-  val eval :
-    ?x:int ref ->
-    ?y:int ref ->
-    ?c:int ref ->
-    t ->
-    ('a, 'b, 'c) filter
-  (** Evaluate an operation *)
-
-  val eval_expr :
-    ?x:int ref ->
-    ?y:int ref ->
-    ?c:int ref ->
-    float Expr.t ->
-    ('a, 'b, 'c) filter
-  (** Convert an [Expr] to a filter *)
-
-  val eval_all :
-    t array ->
-    ('a, 'b, 'c) filter
-
   val join :
     (float -> float -> float) ->
     t ->
@@ -947,6 +914,37 @@ module Op : sig
     (** Infix operator for [map] *)
   end
 end
+
+module type FILTER = sig
+  type 'a io
+  type ('a, 'b, 'c) t =
+    output:('a, 'b, 'c) Image.t -> Input.t -> unit io
+
+  val join: ('a, 'b, 'c) t array -> ('a, 'b, 'c) t
+  val make:
+    ?x: int ref ->
+    ?y: int ref ->
+    ?c: int ref ->
+    Op.t -> ('a, 'b, 'c) t
+  val of_expr:
+    float Expr.t -> ('a, 'b, 'c) t
+end
+
+module Filter: sig
+  include FILTER with type 'a io = 'a
+  module Make(S: sig
+    type 'a io
+
+    val bind: 'a io -> ('a -> 'b io) -> 'b io
+    val return: 'a -> 'a io
+    val detach: ('a -> 'b) -> 'a -> 'b io
+  end) : FILTER with type 'a io = 'a S.io
+end
+
+type ('a, 'b, 'c) filter =
+    output:('a, 'b, 'c) Image.t -> Input.t -> unit
+
+
 
 module Hash : sig
   type t

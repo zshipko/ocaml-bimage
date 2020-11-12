@@ -5,9 +5,6 @@ type t = Input.input array -> int -> int -> int -> float
 type f =
   float Expr.t -> Input.input array -> int -> int -> int -> float
 
-type ('a, 'b, 'c) filter =
-  output:('a, 'b, 'c) Image.t -> Input.input array -> unit
-
 let blend ?(input = 0) ?(input1 = 1) : t =
   Expr.op (Expr.blend input input1)
 
@@ -29,45 +26,6 @@ let cond :
     t =
  fun cond a b inputs x y c ->
    if cond inputs x y c then a inputs x y c else b inputs x y c
-
-let eval ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) op :
-    ('a, 'b, 'c) filter =
- fun ~output inputs ->
-   let width, _height, channels = shape output in
-   let kind = ty output in
-   let of_float f = Type.of_float kind f in
-   let denormalize = Type.denormalize kind in
-   let clamp = Type.clamp kind in
-   let op = op inputs in
-   for i = 0 to length output - 1 do
-     let f = op !x !y !c in
-     Bigarray.Array1.unsafe_set output.data i (of_float @@ denormalize @@ clamp f);
-     (* Increment channel index *)
-     incr c;
-     (* If channel index is greater than the number of channels
-        * then reset channel index to 0 and increment x index *)
-     let () =
-       if !c >= channels then
-         let () = c := 0 in
-         incr x
-     in
-     (* If x index is greater than the width then reset x index to 0
-        * and increment y index *)
-     if !x >= width then
-       let () = x := 0 in
-       incr y
-   done
-
-let eval_all ops : ('a, 'b, 'c) filter =
-  fun ~output inputs ->
-    Array.iteri (fun i op ->
-      if i > 0 then
-        inputs.(0) <- Input.input (Image.copy output);
-      eval op ~output inputs;
-    ) ops
-
-let eval_expr ?(x = ref 0) ?(y = ref 0) ?(c = ref 0) body ~output inputs =
-  eval ~x ~y ~c (Expr.op ~x ~y ~c body) ~output inputs
 
 let join f a b inputs x y c = f (a inputs x y c) (b inputs x y c)
 

@@ -15,7 +15,7 @@ let f = let open Op in Infix.(grayscale &- scalar 0.5) in
 let dest = Image.like_with_color gray a in
 
 (* Run the operation *)
-let () = Op.eval f ~output:dest [| Input.input a |] in
+let () = (Filter.make f) ~output:dest [| Input.input a |] in
 
 (* Save the image using ImageMagick *)
 Magick.write "test2.jpg" dest

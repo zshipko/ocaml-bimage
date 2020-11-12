@@ -15,4 +15,4 @@ let avg_times_3 = Expr.Infix.(avg *. float 3.0)
 let () =
   let dest = Image.like a in
   (* Exprs can also be evaluated directly using `Op.eval_expr` *)
-  Op.eval_expr avg ~output:dest [| Input.input a |]
+  Filter.of_expr avg ~output:dest [| Input.input a |]

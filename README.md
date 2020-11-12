@@ -73,8 +73,8 @@ let avg_times_3 = Expr.Infix.(avg *. float 3.0)
 
 let () =
   let dest = Image.like a in
-  (* Exprs can also be evaluated directly using `Op.eval_expr` *)
-  Op.eval_expr avg ~output:dest [| a |]
+  (* Exprs can also be evaluated directly using `Filter.of_expr` *)
+  Filter.of_expr avg ~output:dest [| a |]
 ```
 
 An example composing two `Op`s:
@@ -97,7 +97,7 @@ let f = let open Op in Infix.(grayscale &- scalar 0.5) in
 let dest = Image.like_with_color gray a in
 
 (* Run the operation *)
-let () = Op.eval f ~output:dest [| a |] in
+let () = Filter.make f ~output:dest [| a |] in
 
 (* Save the image using ImageMagick *)
 Magick.write "test2.jpg" dest

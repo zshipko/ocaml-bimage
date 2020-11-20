@@ -1,0 +1,49 @@
+name: 'OCaml tests'
+true:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+jobs:
+  run:
+    name: Build
+    runs-on: '${{ matrix.os }}'
+    steps:
+      - name: 'Install deps'
+        run: "' uname=$(uname); case \"$uname\" in (*Linux*) sudo apt-get install\
+          \ -y libopenimageio-dev libsdl2-dev libgtk3-dev; ;; (*Darwin*) brew install\
+          \ openimageio sdl2; ;; esac;\n'"
+      - name: 'Checkout code'
+        uses: actions/checkout@v2
+      - id: ocaml-bimage-opam-cache
+        name: 'OCaml/Opam cache'
+        uses: actions/cache@v2
+        with:
+          key: 'ocaml-bimage-opam-${{ matrix.ocaml-version }}-${{ matrix.os }}'
+          path: ~/.opam
+      - name: 'Use OCaml ${{ matrix.ocaml-version }}'
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: '${{ matrix.ocaml-version }}'
+      - name: 'Set Opam env'
+        run: 'opam env >> $GITHUB_ENV'
+      - name: 'Add Opam switch to PATH'
+        run: 'opam var bin >> $GITHUB_PATH'
+      - run: 'opam install dune lwt tsdl ctypes ctypes-foreign'
+      - name: 'Run OCaml tests'
+        run: 'opam exec -- dune runtest'
+    strategy:
+      fail-fast: true
+      matrix:
+        ocaml-version:
+          - 4.11.1
+          - 4.10.0
+          - 4.09.1
+          - 4.08.1
+          - 4.07.0
+          - 4.06.0
+        os:
+          - macos-latest
+          - ubuntu-latest

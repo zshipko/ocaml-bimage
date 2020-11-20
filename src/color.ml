@@ -71,10 +71,15 @@ module Gray : COLOR with type t = [ `Gray ] = struct
 
   let has_alpha _ = false
 
-  let to_rgb _ (px : floatarray) = make 3 (get px 0)
+  let to_rgb _ (px : floatarray) =
+    let arr = create 3 in
+    fill arr 0 3 (get px 0);
+    arr
 
   let from_rgb _ (px : floatarray) =
-    make 1 ((get px 0 *. 0.21) +. (get px 1 *. 0.72) +. (get px 2 *. 0.07))
+    let arr = create 1 in
+    fill arr 0 1 ((get px 0 *. 0.21) +. (get px 1 *. 0.72) +. (get px 2 *. 0.07));
+    arr
 end
 
 type 'a t = (module COLOR with type t = 'a)

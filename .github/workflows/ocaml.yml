@@ -44,8 +44,6 @@ jobs:
           - 4.10.0
           - 4.09.1
           - 4.08.1
-          - 4.07.0
-          - 4.06.0
         os:
           - macos-latest
           - ubuntu-latest

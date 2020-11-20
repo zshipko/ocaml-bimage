@@ -13,10 +13,10 @@ jobs:
     runs-on: '${{ matrix.os }}'
     steps:
       - name: 'Install deps'
-        run: '''case "$(uname)" in
-          (*Linux*) sudo apt-get install -y libopenimageio-dev libsdl2-dev; ;;
-          (*Darwin*) brew install openimageio sdl2; ;;
-          esac'''
+        run: '''bash -c "case \"$(uname)\" in \
+          (*Linux*) sudo apt-get install -y libopenimageio-dev libsdl2-dev; ;; \
+          (*Darwin*) brew install openimageio sdl2; ;; \
+          esac"'''
       - name: 'Checkout code'
         uses: actions/checkout@v2
       - id: ocaml-bimage-opam-cache

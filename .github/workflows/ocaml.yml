@@ -1,5 +1,6 @@
 name: 'OCaml tests'
-true:
+
+on:
   pull_request:
     branches:
       - master

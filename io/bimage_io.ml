@@ -127,3 +127,13 @@ module Output = struct
       Ok ()
     with Failure reason -> Error (`Msg reason)
 end
+
+let write filename image =
+  match Output.create filename with
+  | Ok output -> Output.write_image output image
+  | Error e -> Error e
+
+let read t c filename =
+  match Input.init filename with
+  | Ok input -> Input.read_image input t c
+  | Error e -> Error e

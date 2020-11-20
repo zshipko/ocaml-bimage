@@ -1,0 +1,24 @@
+opam-version: "2.0"
+maintainer: "zachshipko@gmail.com"
+homepage: "https://www.openimageio.org"
+authors: "OpenImageIO"
+bug-reports: "https://github.com/ocaml/opam-repository/issues"
+license: "MIT"
+build: [
+  ["pkg-config" "--atleast-version=2" "OpenImageIO"]
+]
+depends: ["conf-pkg-config" {build}]
+depexts: [
+  ["libopenimageio-dev"] {os-family = "debian"}
+  ["openimageio-devel"] {os-distribution = "fedora"}
+  ["openimageio-devel" "epel-release"] {os-distribution = "centos"}
+  ["openimageio-devel"] {os-family = "suse"}
+  ["openimageio-dev"] {os-distribution = "alpine"}
+  ["openimageio"] {os = "macos" & os-distribution = "homebrew"}
+  ["openimageio"] {os = "macos" & os-distribution = "macports"}
+]
+synopsis: "Virtual package relying on OpenImageIO development package installation"
+description: """
+This package can only install if OpenImageIO is available on the system.
+"""
+flags: conf

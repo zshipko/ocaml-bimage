@@ -1,19 +1,19 @@
 open Bigarray
-open Type
 
 type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
 
-let[@inline] kind t = Array1.kind t
+let[@inline] ty t = Array1.kind t |> Type.of_kind
 
-let create kind n =
-  let arr = Bigarray.Array1.create kind Bigarray.C_layout n in
-  Array1.fill arr (Kind.of_float kind 0.0);
+let create (type a b) (module T : Type.TYPE with type t = a and type elt = b) n
+    =
+  let arr = Bigarray.Array1.create T.kind Bigarray.C_layout n in
+  Array1.fill arr (T.of_float 0.0);
   arr
 
-let random kind n =
-  let dest = create kind n in
+let random t n =
+  let dest = create t n in
   for i = 0 to n - 1 do
-    dest.{i} <- Kind.of_float kind (Random.float (Kind.max kind))
+    dest.{i} <- Type.of_float t (Random.float (Type.max_f t))
   done;
   dest
 
@@ -39,25 +39,7 @@ let compare a b = compare a b
 
 let equal a b = compare a b = 0
 
-let of_float ?dest t arr =
-  let of_float = Kind.of_float t in
-  let size = length arr in
-  let dest = match dest with None -> create t size | Some d -> d in
-  for i = 0 to size - 1 do
-    dest.{i} <- of_float arr.{i}
-  done;
-  dest
-
-let to_float ?dest arr =
-  let to_float = Kind.to_float (kind arr) in
-  let size = length arr in
-  let dest = match dest with None -> create f32 size | Some d -> d in
-  for i = 0 to size - 1 do
-    dest.{i} <- to_float arr.{i}
-  done;
-  dest
-
-let of_array t arr = Array1.of_array t C_layout arr
+let of_array t arr = Array1.of_array (Type.kind t) C_layout arr
 
 let to_array data =
   let size = length data in
@@ -84,7 +66,7 @@ let map2_inplace f a b =
 let copy_to ~dest src = Bigarray.Array1.blit src dest
 
 let copy data =
-  let dest = create (Bigarray.Array1.kind data) (length data) in
+  let dest = create (ty data) (length data) in
   copy_to ~dest data;
   dest
 
@@ -94,9 +76,9 @@ let convert_to fn ~dest data =
     dest.{i} <- fn data.{i}
   done
 
-let convert kind fn data =
+let convert ty fn data =
   let len = length data in
-  let dst = create kind len in
+  let dst = create ty len in
   for i = 0 to len - 1 do
     dst.{i} <- fn data.{i}
   done;

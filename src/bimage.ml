@@ -7,12 +7,14 @@
 include Type
 include Color
 include Util
+include Filter
 module Error = Error
 module Color = Color
 module Data = Data
 module Pixel = Pixel
 module Kernel = Kernel
 module Transform = Transform
+module Type = Type
 
 module Image = struct
   include Image
@@ -23,8 +25,9 @@ module Input = Input
 module Op = Op
 module Expr = Expr
 module Hash = Hash
+module Filter = Filter
 
-type ('a, 'b, 'c, 'd, 'e, 'f) filter = ('a, 'b, 'c, 'd, 'e, 'f) Op.filter
+type ('a, 'b, 'c) filter = ('a, 'b, 'c) Filter.t
 
 let ( ~@ ) = Input.index
 

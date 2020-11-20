@@ -41,7 +41,6 @@ let make_surface image renderer =
   | Error e -> Error e
 
 let create ?title flags image =
-  (match Image.layout image with Planar -> Error.exc `Invalid_layout | _ -> ());
   let w, h, _ = Image.shape image in
   match Sdl.create_window_and_renderer ~w ~h flags with
   | Ok (w, r) -> (

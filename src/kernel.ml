@@ -26,6 +26,17 @@ let normalize kernel =
   let sum = sum kernel in
   if sum = 0.0 then kernel else Array.map (Array.map (fun x -> x /. sum)) kernel
 
+let join op a b =
+  let rows = rows a in
+  let cols = cols a in
+  let dest = create rows cols in
+  for r = 0 to rows - 1 do
+    for c = 0 to cols - 1 do
+      dest.(r).(c) <- op a.(r).(c) b.(r).(c)
+    done
+  done;
+  dest
+
 external to_array : t -> float array array = "%identity"
 
 let of_array ?(norm = true) arr = if norm then normalize arr else arr

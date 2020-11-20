@@ -1,6 +1,4 @@
-let create_mmap ?mode ?(layout = Bimage.Image.Interleaved) kind color ~filename
-    w h =
-  let data =
-    Data.create_mmap ?mode kind ~filename (w * h * Bimage.Color.channels color)
-  in
-  Bimage.Image.of_data color w h layout data
+let create_mmap (type color) ?mode kind
+    (module C : Bimage.COLOR with type t = color) ~filename w h =
+  let data = Data.create_mmap ?mode kind ~filename (w * h * C.channels C.t) in
+  Bimage.Image.of_data (module C) w h data

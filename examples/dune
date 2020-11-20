@@ -10,4 +10,3 @@
  (name runtest)
  (package bimage-unix)
  (deps for_each.exe expr.exe compose.exe))
-

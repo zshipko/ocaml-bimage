@@ -1,37 +1,49 @@
-open Type
+type 'a t = Pixel : ('a Color.t * floatarray) -> 'a t [@@unboxed]
 
-type t = Pixel : (float, f32) Data.t -> t [@@unboxed]
+let empty (type c) color =
+  let (module C : Color.COLOR with type t = c) = color in
+  let p = Float.Array.create (C.channels C.t) in
+  Pixel (color, p)
 
-let empty n =
-  let p = Data.create f32 n in
-  Pixel p
+let length (Pixel (_color, p)) = Float.Array.length p
 
-let length (Pixel p) = Data.length p
+let compare (Pixel a) (Pixel b) = if a < b then -1 else if a > b then 1 else 0
 
-let compare (Pixel a) (Pixel b) = Data.compare a b
+let equal (Pixel (_, a)) (Pixel (_, b)) =
+  let result = ref true in
+  Float.Array.iter2 (fun a b -> result := !result && Float.equal a b) a b;
+  !result
 
-let equal (Pixel a) (Pixel b) = Data.equal a b
+let get (Pixel (_, a)) = Float.Array.get a
 
-let from_data data =
+let set (Pixel (_, a)) = Float.Array.set a
+
+let to_rgb (type color) (Pixel (color, a)) =
+  let (module C : Color.COLOR with type t = color) = color in
+  Pixel ((module Color.Rgb), C.to_rgb C.t a)
+
+let from_rgb (type color) color (Pixel (_rgb, a)) =
+  let (module C : Color.COLOR with type t = color) = color in
+  Pixel (color, C.from_rgb C.t a)
+
+let from_data (type a b) color data =
   let len = Data.length data in
-  let (Pixel px) = empty len in
-  let kind = Data.kind data in
+  let px = empty color in
+  let (module T : Type.TYPE with type t = a and type elt = b) = Data.ty data in
   for i = 0 to len - 1 do
-    px.{i} <- Kind.(to_float kind data.{i} |> normalize kind)
+    set px i T.(to_float data.{i} |> Type.normalize (module T))
   done;
-  Pixel px
+  px
 
-let to_data ~dest (Pixel px) =
+let to_data ~dest px =
   let len = Data.length dest in
-  let kind = Data.kind dest in
-  for i = 0 to min len (Data.length px) - 1 do
-    dest.{i} <- Kind.(of_float kind (denormalize kind px.{i}))
+  let ty = Data.ty dest in
+  for i = 0 to min len (length px) - 1 do
+    dest.{i} <- Type.(of_float ty (denormalize ty (get px i)))
   done
 
-let data (Pixel px) = px
-
-let rgb_to_xyz (Pixel px) =
-  let (Pixel dest) = empty 3 in
+(*let rgb_to_xyz (Pixel px) =
+  let (Pixel (_, dest)) = empty 3 in
   dest.{0} <-
     (0.4124564 *. px.{0}) +. (0.3575761 *. px.{1}) +. (0.1804375 *. px.{2});
   dest.{1} <-
@@ -45,32 +57,33 @@ let rgb_to_yuv (Pixel px) =
   dest.{0} <- (0.299 *. px.{0}) +. (0.587 *. px.{1}) +. (0.114 *. px.{2});
   dest.{1} <- (-0.147 *. px.{0}) -. (0.289 *. px.{1}) +. (0.436 *. px.{2});
   dest.{2} <- (0.615 *. px.{0}) -. (0.515 *. px.{1}) -. (0.100 *. px.{2});
-  Pixel dest
+  Pixel dest*)
 
-let map_inplace f (Pixel px) = Data.map_inplace f px
+let data (Pixel (_, px)) = px
 
-let map f (Pixel px) =
-  let dest = Data.copy px in
-  Data.map_inplace f dest;
-  Pixel dest
+let color (Pixel (c, _)) = c
 
-let map2_inplace f (Pixel a) (Pixel b) = Data.map2_inplace f a b
+let map_inplace f px = Float.Array.iteri (fun i x -> set px i (f x)) (data px)
 
-let map2 f (Pixel a) (Pixel b) =
-  let dest = Data.copy a in
-  Data.map2_inplace f dest b;
-  Pixel dest
+let map f (Pixel (color, px)) =
+  let dest = Pixel (color, Float.Array.copy px) in
+  map_inplace f dest;
+  dest
 
 let convert_in_place from to_ px =
   map
     (fun x ->
-      let x = Kind.normalize from x in
-      Kind.denormalize to_ x)
+      let x = Type.normalize from x in
+      Type.denormalize to_ x)
     px
 
-let fold f (Pixel px) a = Data.fold f px a
+let fold f (Pixel (_, px)) a = Float.Array.fold_left (fun a b -> f b a) a px
 
-let fold2 f (Pixel px) (Pixel px') a = Data.fold2 f px px' a
-
-let pp fmt (Pixel px) =
-  Format.fprintf fmt "Scalar(%f, %f, %f)" px.{0} px.{1} px.{2}
+let pp fmt px =
+  let len = length px - 1 in
+  Format.fprintf fmt "Pixel(";
+  for p = 0 to len do
+    let () = Format.fprintf fmt "%f" (get px p) in
+    if p < len then Format.fprintf fmt ","
+  done;
+  Format.fprintf fmt ")"

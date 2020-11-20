@@ -20,13 +20,13 @@ module Stb : sig
     'a Color.t -> bytes -> ((float, f32, 'a) Image.t, Error.t) result
 
   val read :
-    ('a, 'b) kind ->
+    ('a, 'b) Type.t ->
     'c Color.t ->
     string ->
     (('a, 'b, 'c) Image.t, Error.t) result
 
   val read_from_memory :
-    ('a, 'b) kind ->
+    ('a, 'b) Type.t ->
     'c Color.t ->
     bytes ->
     (('a, 'b, 'c) Image.t, Error.t) result
@@ -51,15 +51,13 @@ module Magick : sig
   val read :
     ?create:
       (string ->
-      ?layout:Image.layout ->
-      ('a, 'b) kind ->
+      ('a, 'b) Type.t ->
       'c Color.t ->
       int ->
       int ->
       ('a, 'b, 'c) Image.t) ->
-    ?layout:Image.layout ->
-    ('a, 'b) kind ->
-    ([< gray | rgb | rgba ] as 'c) Color.t ->
+    ('a, 'b) Type.t ->
+    ([< `Gray | `Rgb | `Rgba ] as 'c) Color.t ->
     ?format:string ->
     string ->
     (('a, 'b, 'c) Image.t, Error.t) result
@@ -69,25 +67,23 @@ module Magick : sig
     ?quality:int ->
     ?format:string ->
     string ->
-    ('a, 'b, [< gray | rgb | rgba ]) Image.t ->
+    ('a, 'b, [< `Gray | `Rgb | `Rgba ]) Image.t ->
     unit
   (** [write filename image] saves an image to [filename] *)
 
   val read_all :
     ?create:
       (string ->
-      ?layout:Image.layout ->
-      ('a, 'b) kind ->
+      ('a, 'b) Type.t ->
       'c Color.t ->
       int ->
       int ->
       ('a, 'b, 'c) Image.t) ->
-    ?layout:Image.layout ->
-    ('a, 'b) kind ->
-    ([< gray | rgb | rgba ] as 'c) Color.t ->
+    ('a, 'b) Type.t ->
+    ([< `Gray | `Rgb | `Rgba ] as 'c) Color.t ->
     ?format:string ->
     string array ->
-    (('a, 'b, 'c) Input.t, Error.t) result
+    (Input.t, Error.t) result
   (** Read multiple images directly into an Input array *)
 
   val convert_command : string ref
@@ -101,14 +97,13 @@ end
 
 module Data_unix : sig
   val create_mmap :
-    ?mode:int -> ('a, 'b) kind -> filename:string -> int -> ('a, 'b) Data.t
+    ?mode:int -> ('a, 'b) Type.t -> filename:string -> int -> ('a, 'b) Data.t
 end
 
 module Image_unix : sig
   val create_mmap :
     ?mode:int ->
-    ?layout:Image.layout ->
-    ('a, 'b) kind ->
+    ('a, 'b) Type.t ->
     'c Color.t ->
     filename:string ->
     int ->

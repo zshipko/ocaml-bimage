@@ -12,7 +12,6 @@ type t = string
 
 let create ?(width = 800) ?(height = 600) ?mousedown ?mouseup ?keydown ?keyup
     ?timer title m =
-  if Image.layout m = Image.Planar then Error.exc `Invalid_layout;
   GMain.init () |> ignore;
   let window = GWindow.window ~title ~width ~height ~deletable:true () in
   let scroll = GBin.scrolled_window ~width ~height ~show:true () in

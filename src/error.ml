@@ -2,7 +2,6 @@ type t =
   [ `Invalid_shape
   | `Invalid_kernel_shape of int * int
   | `Invalid_input of int
-  | `Invalid_layout
   | `Invalid_color
   | `Msg of string ]
 

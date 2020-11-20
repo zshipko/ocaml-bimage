@@ -1,105 +1,117 @@
-open Type
 open Color
-
-type layout = Planar | Interleaved
 
 type ('a, 'b, 'c) t = {
   width : int;
   height : int;
   color : 'c Color.t;
-  layout : layout;
+  ty : ('a, 'b) Type.t;
   data : ('a, 'b) Data.t;
 }
 
-let create ?(layout = Interleaved) kind color width height =
-  let channels = channels_of_color color in
-  let data = Data.create kind (width * height * channels) in
-  { width; height; color; layout; data }
+module type TYPE = sig
+  type t
+
+  type repr
+
+  type storage
+
+  val kind : (repr, storage) Bigarray.kind
+
+  val to_float : repr -> float
+
+  val of_float : float -> repr
+end
+
+let create (type color) ty (module C : COLOR with type t = color) width height =
+  let channels = C.channels C.t in
+  let data = Data.create ty (width * height * channels) in
+  { width; height; ty; color = (module C); data }
 
 let compare a b = Data.compare a.data b.data
 
-let equal a b = Data.equal a.data b.data
+let equal a b =
+  a.width = b.width && a.height = b.height
+  && Color.name a.color = Color.name b.color
+  && Data.equal a.data b.data
 
-let of_data color width height layout data =
-  let channels = channels_of_color color in
+let of_data (type color) (module C : COLOR with type t = color) width height
+    data =
+  let channels = C.channels C.t in
+  let ty = Data.ty data in
   if width * height * channels <> Data.length data then Error.exc `Invalid_shape
-  else { width; height; color; layout; data }
+  else { width; height; ty; color = (module C); data }
 
 let like image =
-  create ~layout:image.layout (Data.kind image.data) image.color image.width
-    image.height
+  create (Data.ty image.data) image.color image.width image.height
 
-let like_with_kind kind image =
-  create ~layout:image.layout kind image.color image.width image.height
+let like_with_ty ty image = create ty image.color image.width image.height
 
 let like_with_color color image =
-  create ~layout:image.layout (Data.kind image.data) color image.width
-    image.height
-
-let like_with_layout layout image =
-  create ~layout (Data.kind image.data) image.color image.width image.height
+  create (Data.ty image.data) color image.width image.height
 
 let copy image =
   let data = Data.copy image.data in
-  of_data image.color image.width image.height image.layout data
+  of_data image.color image.width image.height data
 
 let copy_to ~dest src = Data.copy_to ~dest:dest.data src.data
 
-let random ?(layout = Interleaved) kind color width height =
-  let channels = channels_of_color color in
-  let data = Data.random kind (width * height * channels) in
-  { width; height; color; layout; data }
+let random (type color) ty (module C : COLOR with type t = color) width height =
+  let channels = C.channels C.t in
+  let data = Data.random ty (width * height * channels) in
+  { width; height; ty; color = (module C); data }
 
-let channels { color; _ } = channels_of_color color
+let channels (type c) { color; _ } =
+  let (module C : COLOR with type t = c) = color in
+  C.channels C.t
 
-let[@inline] kind { data; _ } = Data.kind data
+let[@inline] ty { data; _ } = Data.ty data
 
 let color { color; _ } = color
 
-let layout { layout; _ } = layout
+let shape (type c) { width; height; color; _ } =
+  let (module C : COLOR with type t = c) = color in
+  (width, height, C.channels C.t)
 
-let shape { width; height; color; _ } = (width, height, channels_of_color color)
-
-let[@inline] length { width; height; color; _ } =
-  width * height * Color.channels color
+let[@inline] length t = t.width * t.height * channels t
 
 let data { data; _ } = data
 
-let empty_pixel image = Pixel.empty (channels image)
+let empty_pixel image = Pixel.empty image.color
 
-let empty_data image = Data.create (kind image) (channels image)
+let empty_data image = Data.create (ty image) (channels image)
 
 let convert_to ~dest img =
-  let dest_k = kind dest in
-  let src_k = kind img in
+  let dest_k = ty dest in
+  let src_k = ty img in
   for i = 0 to length dest - 1 do
-    dest.data.{i} <- Kind.convert ~from:src_k dest_k img.data.{i}
+    dest.data.{i} <- Type.convert ~from:src_k dest_k img.data.{i}
   done
 
 let convert k img =
-  let dest = create ~layout:img.layout k img.color img.width img.height in
+  let dest = create k img.color img.width img.height in
   convert_to ~dest img;
   dest
 
-let of_any_color im color : (('a, 'b, 'c) t, Error.t) result =
-  if Color.channels color = Color.channels im.color then
-    Ok (of_data color im.width im.height im.layout im.data)
+let of_any_color (type color) im (module C : COLOR with type t = color) :
+    (('a, 'b, color) t, Error.t) result =
+  if channels im = C.channels C.t then
+    Ok
+      (of_data
+         (module C : COLOR with type t = color)
+         im.width im.height im.data)
   else Error `Invalid_color
 
 let[@inline] index image x y c =
-  match image.layout with
-  | Planar -> (image.width * image.height * c) + (y * image.width) + x
-  | Interleaved ->
-      (y * image.width * image.color.Color.channels)
-      + (image.color.Color.channels * x)
-      + c
+  let channels = channels image in
+  (y * image.width * channels) + (channels * x) + c
 
 let index_at image offs =
-  Data.slice image.data ~offs ~length:image.color.Color.channels
+  let channels = channels image in
+  Data.slice image.data ~offs ~length:channels
 
 let[@inline] get image x y c =
   let index = index image x y c in
-  if index < 0 || index >= length image then Kind.min (kind image)
+  if index < 0 || index >= length image then Type.min (ty image)
   else image.data.{index}
 
 let[@inline] set image x y c v =
@@ -107,70 +119,48 @@ let[@inline] set image x y c v =
   image.data.{index} <- v
 
 let get_f image x y c =
-  let kind = kind image in
-  get image x y c |> Kind.to_float kind
+  let ty = ty image in
+  get image x y c |> Type.to_float ty |> Type.normalize ty
 
 let set_f image x y c v =
-  let kind = kind image in
-  let v = Kind.of_float kind v in
-  set image x y c v
-
-let get_norm image x y c =
-  let kind = kind image in
-  get image x y c |> Kind.to_float kind |> Kind.normalize kind
-
-let set_norm image x y c v =
-  let kind = kind image in
-  let v = Kind.denormalize kind v |> Kind.of_float kind in
+  let ty = ty image in
+  let v = Type.denormalize ty v |> Type.of_float ty in
   set image x y c v
 
 let get_pixel image ?dest x y =
   let c = channels image in
-  let (Pixel.Pixel px) =
-    match dest with Some px -> px | None -> Pixel.empty c
-  in
+  let px = match dest with Some px -> px | None -> Pixel.empty image.color in
+  let index = index image x y 0 in
+  let ty = ty image in
   for i = 0 to c - 1 do
-    px.{i} <- get_f image x y i
-  done;
-  Pixel.Pixel px
-
-let set_pixel image x y (Pixel.Pixel px) =
-  let c = channels image in
-  for i = 0 to c - 1 do
-    set_f image x y i px.{i}
-  done
-
-let get_pixel_norm image ?dest x y =
-  let c = channels image in
-  let (Pixel.Pixel px) =
-    match dest with Some px -> px | None -> Pixel.empty c
-  in
-  for i = 0 to c - 1 do
-    px.{i} <- get_norm image x y i
-  done;
-  Pixel.Pixel px
-
-let set_pixel_norm image x y (Pixel.Pixel px) =
-  let c = channels image in
-  for i = 0 to c - 1 do
-    set_norm image x y i px.{i}
-  done
-
-let get_data image ?dest x y =
-  let c = channels image in
-  let px =
-    match dest with Some px -> px | None -> Data.create (kind image) c
-  in
-  for i = 0 to c - 1 do
-    px.{i} <- get image x y i
+    Pixel.set px i (Type.to_float ty image.data.{index + i} |> Type.normalize ty)
   done;
   px
 
-let set_data image x y px =
+let set_pixel image x y px =
   let c = channels image in
+  let index = index image x y 0 in
+  let ty = ty image in
   for i = 0 to c - 1 do
-    set image x y i px.{i}
+    image.data.{index + i} <-
+      Type.denormalize ty (Pixel.get px i) |> Type.of_float ty
   done
+
+let get_data image ?dest x y =
+  let index = index image x y 0 in
+  let c = channels image in
+  let data = Data.slice image.data ~offs:index ~length:c in
+  match dest with
+  | Some dest ->
+      Data.copy_to ~dest data;
+      dest
+  | None -> data
+
+let set_data image x y px =
+  let index = index image x y 0 in
+  let c = channels image in
+  let data = Data.slice image.data ~offs:index ~length:c in
+  Data.copy_to ~dest:px data
 
 let map_inplace f img = Data.map_inplace f img.data
 
@@ -227,14 +217,14 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let height =
     match height with None -> img.height - y | Some h -> min h (img.width - y)
   in
-  let avg = Data.create f32 (channels img) in
+  let avg = Data.create Type.f64 (channels img) in
   let channels = channels img in
   let size = float_of_int (width * height) in
-  let kind = kind img in
+  let ty = ty img in
   for_each
     (fun _x _y px ->
       for i = 0 to channels - 1 do
-        avg.{i} <- avg.{i} +. Kind.to_float kind px.{i}
+        avg.{i} <- avg.{i} +. Type.to_float ty px.{i}
       done)
     ~x ~y ~width ~height img;
   for i = 0 to channels - 1 do
@@ -242,19 +232,8 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   done;
   avg
 
-let convert_layout layout im =
-  let width, height, _ = shape im in
-  let dest = create ~layout (kind im) (color im) width height in
-  for_each
-    (fun x y px ->
-      for i = 0 to Data.length px - 1 do
-        dest.data.{index dest x y i} <- px.{i}
-      done)
-    im;
-  dest
-
 let crop im ~x ~y ~width ~height =
-  let dest = create ~layout:im.layout (kind im) im.color width height in
+  let dest = create (ty im) im.color width height in
   for_each
     (fun i j _ ->
       for c = 0 to channels im - 1 do
@@ -264,12 +243,12 @@ let crop im ~x ~y ~width ~height =
   dest
 
 let mean_std ?(channel = 0) image =
-  let kind = kind image in
+  let ty = ty image in
   let x1 = ref 0. in
   let x2 = ref 0. in
   for_each
     (fun _x _y px ->
-      let f = Kind.to_float kind px.{channel} in
+      let f = Type.to_float ty px.{channel} in
       x1 := !x1 +. f;
       x2 := !x2 +. (f *. f))
     image;
@@ -302,8 +281,8 @@ module Diff = struct
   let apply diff image =
     Hashtbl.iter
       (fun (x, y, c) v ->
-        let v' = get_norm image x y c in
-        set_norm image x y c (v' +. v))
+        let v' = get_f image x y c in
+        set_f image x y c (v' +. v))
       diff
 
   let length x = Hashtbl.length x
@@ -311,13 +290,13 @@ end
 
 let diff a b =
   let dest = Hashtbl.create 8 in
-  let kind = kind a in
+  let ty = ty a in
   for_each
     (fun x y px ->
       let pxb = get_data b x y in
       for i = 0 to channels a do
-        let a = Kind.to_float kind px.{i} |> Kind.normalize kind in
-        let b = Kind.to_float kind pxb.{i} |> Kind.normalize kind in
+        let a = Type.to_float ty px.{i} |> Type.normalize ty in
+        let b = Type.to_float ty pxb.{i} |> Type.normalize ty in
         if a <> b then Hashtbl.replace dest (x, y, i) (a -. b)
       done)
     a;

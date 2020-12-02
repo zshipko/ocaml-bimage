@@ -115,12 +115,12 @@ let read_f32_from_memory color data =
 let read kind color filename =
   match read_u16 color filename with
   | Error e -> Error e
-  | Ok tmp -> Ok (Bimage.Image.convert kind tmp)
+  | Ok tmp -> Ok (Bimage.Image.convert kind color tmp)
 
 let read_from_memory kind color filename =
   match read_u16_from_memory color filename with
   | Error e -> Error e
-  | Ok tmp -> Ok (Bimage.Image.convert kind tmp)
+  | Ok tmp -> Ok (Bimage.Image.convert kind color tmp)
 
 let stbi_write_png =
   foreign ~release_runtime_lock:true "stbi_write_png"
@@ -158,13 +158,13 @@ let write_hdr filename image =
 let write filename image =
   match Filename.extension filename |> String.lowercase_ascii with
   | ".png" ->
-      let tmp = Bimage.Image.convert Bimage.u8 image in
+      let tmp = Bimage.Image.convert Bimage.u8 Bimage.rgb image in
       write_png filename tmp
   | ".jpeg" | ".jpg" ->
-      let tmp = Bimage.Image.convert Bimage.u8 image in
+      let tmp = Bimage.Image.convert Bimage.u8 Bimage.rgb image in
       write_jpg filename tmp
   | ".hdr" ->
-      let tmp = Bimage.Image.convert Bimage.f32 image in
+      let tmp = Bimage.Image.convert Bimage.f32 Bimage.rgb image in
       write_hdr filename tmp
   | ext ->
       Error

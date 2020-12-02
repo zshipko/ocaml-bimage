@@ -197,7 +197,7 @@ let convert_to ~dest img =
       set_pixel dest x y color)
     img
 
-let convert k c img =
+let convert k (c : 'c Color.t) img =
   let dest = create k c img.width img.height in
   convert_to ~dest img;
   dest

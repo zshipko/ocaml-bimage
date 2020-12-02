@@ -1,0 +1,30 @@
+opam-version: "2.0"
+maintainer: "Zach Shipko <zachshipko@gmail.com>"
+authors: ["Zach Shipko <zachshipko@gmail.com>"]
+homepage: "https://github.com/zshipko/ocaml-bimage"
+doc: "https://zshipko.github.io/ocaml-bimage/doc"
+license: "ISC"
+dev-repo: "git+https://github.com/zshipko/ocaml-bimage.git"
+bug-reports: "https://github.com/zshipko/ocaml-bimage/issues"
+tags: ["image processing"]
+
+depends:
+[
+    "ocaml" {>= "4.08.0"}
+    "dune" {>= "2.0"}
+    "bimage" {= version}
+    "glfw-ocaml"
+]
+
+build: [
+    ["dune" "build" "-p" name "-j" jobs]
+    ["dune" "runtest" "-p" name] {with-test}
+]
+
+synopsis: """
+Window system for Bimage
+"""
+
+description: """
+Allows for Bimage Images to be displayed using OpenGL
+"""

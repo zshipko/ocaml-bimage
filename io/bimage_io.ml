@@ -77,7 +77,7 @@ module Input = struct
 
   let spec input = input_get_spec input
 
-  let read ?(index = 0) input image =
+  let read_image ?(index = 0) input image =
     try
       let w, h, _c = Image.shape image in
       let spec = make_spec (Image.ty image) (Image.color image) w h in
@@ -86,13 +86,13 @@ module Input = struct
            (Image.data image))
     with Failure reason -> Error (`Msg reason)
 
-  let read_image ?index input ty color =
+  let read ?index input ty color =
     let spec = spec input in
     let width, height, channels = Spec.shape spec in
     if channels > Color.channels color then Error `Invalid_color
     else
       let image = Image.create ty color width height in
-      match read ?index input image with
+      match read_image ?index input image with
       | Ok () -> Ok image
       | Error e -> Error e
 end
@@ -104,20 +104,7 @@ module Output = struct
     try Ok (filename, output_create filename)
     with Failure reason -> Error (`Msg reason)
 
-  let set_spec (filename, output) s =
-    try Ok (output_open filename output s)
-    with Failure reason -> Error (`Msg reason)
-
-  let write (_filename, output) image =
-    try
-      let spec =
-        make_spec (Image.ty image) image.color image.width image.height
-      in
-      let () = output_write_image output spec (Image.data image) in
-      Ok ()
-    with Failure reason -> Error (`Msg reason)
-
-  let write_image (filename, output) image =
+  let write (filename, output) image =
     try
       let spec =
         make_spec (Image.ty image) image.color image.width image.height
@@ -130,10 +117,10 @@ end
 
 let write filename image =
   match Output.create filename with
-  | Ok output -> Output.write_image output image
+  | Ok output -> Output.write output image
   | Error e -> Error e
 
 let read t c filename =
   match Input.init filename with
-  | Ok input -> Input.read_image input t c
+  | Ok input -> Input.read input t c
   | Error e -> Error e

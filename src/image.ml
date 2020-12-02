@@ -80,27 +80,6 @@ let empty_pixel image = Pixel.empty image.color
 
 let empty_data image = Data.create (ty image) (channels image)
 
-let convert_to ~dest img =
-  let dest_k = ty dest in
-  let src_k = ty img in
-  for i = 0 to length dest - 1 do
-    dest.data.{i} <- Type.convert ~from:src_k dest_k img.data.{i}
-  done
-
-let convert k img =
-  let dest = create k img.color img.width img.height in
-  convert_to ~dest img;
-  dest
-
-let of_any_color (type color) im (module C : COLOR with type t = color) :
-    (('a, 'b, color) t, Error.t) result =
-  if channels im = C.channels C.t then
-    Ok
-      (of_data
-         (module C : COLOR with type t = color)
-         im.width im.height im.data)
-  else Error `Invalid_color
-
 let[@inline] index image x y c =
   let channels = channels image in
   (y * image.width * channels) + (channels * x) + c
@@ -209,6 +188,19 @@ let[@inline] for_each f ?(x = 0) ?(y = 0) ?width ?height img =
       f i j px
     done
   done
+
+let convert_to ~dest img =
+  for_each_pixel
+    (fun x y px ->
+      let rgb = Pixel.to_rgb px in
+      let color = Pixel.from_rgb dest.color rgb in
+      set_pixel dest x y color)
+    img
+
+let convert k img =
+  let dest = create k img.color img.width img.height in
+  convert_to ~dest img;
+  dest
 
 let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let width =

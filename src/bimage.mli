@@ -108,6 +108,10 @@ module Color : sig
 
   module Gray : COLOR with type t = [ `Gray ]
 
+  module Xyz : COLOR with type t = [ `Xyz ]
+
+  module Yuv : COLOR with type t = [ `Yuv ]
+
   type 'a t = (module COLOR with type t = 'a)
   (** Used to specify the color model of an image *)
 
@@ -132,14 +136,11 @@ type gray = Color.Gray.t
 type rgb = Color.Rgb.t
 (** 3-channel RGB color type *)
 
-(*type rgb_packed = [ `Rgb_packed ]
-
 type xyz = [ `Xyz ]
 (** 3-channel XYZ color type *)
 
 type yuv = [ `Yuv ]
 (** 3-channel YUV color type *)
-*)
 
 type rgba = Color.Rgba.t
 (** 4-channel RGBA image *)

@@ -400,10 +400,11 @@ module Image : sig
   val shape : ('a, 'b, 'c) t -> int * int * int
   (** Returns the width, height and channels *)
 
-  val convert_to : dest:('d, 'e, 'c) t -> ('a, 'b, 'c) t -> unit
+  val convert_to : dest:('d, 'e, 'f) t -> ('a, 'b, 'c) t -> unit
   (** Convert an image to an existing image of another ty *)
 
-  val convert : ('d, 'e) Type.t -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
+  val convert :
+    ('d, 'e) Type.t -> 'f Color.t -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t
   (** Convert an image to a new image of another ty *)
 
   (*val of_any_color :

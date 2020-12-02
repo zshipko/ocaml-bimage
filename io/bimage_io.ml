@@ -56,7 +56,7 @@ external input_read :
 
 external output_create : string -> output = "output_create"
 
-external output_open : output -> string -> spec -> unit = "output_open"
+external output_open : output -> string -> spec -> bool -> unit = "output_open"
 
 external output_write_image : output -> spec -> ('a, 'b) Data.t -> unit
   = "output_write_image"
@@ -104,12 +104,12 @@ module Output = struct
     try Ok (filename, output_create filename)
     with Failure reason -> Error (`Msg reason)
 
-  let write (filename, output) image =
+  let write ?(append = false) (filename, output) image =
     try
       let spec =
         make_spec (Image.ty image) image.color image.width image.height
       in
-      let () = output_open output filename spec in
+      let () = output_open output filename spec append in
       let () = output_write_image output spec (Image.data image) in
       Ok ()
     with Failure reason -> Error (`Msg reason)

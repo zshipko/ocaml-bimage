@@ -52,6 +52,7 @@ module Output : sig
   val create : string -> (t, error) result
 
   val write :
+    ?append:bool ->
     t ->
     ('a, 'b, [> `Rgb | `Rgba | `Gray ]) Bimage.Image.t ->
     (unit, error) result

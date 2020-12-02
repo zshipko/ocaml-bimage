@@ -7,8 +7,7 @@ bimage is an image processing library for OCaml.
 ## Features
 
 - Simple image type based on bigarrays
-- Supports u8, u16, i32, i64, f32, f64, complex32 and complex64 datatypes
-- Multiple layout support (Planar/Interleaved)
+- Supports u8, u16, i32, i64, f32, f64 datatypes
 - Composable image operations
 - Image I/O using ImageMagick/GraphicsMagick and stb_image (`bimage-unix`)
 - Image I/O using OpenImageIO (`bimage-io`)
@@ -21,11 +20,21 @@ Homepage: https://github.com/zshipko/ocaml-bimage
 
 bimage can be installed with `opam`:
 
-    opam install bimage
+```
+$ opam install bimage
+```
 
-Additionally, `bimage-unix`, which provides `ImageMagick` and `FFmpeg` bindings, can be installed by running:
+bimage-io can be installed by running:
 
-    opam install bimage-unix
+```
+$ opam install bimage-io
+```
+
+Additionally, `bimage-unix`, which provides `stb-image` and `ImageMagick` bindings, can be installed by running:
+
+```
+$ opam install bimage-unix
+```
 
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.

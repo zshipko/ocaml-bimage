@@ -35,14 +35,14 @@ module Input : sig
   val read_image :
     ?index:int ->
     t ->
-    ('a, 'b, [ `Rgba | `Rgb | `Gray ]) Bimage.Image.t ->
+    ('a, 'b, [> `Rgba | `Rgb | `Gray ]) Bimage.Image.t ->
     (unit, error) result
 
   val read :
     ?index:int ->
     t ->
     ('a, 'b) Bimage.Type.t ->
-    ([ `Rgba | `Rgb | `Gray ] as 'c) Bimage.Color.t ->
+    ([< `Rgba | `Rgb | `Gray ] as 'c) Bimage.Color.t ->
     (('a, 'b, 'c) Bimage.Image.t, error) result
 end
 
@@ -53,17 +53,17 @@ module Output : sig
 
   val write :
     t ->
-    ('a, 'b, [ `Rgb | `Rgba | `Gray ]) Bimage.Image.t ->
+    ('a, 'b, [> `Rgb | `Rgba | `Gray ]) Bimage.Image.t ->
     (unit, error) result
 end
 
 val read :
   ('a, 'b) Bimage.Type.t ->
-  ([ `Rgba | `Rgb | `Gray ] as 'c) Bimage.Color.t ->
+  ([< `Rgba | `Rgb | `Gray ] as 'c) Bimage.Color.t ->
   string ->
   (('a, 'b, 'c) Bimage.Image.t, error) result
 
 val write :
   string ->
-  ('a, 'b, [ `Rgba | `Rgb | `Gray ]) Bimage.Image.t ->
+  ('a, 'b, [> `Rgba | `Rgb | `Gray ]) Bimage.Image.t ->
   (unit, error) result

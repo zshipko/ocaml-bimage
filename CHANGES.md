@@ -1,3 +1,8 @@
+# v0.3.0
+- Overhaul of `Color` and `Type`
+- Added `FILTER`/`Filter`
+- Added `Bimage_io` and `Bimage_lwt`
+
 # v0.2.1
 - Add Func Expr
 - Rewrite ops as exprs

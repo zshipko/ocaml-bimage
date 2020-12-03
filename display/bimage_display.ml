@@ -2,7 +2,7 @@ open Bimage
 
 module Texture = struct
   type t = {
-    dirty : bool;
+    has_alpha : bool;
     id : int;
     internal : int;
     kind : int;
@@ -10,7 +10,6 @@ module Texture = struct
     framebuffer : int;
     width : int;
     height : int;
-    has_alpha : bool;
   }
 
   external create :
@@ -29,5 +28,6 @@ module Texture = struct
   let draw t window image =
     let w, h = GLFW.getWindowSize ~window in
     if image.Image.width = t.width && image.Image.height = t.height then
-      draw t w h image.Image.data
+      let () = draw t w h image.Image.data in
+      GLFW.swapBuffers ~window
 end

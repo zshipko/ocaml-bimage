@@ -75,8 +75,8 @@ value bimage_create_texture(value width, value height, value has_alpha,
                          GL_TEXTURE_2D, texture_id, 0);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-  tex = caml_alloc(9, 0);
-  Store_field(tex, 0, Val_int(1));
+  tex = caml_alloc(8, 0);
+  Store_field(tex, 0, has_alpha);
   Store_field(tex, 1, Val_int(texture_id));
   Store_field(tex, 2, Val_int(texture_internal));
   Store_field(tex, 3, Val_int(texture_kind));
@@ -84,7 +84,6 @@ value bimage_create_texture(value width, value height, value has_alpha,
   Store_field(tex, 5, Val_int(framebuffer));
   Store_field(tex, 6, width);
   Store_field(tex, 7, height);
-  Store_field(tex, 8, has_alpha);
 
   CAMLreturn(tex);
 }

@@ -1,6 +1,6 @@
 module Texture : sig
   type t = {
-    dirty : bool;
+    has_alpha : bool;
     id : int;
     internal : int;
     kind : int;
@@ -8,7 +8,6 @@ module Texture : sig
     framebuffer : int;
     width : int;
     height : int;
-    has_alpha : bool;
   }
 
   val create : ('a, 'b, [< `Rgb | `Rgba ]) Bimage.Image.t -> t

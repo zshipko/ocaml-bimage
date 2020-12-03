@@ -21,6 +21,7 @@ module Texture = struct
     = "bimage_draw_texture"
 
   let create image =
+    let () = GLFW.makeContextCurrent ~window:None in
     create image.Image.width image.Image.height
       (Color.has_alpha image.Image.color)
       image.Image.data
@@ -28,6 +29,7 @@ module Texture = struct
   let draw t window image =
     let w, h = GLFW.getWindowSize ~window in
     if image.Image.width = t.width && image.Image.height = t.height then
+      let () = GLFW.makeContextCurrent ~window:(Some window) in
       let () = draw t w h image.Image.data in
       GLFW.swapBuffers ~window
 end

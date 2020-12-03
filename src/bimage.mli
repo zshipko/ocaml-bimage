@@ -117,17 +117,11 @@ module Color : sig
 
   val name : 'a t -> string
 
-  (*val create : has_alpha:bool -> channels:int -> 'a -> 'a t*)
-  (** Create a new color type *)
-
-  (*val has_alpha : 'a t -> bool*)
+  val has_alpha : 'a t -> bool
   (** Returns true if the color has an alpha channel *)
 
   val channels : 'a t -> int
   (** Returns the number of channels for a color *)
-
-  (*val t : 'a t -> 'a*)
-  (** Returns the underlying type of a color *)
 end
 
 type gray = Color.Gray.t

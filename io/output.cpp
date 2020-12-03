@@ -35,7 +35,7 @@ extern "C" value output_open(value output, value filename, value spec,
   try {
     auto append_mode = ImageOutput::Create;
     if (Int_val(is_append) != 0) {
-      append_mode = ImageOutput::Append;
+      append_mode = ImageOutput::AppendSubimage;
     }
     ImageOutput_val(output)->open(String_val(filename), *ImageSpec_val(spec),
                                   append_mode);

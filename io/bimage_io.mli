@@ -20,9 +20,19 @@ type base_type =
 module Spec : sig
   type t
 
+  type 'a attr =
+    | Int: int attr
+    | Float: float attr
+    | String: string attr
+
   val shape : t -> int * int * int
 
   val base_type : t -> base_type
+  val make: ('a, 'b) Bimage.Type.t -> 'c Bimage.Color.t -> int -> int -> t
+
+  val get_attr: t -> string -> 'a attr -> 'a option
+  val set_attr: t -> string -> 'a attr -> 'a -> unit
+  val attr_names: t -> string array
 end
 
 module Input : sig
@@ -52,9 +62,10 @@ module Output : sig
   val create : string -> (t, error) result
 
   val write :
+    ?spec:Spec.t ->
     ?append:bool ->
     t ->
-    ('a, 'b, [> `Rgb | `Rgba | `Gray ]) Bimage.Image.t ->
+    ('a, 'b, [< `Rgb | `Rgba | `Gray ]) Bimage.Image.t ->
     (unit, error) result
 end
 

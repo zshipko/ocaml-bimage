@@ -62,11 +62,25 @@ external output_write_image : output -> spec -> ('a, 'b) Data.t -> unit
   = "output_write_image"
 
 module Spec = struct
+  type 'a attr =
+    | Int: int attr
+    | Float: float attr
+    | String: string attr
+
+  external spec_get_attr : spec -> string -> 'a attr -> 'a option = "spec_get_attr"
+  external spec_set_attr : spec -> string -> 'a attr -> 'a -> unit  = "spec_set_attr"
+  external spec_get_attr_names : spec -> string array = "spec_get_attr_names"
+
   type t = spec
 
   let shape t = spec_shape t
 
   let base_type t = spec_base_type t
+  let make : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> t = make_spec
+
+  let get_attr t name = spec_get_attr t name
+  let set_attr t name value = spec_set_attr t name value
+  let attr_names t = spec_get_attr_names t
 end
 
 module Input = struct
@@ -104,12 +118,18 @@ module Output = struct
     try Ok (filename, output_create filename)
     with Failure reason -> Error (`Msg reason)
 
-  let write ?(append = false) (filename, output) image =
+  let open_ ?(append = false) (filename, output) spec =
+    output_open output filename spec append
+
+  let write ?spec ?(append = false) (filename, output) image =
     try
       let spec =
-        make_spec (Image.ty image) image.color image.width image.height
+        match spec with
+        | Some spec -> spec
+        | None ->
+          make_spec (Image.ty image) image.color image.width image.height
       in
-      let () = output_open output filename spec append in
+      let () = open_ ~append (filename, output) spec in
       let () = output_write_image output spec (Image.data image) in
       Ok ()
     with Failure reason -> Error (`Msg reason)

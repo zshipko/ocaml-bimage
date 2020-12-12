@@ -17,23 +17,24 @@ module Texture : sig
 end
 
 module Window : sig
-  type t
+  type 'a t
 
-  val create: ?width:int -> ?height:int -> string -> ('a, 'b, 'c) Bimage.Image.t -> t
-  val show: t -> unit
-  val hide: t -> unit
-  val close: t -> unit
-  val update: t -> unit
+  val create: ?width:int -> ?height:int -> string -> ('a, 'b, 'c) Bimage.Image.t -> 'a -> 'a t
+  val show: 'a t -> unit
+  val hide: 'a t -> unit
+  val close: 'a t -> unit
+  val update: 'a t -> unit
+  val data: 'a t -> 'a
 
-  val mouse_position : t -> float -> float -> (float * float)
-  val on_mouse_button: (t -> int -> bool -> GLFW.key_mod list -> unit) -> t -> unit
-  val on_mouse_move : (t -> float -> float -> unit) -> t -> unit
-  val on_key : (t ->
-                GLFW.key -> int -> GLFW.key_action -> GLFW.key_mod list -> unit) -> t -> unit
-  val get_mouse_position : t -> float * float
-  val get_key : t -> GLFW.key -> bool
-  val get_mouse_button : t -> int -> bool
+  val mouse_position : 'a t -> float -> float -> (float * float)
+  val on_mouse_button: ('a t -> int -> bool -> GLFW.key_mod list -> unit) -> 'a t -> unit
+  val on_mouse_move : ('a t -> float -> float -> unit) -> 'a t -> unit
+  val on_key : ('a t ->
+                GLFW.key -> int -> GLFW.key_action -> GLFW.key_mod list -> unit) -> 'a t -> unit
+  val get_mouse_position : 'a t -> float * float
+  val get_key : 'a t -> GLFW.key -> bool
+  val get_mouse_button : 'a t -> int -> bool
 end
 
-val show_all: Window.t list -> unit
+val show_all: 'a Window.t list -> unit
 val show: (string * Bimage.Image.any) list -> unit

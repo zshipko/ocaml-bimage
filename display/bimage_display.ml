@@ -34,14 +34,16 @@ module Texture = struct
 end
 
 module Window = struct
-  type t = { texture : Texture.t; window : GLFW.window; image: Image.any }
+  type 'a t = { texture : Texture.t; window : GLFW.window; image: Image.any; data: 'a }
 
   let init () =
     GLFW.init ();
     GLFW.windowHint ~hint:GLFW.ContextVersionMajor ~value:3;
     GLFW.windowHint ~hint:GLFW.ContextVersionMinor ~value:0
 
-  let rec create ?width ?height title image =
+  let data t = t.data
+
+  let rec create ?width ?height title image data =
     init ();
     let width = match width with
       | Some x -> x
@@ -53,7 +55,7 @@ module Window = struct
     in
     let window = GLFW.createWindow ~width ~height ~title () in
     let texture = Texture.create window image in
-    let t = { window; texture; image = Image.Any image } in
+    let t = { window; texture; image = Image.Any image; data } in
     update t;
     t
   and update window =
@@ -140,7 +142,7 @@ let show_all windows' =
 let show images =
   let windows = List.map (fun (k, v) ->
       let Image.Any v = v in
-      let w = Window.create k v in
+      let w = Window.create k v () in
       Window.on_key (fun window key _ action _ ->
           match action, key with
           | GLFW.Press, GLFW.Escape -> Window.close window

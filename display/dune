@@ -5,5 +5,5 @@
   (language c)
   (names window))
  (c_library_flags
-  (-lGL))
+  (-lGL -lGLEW))
  (libraries bimage glfw-ocaml))

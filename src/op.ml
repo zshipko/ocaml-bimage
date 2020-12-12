@@ -1,8 +1,8 @@
 open Image
 
-type t = Input.input array -> int -> int -> int -> float
+type t = any array -> int -> int -> int -> float
 
-type f = float Expr.t -> Input.input array -> int -> int -> int -> float
+type f = float Expr.t -> any array -> int -> int -> int -> float
 
 let blend ?(input = 0) ?(input1 = 1) : t = Expr.op (Expr.blend input input1)
 
@@ -14,9 +14,9 @@ let grayscale ?(input = 0) : t = Expr.op (Expr.grayscale input)
 
 let color ?(input = 0) : t = Expr.op (Expr.color input)
 
-let cond : (Input.input array -> int -> int -> int -> bool) -> t -> t -> t =
- fun cond a b inputs x y c ->
-   if cond inputs x y c then a inputs x y c else b inputs x y c
+let cond : (any array -> int -> int -> int -> bool) -> t -> t -> t =
+  fun cond a b inputs x y c ->
+  if cond inputs x y c then a inputs x y c else b inputs x y c
 
 let join f a b inputs x y c = f (a inputs x y c) (b inputs x y c)
 
@@ -29,9 +29,9 @@ let scalar_min : ('a, 'b) Type.t -> t = fun k -> scalar (Type.min_f k)
 let scalar_max : ('a, 'b) Type.t -> t = fun k -> scalar (Type.max_f k)
 
 let invert ?(input = 0) : t =
- fun inputs x y c ->
-   let (Input a) = inputs.(input) in
-   if c = 4 then get_f a x y c else 1.0 -. get_f a x y c
+  fun inputs x y c ->
+  let (Any a) = inputs.(input) in
+  if c = 4 then get_f a x y c else 1.0 -. get_f a x y c
 
 module Infix = struct
   let ( $ ) a f = apply f a

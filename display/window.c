@@ -10,6 +10,8 @@
 
 value bimage_create_texture(value width, value height, value has_alpha,
                             value data) {
+  glewExperimental = GL_TRUE;
+  glewInit();
   CAMLparam4(width, height, has_alpha, data);
   CAMLlocal1(tex);
 
@@ -91,14 +93,12 @@ value bimage_create_texture(value width, value height, value has_alpha,
 value bimage_draw_texture(value tex, value window_width, value window_height,
                           value data) {
   CAMLparam4(tex, window_width, window_height, data);
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
 
-  GLuint texture_id = Int_val(Field(tex, 1));
-  GLuint texture_internal = Int_val(Field(tex, 2));
-  GLuint texture_kind = Int_val(Field(tex, 3));
-  GLuint texture_color = Int_val(Field(tex, 4));
-  GLuint framebuffer = Int_val(Field(tex, 5));
+  GLuint texture_id = (GLuint)Int_val(Field(tex, 1));
+  GLuint texture_internal = (GLuint)Int_val(Field(tex, 2));
+  GLuint texture_kind = (GLuint)Int_val(Field(tex, 3));
+  GLuint texture_color = (GLuint)Int_val(Field(tex, 4));
+  GLuint framebuffer = (GLuint)Int_val(Field(tex, 5));
   int width = Int_val(Field(tex, 6));
   int height = Int_val(Field(tex, 7));
   int win_width = Int_val(window_width);
@@ -117,16 +117,22 @@ value bimage_draw_texture(value tex, value window_width, value window_height,
   if (y < 0)
     y = 0;
 
+  glViewport(0, 0, win_width, win_height);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+
   glBindTexture(GL_TEXTURE_2D, texture_id);
   glTexImage2D(GL_TEXTURE_2D, 0, texture_internal, width, height, 0,
                texture_color, texture_kind, Caml_ba_data_val(data));
   glBindTexture(GL_TEXTURE_2D, 0);
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+  glViewport(0, 0, 512, 512);
   glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                          GL_TEXTURE_2D, texture_id, 0);
   glBlitFramebuffer(0, height, width, 0, x, y, x + display_width,
                     y + display_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
   CAMLreturn(Val_unit);
 }

@@ -18,12 +18,12 @@ value alloc_spec(ImageSpec spec) {
 }
 
 extern "C" value image_spec(value width, value height, value channels,
-                            value index, value base_type) {
+                            value base_type) {
   CAMLparam4(width, height, channels, base_type);
   CAMLlocal1(spec);
   spec =
       alloc_spec(ImageSpec(Int_val(width), Int_val(height), Int_val(channels),
-                           (TypeDesc::BASETYPE)Int_val(base_type)));
+                           TypeDesc((TypeDesc::BASETYPE)Int_val(base_type))));
   CAMLreturn(spec);
 }
 

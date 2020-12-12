@@ -66,5 +66,5 @@ val read :
 
 val write :
   string ->
-  ('a, 'b, [> `Rgba | `Rgb | `Gray ]) Bimage.Image.t ->
+  ('a, 'b, [< `Rgba | `Rgb | `Gray ]) Bimage.Image.t ->
   (unit, error) result

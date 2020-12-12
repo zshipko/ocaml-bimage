@@ -25,6 +25,7 @@ module Window : sig
   val close: t -> unit
   val update: t -> unit
 
+  val mouse_position : t -> float -> float -> (float * float)
   val on_mouse_button: (t -> int -> bool -> GLFW.key_mod list -> unit) -> t -> unit
   val on_mouse_move : (t -> float -> float -> unit) -> t -> unit
   val on_key : (t ->

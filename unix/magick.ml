@@ -14,8 +14,8 @@ let read (type color) ?(create = fun _name -> Image.create) t
     match format with
     | Some f -> f
     | None ->
-        Filename.extension filename |> fun s ->
-        String.sub s 1 (String.length s - 1)
+      Filename.extension filename |> fun s ->
+      String.sub s 1 (String.length s - 1)
   in
   try
     let read_image_data filename img =
@@ -44,9 +44,9 @@ let read (type color) ?(create = fun _name -> Image.create) t
     let shape = String.split_on_char ' ' (String.trim s) in
     match List.map int_of_string shape with
     | [ x; y ] ->
-        let img = create filename t (module C) x y in
-        let () = read_image_data filename img in
-        Ok img
+      let img = create filename t (module C) x y in
+      let () = read_image_data filename img in
+      Ok img
     | _ -> Error `Invalid_shape
   with
   | End_of_file -> Error (`Msg "end of file")
@@ -57,7 +57,7 @@ let read_all ?create kind color ?format filenames =
     Ok
       (Array.map
          (fun f ->
-           read ?create kind color ?format f |> Error.unwrap |> Input.input)
+            read ?create kind color ?format f |> Error.unwrap |> Image.any)
          filenames)
   with Error.Exc err -> Error err
 
@@ -66,8 +66,8 @@ let write (type color) ?quality ?format filename img =
     match format with
     | Some f -> f
     | None ->
-        Filename.extension filename |> fun s ->
-        String.sub s 1 (String.length s - 1)
+      Filename.extension filename |> fun s ->
+      String.sub s 1 (String.length s - 1)
   in
   let width, height, channels = Image.shape img in
   let (module C : COLOR with type t = color) = img.Image.color in

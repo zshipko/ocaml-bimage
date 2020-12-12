@@ -19,7 +19,7 @@ let _ =
   let dest = Image.like_with_color gray a in
 
   (* Run the operation *)
-  let () = (Filter.make f) ~output:dest [| Input.input a |] in
+  let () = (Filter.make f) ~output:dest [| Image.any a |] in
 
   (* Save the image using ImageMagick *)
   Magick.write "test2.jpg" dest

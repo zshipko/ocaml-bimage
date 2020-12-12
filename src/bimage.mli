@@ -117,17 +117,11 @@ module Color : sig
 
   val name : 'a t -> string
 
-  (*val create : has_alpha:bool -> channels:int -> 'a -> 'a t*)
-  (** Create a new color type *)
-
-  (*val has_alpha : 'a t -> bool*)
+  val has_alpha : 'a t -> bool
   (** Returns true if the color has an alpha channel *)
 
   val channels : 'a t -> int
   (** Returns the number of channels for a color *)
-
-  (*val t : 'a t -> 'a*)
-  (** Returns the underlying type of a color *)
 end
 
 type gray = Color.Gray.t
@@ -145,29 +139,20 @@ type yuv = [ `Yuv ]
 type rgba = Color.Rgba.t
 (** 4-channel RGBA image *)
 
-(*type any = [ `Any ]*)
-(** Any color image *)
-
 val gray : [ `Gray ] Color.t
 (** Gray color *)
 
 val rgb : [ `Rgb ] Color.t
 (** RGB color *)
 
-(*val rgb_packed : rgb_packed Color.t
-(** RGB packed into a signle channel *)
-
 val xyz : xyz Color.t
 (** XYZ color *)
 
 val yuv : yuv Color.t
-(** YUV color *)*)
+(** YUV color *)
 
 val rgba : [ `Rgba ] Color.t
 (** RGBA color *)
-
-(*val color : int -> any Color.t*)
-(** Generic color *)
 
 module Type : sig
   type ('a, 'b) t = (module TYPE with type t = 'a and type elt = 'b)
@@ -358,6 +343,10 @@ module Image : sig
     data : ('a, 'b) Data.t;
   }
   (** Image type *)
+
+  type any = Any: ('a, 'b, 'c) t -> any
+
+  val any : ('a, 'b, 'c) t -> any
 
   val create : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
   (** [create ty color width height] makes a new image with the given [ty], [color] and dimensions *)
@@ -571,19 +560,15 @@ end
 
 (** Defines the type used as input to operations *)
 module Input : sig
-  type input = Input : ('a, 'b, 'c) Image.t -> input
-
-  type t = input array
+  type t = Image.any array
 
   type index = private int
 
   val index : int -> index
 
-  val input : ('a, 'b, 'c) Image.t -> input
-
   val int_of_index : index -> int
 
-  val get : t -> index -> input
+  val get : t -> index -> Image.any
   (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
       if the provided index is out of bounds. *)
 
@@ -937,14 +922,14 @@ module Filter : sig
   include FILTER with type 'a io = 'a
 
   module Make (S : sig
-    type 'a io
+      type 'a io
 
-    val bind : 'a io -> ('a -> 'b io) -> 'b io
+      val bind : 'a io -> ('a -> 'b io) -> 'b io
 
-    val return : 'a -> 'a io
+      val return : 'a -> 'a io
 
-    val detach : ('a -> 'b) -> 'a -> 'b io
-  end) : FILTER with type 'a io = 'a S.io
+      val detach : ('a -> 'b) -> 'a -> 'b io
+    end) : FILTER with type 'a io = 'a S.io
 end
 
 type ('a, 'b, 'c) filter = output:('a, 'b, 'c) Image.t -> Input.t -> unit

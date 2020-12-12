@@ -26,15 +26,15 @@ type base_type =
   | Ptr
 
 let base_type_of_ty : type a b. (a, b) Type.t -> base_type =
- fun (module T) ->
-   match T.kind with
-   | Float64 -> Double
-   | Float32 -> Float
-   | Int8_unsigned -> UInt8
-   | Int16_unsigned -> UInt16
-   | Int32 -> Int32
-   | Int64 -> Int64
-   | _ -> raise Unsupported
+  fun (module T) ->
+  match T.kind with
+  | Float64 -> Double
+  | Float32 -> Float
+  | Int8_unsigned -> UInt8
+  | Int16_unsigned -> UInt16
+  | Int32 -> Int32
+  | Int64 -> Int64
+  | _ -> raise Unsupported
 
 external image_spec : int -> int -> int -> base_type -> spec = "image_spec"
 
@@ -56,7 +56,7 @@ external input_read :
 
 external output_create : string -> output = "output_create"
 
-external output_open : output -> string -> spec -> unit = "output_open"
+external output_open : output -> string -> spec -> bool -> unit = "output_open"
 
 external output_write_image : output -> spec -> ('a, 'b) Data.t -> unit
   = "output_write_image"
@@ -104,12 +104,12 @@ module Output = struct
     try Ok (filename, output_create filename)
     with Failure reason -> Error (`Msg reason)
 
-  let write (filename, output) image =
+  let write ?(append = false) (filename, output) image =
     try
       let spec =
         make_spec (Image.ty image) image.color image.width image.height
       in
-      let () = output_open output filename spec in
+      let () = output_open output filename spec append in
       let () = output_write_image output spec (Image.data image) in
       Ok ()
     with Failure reason -> Error (`Msg reason)

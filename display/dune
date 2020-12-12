@@ -1,0 +1,9 @@
+(library
+ (name bimage_display)
+ (public_name bimage-display)
+ (foreign_stubs
+  (language c)
+  (names window))
+ (c_library_flags
+  (-lGL -lGLEW))
+ (libraries bimage glfw-ocaml))

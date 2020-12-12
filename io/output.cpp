@@ -29,10 +29,16 @@ extern "C" value output_create(value filename) {
   CAMLreturn(output);
 }
 
-extern "C" value output_open(value output, value filename, value spec) {
-  CAMLparam3(output, filename, spec);
+extern "C" value output_open(value output, value filename, value spec,
+                             value is_append) {
+  CAMLparam4(output, filename, spec, is_append);
   try {
-    ImageOutput_val(output)->open(String_val(filename), *ImageSpec_val(spec));
+    auto append_mode = ImageOutput::Create;
+    if (Int_val(is_append) != 0) {
+      append_mode = ImageOutput::AppendSubimage;
+    }
+    ImageOutput_val(output)->open(String_val(filename), *ImageSpec_val(spec),
+                                  append_mode);
   } catch (std::exception exc) {
     caml_failwith(exc.what());
   }

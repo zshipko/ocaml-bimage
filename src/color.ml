@@ -193,3 +193,5 @@ let yuv : yuv t = (module Yuv)
 let channels (type a) (module C : COLOR with type t = a) = C.channels C.t
 
 let name (type a) (module C : COLOR with type t = a) = C.name C.t
+
+let has_alpha (type a) (module C : COLOR with type t = a) = C.has_alpha C.t

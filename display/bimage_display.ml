@@ -34,7 +34,7 @@ module Texture = struct
 end
 
 module Window = struct
-  type 'a t = { texture : Texture.t; window : GLFW.window; image: Image.any; data: 'a }
+  type 'a t = { texture : Texture.t; window : GLFW.window; image: Image.any; data: 'a; callback: ('a t -> unit) option }
 
   let init () =
     GLFW.init ();
@@ -43,7 +43,7 @@ module Window = struct
 
   let data t = t.data
 
-  let rec create ?width ?height title image data =
+  let rec create ?callback ?width ?height title image data =
     init ();
     let width = match width with
       | Some x -> x
@@ -55,7 +55,7 @@ module Window = struct
     in
     let window = GLFW.createWindow ~width ~height ~title () in
     let texture = Texture.create window image in
-    let t = { window; texture; image = Image.Any image; data } in
+    let t = { window; texture; image = Image.Any image; data; callback } in
     update t;
     t
   and update window =
@@ -134,6 +134,9 @@ let show_all windows' =
     let current_window = current_window () in
     let () = match current_window with
       | Some w ->
+        let () = match w.callback with
+          | Some f -> f w
+          | None -> () in
         Window.update w
       | None -> () in
     GLFW.pollEvents ()

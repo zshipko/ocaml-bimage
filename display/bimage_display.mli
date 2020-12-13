@@ -19,7 +19,7 @@ end
 module Window : sig
   type 'a t
 
-  val create: ?width:int -> ?height:int -> string -> ('a, 'b, 'c) Bimage.Image.t -> 'a -> 'a t
+  val create: ?callback:('a t -> unit ) -> ?width:int -> ?height:int -> string -> ('a, 'b, 'c) Bimage.Image.t -> 'a -> 'a t
   val show: 'a t -> unit
   val hide: 'a t -> unit
   val close: 'a t -> unit

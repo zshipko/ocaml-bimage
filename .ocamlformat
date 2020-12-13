@@ -1,4 +1,4 @@
-version = 0.15.1
+version = 0.15.0
 function-indent-nested = always
 doc-comments = after-when-possible
 

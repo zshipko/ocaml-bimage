@@ -65,6 +65,9 @@ let color (Pixel (c, _)) = c
 
 let map_inplace f px = Float.Array.iteri (fun i x -> set px i (f x)) (data px)
 
+let map2_inplace f px px' =
+  Float.Array.iteri (fun i x -> set px i (f x (get px' i))) (data px)
+
 let map f (Pixel (color, px)) =
   let dest = Pixel (color, Float.Array.copy px) in
   map_inplace f dest;

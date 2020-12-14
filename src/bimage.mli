@@ -327,6 +327,8 @@ module Pixel : sig
   (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
    *  index *)
 
+  val map2_inplace : (float -> float -> float) -> 'a t -> 'a t -> unit
+
   val fold : (float -> 'a -> 'a) -> 'b t -> 'a -> 'a
   (** Reduction over a pixel *)
 
@@ -344,7 +346,7 @@ module Image : sig
   }
   (** Image type *)
 
-  type any = Any: ('a, 'b, 'c) t -> any
+  type any = Any : ('a, 'b, 'c) t -> any
 
   val any : ('a, 'b, 'c) t -> any
 
@@ -922,14 +924,14 @@ module Filter : sig
   include FILTER with type 'a io = 'a
 
   module Make (S : sig
-      type 'a io
+    type 'a io
 
-      val bind : 'a io -> ('a -> 'b io) -> 'b io
+    val bind : 'a io -> ('a -> 'b io) -> 'b io
 
-      val return : 'a -> 'a io
+    val return : 'a -> 'a io
 
-      val detach : ('a -> 'b) -> 'a -> 'b io
-    end) : FILTER with type 'a io = 'a S.io
+    val detach : ('a -> 'b) -> 'a -> 'b io
+  end) : FILTER with type 'a io = 'a S.io
 end
 
 type ('a, 'b, 'c) filter = output:('a, 'b, 'c) Image.t -> Input.t -> unit

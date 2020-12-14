@@ -73,17 +73,20 @@ let a = Bimage_unix.Magick.read f32 rgb Sys.argv.(1) |> Error.unwrap
 
 (** Create an expression to get the average pixel for each pixel,
     [~@] is used to create [index] parameters *)
-let avg = func (pixel ~@0 X Y) (fun _x _y _c px ->
-  float (Pixel.fold ( +. ) px 0.0)
-)
+let avg =
+  func (input ~@0 X Y) (fun _x _y px ->
+      let f = Pixel.fold ( +. ) px 0.0 in
+      Pixel.fill px (f /. Float.of_int (Pixel.length px));
+      Pixel px)
 
-let avg_minus_1 = Expr.Infix.(avg -. float 1.0)
-let avg_times_3 = Expr.Infix.(avg *. float 3.0)
+let avg_minus_1 = Expr.Infix.Pixel.(avg -@ float 1.0)
+
+let avg_times_3 = Expr.Infix.Pixel.(avg *@ float 3.0)
 
 let () =
   let dest = Image.like a in
-  (* Exprs can also be evaluated directly using `Filter.of_expr` *)
-  Filter.of_expr avg ~output:dest [| a |]
+  (* Exprs can also be evaluated directly using `Op.eval_expr` *)
+  Filter.of_expr avg ~output:dest [| Image.any a |]
 ```
 
 An example composing two `Op`s:
@@ -93,23 +96,27 @@ open Bimage
 open Bimage_unix
 
 let _ =
-(* Load an image using ImageMagick *)
-let a = match Magick.read f32 rgb "test/test.jpg" with
-  | Ok img -> img
-  | Error e -> failwith (Error.to_string e)
-in
+  (* Load an image using ImageMagick *)
+  let a =
+    match Magick.read f32 rgb "test/test.jpg" with
+    | Ok img -> img
+    | Error e -> failwith (Error.to_string e)
+  in
 
-(* Create an operation to convert to grayscale and subtract 1.0 *)
-let f = let open Op in Infix.(grayscale &- scalar 0.5) in
+  (* Create an operation to convert to grayscale and subtract 1.0 *)
+  let f =
+    let open Op in
+    Infix.(grayscale &- pixel (Pixel.make rgb [ 0.5; 0.5; 0.5 ]))
+  in
 
-(* Create a destination image *)
-let dest = Image.like_with_color gray a in
+  (* Create a destination image *)
+  let dest = Image.like_with_color gray a in
 
-(* Run the operation *)
-let () = Filter.make f ~output:dest [| a |] in
+  (* Run the operation *)
+  let () = (Filter.make f) ~output:dest [| Image.any a |] in
 
-(* Save the image using ImageMagick *)
-Magick.write "test2.jpg" dest
+  (* Save the image using ImageMagick *)
+  Magick.write "test2.jpg" dest
 ```
 
 ## Documentation

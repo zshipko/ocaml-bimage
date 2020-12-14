@@ -8,7 +8,7 @@ type ('a, 'b, 'c) t = {
   data : ('a, 'b) Data.t;
 }
 
-type any = Any: ('a, 'b, 'c) t -> any
+type any = Any : ('a, 'b, 'c) t -> any
 
 module type TYPE = sig
   type t
@@ -115,19 +115,26 @@ let get_pixel image ?dest x y =
   let px = match dest with Some px -> px | None -> Pixel.empty image.color in
   let index = index image x y 0 in
   let ty = ty image in
-  for i = 0 to c - 1 do
-    Pixel.set px i (Type.to_float ty image.data.{index + i} |> Type.normalize ty)
-  done;
-  px
+  try
+    for i = 0 to c - 1 do
+      Pixel.set px i
+        (Type.to_float ty image.data.{index + i} |> Type.normalize ty)
+    done;
+    px
+  with _ ->
+    Pixel.fill px 0.0;
+    px
 
 let set_pixel image x y px =
   let c = channels image in
   let index = index image x y 0 in
   let ty = ty image in
-  for i = 0 to c - 1 do
-    image.data.{index + i} <-
-      Type.denormalize ty (Pixel.get px i) |> Type.of_float ty
-  done
+  try
+    for i = 0 to c - 1 do
+      image.data.{index + i} <-
+        Type.denormalize ty (Pixel.get px i) |> Type.of_float ty
+    done
+  with _ -> ()
 
 let get_data image ?dest x y =
   let index = index image x y 0 in
@@ -135,8 +142,8 @@ let get_data image ?dest x y =
   let data = Data.slice image.data ~offs:index ~length:c in
   match dest with
   | Some dest ->
-    Data.copy_to ~dest data;
-    dest
+      Data.copy_to ~dest data;
+      dest
   | None -> data
 
 let set_data image x y px =
@@ -145,19 +152,21 @@ let set_data image x y px =
   let data = Data.slice image.data ~offs:index ~length:c in
   Data.copy_to ~dest:px data
 
-let map_inplace f img = Data.map_inplace f img.data
+let map_inplace f img =
+  let _ = Data.map_inplace f img.data in
+  img
 
-let map2_inplace f a b = Data.map2_inplace f a.data b.data
+let map2_inplace f a b =
+  let _ = Data.map2_inplace f a.data b.data in
+  a
 
 let map f img =
   let dest = copy img in
-  map_inplace f dest;
-  dest
+  map_inplace f dest
 
 let map2 f img b =
   let dest = copy img in
-  map2_inplace f dest b;
-  dest
+  map2_inplace f dest b
 
 let[@inline] for_each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
@@ -196,9 +205,9 @@ let[@inline] for_each f ?(x = 0) ?(y = 0) ?width ?height img =
 let convert_to ~dest img =
   for_each_pixel
     (fun x y px ->
-       let rgb = Pixel.to_rgb px in
-       let color = Pixel.from_rgb dest.color rgb in
-       set_pixel dest x y color)
+      let rgb = Pixel.to_rgb px in
+      let color = Pixel.from_rgb dest.color rgb in
+      set_pixel dest x y color)
     img
 
 let convert k (c : 'c Color.t) img =
@@ -219,9 +228,9 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let ty = ty img in
   for_each
     (fun _x _y px ->
-       for i = 0 to channels - 1 do
-         avg.{i} <- avg.{i} +. Type.to_float ty px.{i}
-       done)
+      for i = 0 to channels - 1 do
+        avg.{i} <- avg.{i} +. Type.to_float ty px.{i}
+      done)
     ~x ~y ~width ~height img;
   for i = 0 to channels - 1 do
     avg.{i} <- avg.{i} /. size
@@ -232,9 +241,9 @@ let crop im ~x ~y ~width ~height =
   let dest = create (ty im) im.color width height in
   for_each
     (fun i j _ ->
-       for c = 0 to channels im - 1 do
-         set dest i j c (get im (x + i) (y + j) c)
-       done)
+      for c = 0 to channels im - 1 do
+        set dest i j c (get im (x + i) (y + j) c)
+      done)
     dest;
   dest
 
@@ -244,9 +253,9 @@ let mean_std ?(channel = 0) image =
   let x2 = ref 0. in
   for_each
     (fun _x _y px ->
-       let f = Type.to_float ty px.{channel} in
-       x1 := !x1 +. f;
-       x2 := !x2 +. (f *. f))
+      let f = Type.to_float ty px.{channel} in
+      x1 := !x1 +. f;
+      x2 := !x2 +. (f *. f))
     image;
   let len = length image |> float_of_int in
   let mean = !x1 /. len in
@@ -266,8 +275,8 @@ let fold_data2 f a b init =
   let acc = ref init in
   for_each
     (fun x y px ->
-       let px' = get_data b x y in
-       acc := f x y px px' !acc)
+      let px' = get_data b x y in
+      acc := f x y px px' !acc)
     a;
   !acc
 
@@ -277,8 +286,8 @@ module Diff = struct
   let apply diff image =
     Hashtbl.iter
       (fun (x, y, c) v ->
-         let v' = get_f image x y c in
-         set_f image x y c (v' +. v))
+        let v' = get_f image x y c in
+        set_f image x y c (v' +. v))
       diff
 
   let length x = Hashtbl.length x
@@ -289,11 +298,11 @@ let diff a b =
   let ty = ty a in
   for_each
     (fun x y px ->
-       let pxb = get_data b x y in
-       for i = 0 to channels a do
-         let a = Type.to_float ty px.{i} |> Type.normalize ty in
-         let b = Type.to_float ty pxb.{i} |> Type.normalize ty in
-         if a <> b then Hashtbl.replace dest (x, y, i) (a -. b)
-       done)
+      let pxb = get_data b x y in
+      for i = 0 to channels a do
+        let a = Type.to_float ty px.{i} |> Type.normalize ty in
+        let b = Type.to_float ty pxb.{i} |> Type.normalize ty in
+        if a <> b then Hashtbl.replace dest (x, y, i) (a -. b)
+      done)
     a;
   dest

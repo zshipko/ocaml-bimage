@@ -56,12 +56,14 @@ let slice ~offs ~length d = Bigarray.Array1.sub d offs length
 let map_inplace f a =
   for i = 0 to length a - 1 do
     a.{i} <- f a.{i}
-  done
+  done;
+  a
 
 let map2_inplace f a b =
   for i = 0 to length a - 1 do
     a.{i} <- f a.{i} b.{i}
-  done
+  done;
+  a
 
 let copy_to ~dest src = Bigarray.Array1.blit src dest
 

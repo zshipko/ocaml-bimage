@@ -10,7 +10,7 @@ open Bimage_unix
 exception Assert of string
 
 let check name a b =
-  if a + 1 >= b || a - 1 <= b then () else raise (Assert name)
+  if a = b || a + 1 = b || a - 1 = b then () else raise (Assert name)
 
 let only_generate_images =
   try Unix.getenv "ONLY_GENERATE_IMAGES" = "1" with _ -> false
@@ -27,18 +27,18 @@ let image_eq a b =
     check "image: same channels" c c';
     Image.for_each
       (fun x y px ->
-         let px' = Image.get_data b x y in
-         for i = 0 to c - 1 do
-           check
-             (Printf.sprintf "image: pixel %dx%d %d=%d" x y px.{i} px'.{i})
-             px.{i} px'.{i}
-         done)
+        let px' = Image.get_data b x y in
+        for i = 0 to c - 1 do
+          check
+            (Printf.sprintf "image: pixel %dx%d %d=%d" x y px.{i} px'.{i})
+            px.{i} px'.{i}
+        done)
       a )
 
 let sobel =
   let open Expr in
-  let open Infix in
-  kernel ~@0 Kernel.sobel_x +. kernel ~@0 Kernel.sobel_y
+  let open Infix.Pixel in
+  kernel ~@0 Kernel.sobel_x + kernel ~@0 Kernel.sobel_y
 
 let test name f ~input ~output =
   ( name,
@@ -91,7 +91,7 @@ let test_rotate_270 ~output input =
 
 let grayscale_invert =
   let open Expr in
-  map (fun (a, b) -> float (a -. b)) (pair (type_max ~@0) (grayscale ~@0))
+  map (fun a -> pixel (Pixel.map_inplace (fun i -> 1.0 -. i) a)) (grayscale ~@0)
 
 let test_grayscale_invert ~output input =
   Filter.of_expr grayscale_invert ~output [| Image.any input |]
@@ -131,13 +131,13 @@ let () =
   let total = ref 0 in
   List.iter
     (fun (name, f) ->
-       Printf.printf "-----\nRunning: %s\n" name;
-       incr total;
-       try
-         f ();
-         incr passed;
-         Printf.printf "\tPassed\n%!"
-       with exc -> Printexc.to_string exc |> Printf.printf "\tError: %s\n%!")
+      Printf.printf "-----\nRunning: %s\n" name;
+      incr total;
+      try
+        f ();
+        incr passed;
+        Printf.printf "\tPassed\n%!"
+      with exc -> Printexc.to_string exc |> Printf.printf "\tError: %s\n%!")
     tests;
   Printf.printf "\n\n-----\nTotal: %d\n\tPassed: %d\n\tFailed: %d\n%!" !total
     !passed (!total - !passed);

@@ -12,7 +12,7 @@ let _ =
   (* Create an operation to convert to grayscale and subtract 1.0 *)
   let f =
     let open Op in
-    Infix.(grayscale &- scalar 0.5)
+    Infix.(grayscale &- pixel (Pixel.make rgb [ 0.5; 0.5; 0.5 ]))
   in
 
   (* Create a destination image *)

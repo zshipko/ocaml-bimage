@@ -156,29 +156,25 @@ module Infix = struct
   let ( ?> ) a b = map b a
 
   module Pixel = struct
-    let ( + ) a b =
-      map2 (fun a b -> Pixel (Pixel.to_rgb Pixel.Infix.(a + b))) a b
+    let ( + ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a + b)) a b
 
-    let ( - ) a b =
-      map2 (fun a b -> Pixel (Pixel.to_rgb Pixel.Infix.(a - b))) a b
+    let ( - ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a - b)) a b
 
-    let ( * ) a b =
-      map2 (fun a b -> Pixel (Pixel.to_rgb Pixel.Infix.(a * b))) a b
+    let ( * ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a * b)) a b
 
-    let ( / ) a b =
-      map2 (fun a b -> Pixel (Pixel.to_rgb Pixel.Infix.(a / b))) a b
+    let ( / ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a / b)) a b
 
     let ( +@ ) a (b : float t) =
-      map2 (fun a b -> Pixel Pixel.Infix.(Pixel.to_rgb a +@ b)) a b
+      map2 (fun a b -> Pixel Pixel.Infix.(a +@ b)) a b
 
     let ( -@ ) a (b : float t) =
-      map2 (fun a b -> Pixel Pixel.Infix.(Pixel.to_rgb a -@ b)) a b
+      map2 (fun a b -> Pixel Pixel.Infix.(a -@ b)) a b
 
     let ( *@ ) a (b : float t) =
-      map2 (fun a b -> Pixel Pixel.Infix.(Pixel.to_rgb a *@ b)) a b
+      map2 (fun a b -> Pixel Pixel.Infix.(a *@ b)) a b
 
     let ( /@ ) a (b : float t) =
-      map2 (fun a b -> Pixel Pixel.Infix.(Pixel.to_rgb a /@ b)) a b
+      map2 (fun a b -> Pixel Pixel.Infix.(a /@ b)) a b
   end
 end
 

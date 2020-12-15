@@ -43,20 +43,17 @@ end) : FILTER with type 'a io = 'a S.io = struct
        else
          S.bind
            (S.detach
-              (fun (x, y) ->
-                let px = op x y in
-                Image.set_pixel output x y px)
-              (!x, !y))
+              (fun y ->
+                for x' = 0 to width - 1 do
+                  x := x';
+                  let px = op x' y in
+                  Image.set_pixel output x' y px
+                done)
+              !y)
            (fun () ->
-             (* Increment x index *)
-             incr x;
              (* If x index is greater than the width then reset x index to 0
                 * and increment y index *)
-             let () =
-               if !x >= width then
-                 let () = x := 0 in
-                 incr y
-             in
+             incr y;
              inner ())
      in
      inner ()

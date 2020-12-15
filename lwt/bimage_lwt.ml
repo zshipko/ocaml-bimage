@@ -1,6 +1,6 @@
 open Bimage
 
-include Filter.Make (struct
+module Filter = Filter.Make (struct
   type 'a io = 'a Lwt.t
 
   let bind = Lwt.bind

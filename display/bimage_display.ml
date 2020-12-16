@@ -22,9 +22,15 @@ module Texture = struct
 
   let create window image =
     let () = GLFW.makeContextCurrent ~window:(Some window) in
-    create image.Image.width image.Image.height
-      (Color.has_alpha image.Image.color)
-      image.Image.data
+    try
+      create image.Image.width image.Image.height
+        (Color.has_alpha image.Image.color)
+        image.Image.data
+    with Failure s when s = "Invalid image type" ->
+      raise
+        (Invalid_argument
+           ( "Invalid image type: " ^ Type.name image.ty ^ ", "
+           ^ Color.name image.color ))
 
   let draw t window image =
     let () = GLFW.makeContextCurrent ~window:(Some window) in

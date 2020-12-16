@@ -1,5 +1,15 @@
 open Bimage
 
+module Thread : sig
+  module IO : sig
+    type 'a t
+  end
+
+  module Filter : sig
+    include Bimage.FILTER with type 'a io = 'a IO.t
+  end
+end
+
 (** Stb contains image I/O operationgs using stb_image *)
 module Stb : sig
   val read_u8 : 'a Color.t -> string -> ((int, u8, 'a) Image.t, Error.t) result

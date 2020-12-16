@@ -7,5 +7,7 @@ module Filter = Filter.Make (struct
 
   let detach = Lwt_preemptive.detach
 
-  let return = Lwt.return
+  let wrap = Lwt.wrap
+
+  let wait (x : unit io) = Lwt_preemptive.run_in_main (fun () -> x)
 end)

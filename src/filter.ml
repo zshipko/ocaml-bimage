@@ -8,30 +8,35 @@ module type FILTER = sig
   val make : ?x:int ref -> ?y:int ref -> Op.t -> ('a, 'b, 'c) t
 
   val of_expr : Expr.pixel Expr.t -> ('a, 'b, 'c) t
+
+  val run : ('a, 'b, 'c) t -> output:('a, 'b, 'c) Image.t -> Input.t -> unit
 end
 
 module Make (S : sig
   type 'a io
 
-  val bind : 'a io -> ('a -> 'b io) -> 'b io
+  val bind : unit io -> (unit -> unit io) -> unit io
 
-  val return : 'a -> 'a io
+  val wrap : (unit -> 'a) -> 'a io
 
-  val detach : ('a -> 'b) -> 'a -> 'b io
+  val detach : ('a -> unit) -> 'a -> unit io
+
+  val wait : unit io -> unit
 end) : FILTER with type 'a io = 'a S.io = struct
   type 'a io = 'a S.io
 
   type ('a, 'b, 'c) t = output:('a, 'b, 'c) Image.t -> Input.t -> unit io
 
   let join filters : ('a, 'b, 'c) t =
-   fun ~output inputs ->
+   fun ~output (inputs : Input.t) ->
      let rec inner i =
-       if i >= Array.length filters then S.return ()
+       if i >= Array.length filters then ()
        else
          let () = if i > 0 then inputs.(0) <- Input.input (Image.copy output) in
-         S.bind (filters.(i) ~output inputs) (fun () -> inner (i + 1))
+         S.wait (filters.(i) ~output inputs);
+         inner (i + 1)
      in
-     inner 0
+     S.wrap (fun () -> inner 0)
 
   let make ?(x = ref 0) ?(y = ref 0) op :
       output:('a, 'b, 'c) Image.t -> Input.t -> unit io =
@@ -39,7 +44,7 @@ end) : FILTER with type 'a io = 'a S.io = struct
      let width, height, _channels = Image.shape output in
      let op = op inputs in
      let rec inner () =
-       if !y >= height then S.return ()
+       if !y >= height then S.wrap (fun () -> ())
        else
          S.bind
            (S.detach
@@ -61,6 +66,8 @@ end) : FILTER with type 'a io = 'a S.io = struct
   let of_expr (expr : Expr.pixel Expr.t) :
       output:('a, 'b, 'c) Image.t -> Input.t -> unit io =
     make (Expr.op expr)
+
+  let run t ~output inputs = S.wait (t ~output inputs)
 end
 
 include Make (struct
@@ -68,7 +75,9 @@ include Make (struct
 
   let detach f x = f x
 
-  let return a = a
+  let wrap f = f ()
 
   let bind a f = f a
+
+  let wait () = ()
 end)

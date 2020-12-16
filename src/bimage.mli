@@ -935,13 +935,17 @@ end
 module type FILTER = sig
   type 'a io
 
-  type ('a, 'b, 'c) t = output:('a, 'b, 'c) Image.t -> Input.t -> unit io
+  type ('a, 'b, 'c) t =
+    output:('a, 'b, 'c) Image.t -> Image.any array -> unit io
 
   val join : ('a, 'b, 'c) t array -> ('a, 'b, 'c) t
 
   val make : ?x:int ref -> ?y:int ref -> Op.t -> ('a, 'b, 'c) t
 
   val of_expr : Expr.pixel Expr.t -> ('a, 'b, 'c) t
+
+  val run :
+    ('a, 'b, 'c) t -> output:('a, 'b, 'c) Image.t -> Image.any array -> unit
 end
 
 module Filter : sig
@@ -950,11 +954,13 @@ module Filter : sig
   module Make (S : sig
     type 'a io
 
-    val bind : 'a io -> ('a -> 'b io) -> 'b io
+    val bind : unit io -> (unit -> unit io) -> unit io
 
-    val return : 'a -> 'a io
+    val detach : ('a -> unit) -> 'a -> unit io
 
-    val detach : ('a -> 'b) -> 'a -> 'b io
+    val wait : unit io -> unit
+
+    val wrap : (unit -> 'a) -> 'a io
   end) : FILTER with type 'a io = 'a S.io
 end
 

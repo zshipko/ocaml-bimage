@@ -123,7 +123,7 @@ module Window = struct
     window.image <- Image.Any image
 end
 
-let show_all windows' =
+let show_all ?(update_in_background = false) windows' =
   let windows = Hashtbl.create 8 in
   List.iter (fun v -> Hashtbl.replace windows v v) windows';
   let should_close () =
@@ -146,7 +146,9 @@ let show_all windows' =
         | None ->
             if GLFW.getWindowAttrib ~window:v.Window.window ~attribute:Focused
             then Some v
-            else None)
+            else (
+              if update_in_background then Window.update v;
+              None ))
       windows None
   in
   while not (should_close ()) do
@@ -161,7 +163,7 @@ let show_all windows' =
     GLFW.pollEvents ()
   done
 
-let show images =
+let show ?update_in_background images =
   let windows =
     List.map
       (fun (k, v) ->
@@ -176,4 +178,4 @@ let show images =
         w)
       images
   in
-  show_all windows
+  show_all ?update_in_background windows

@@ -63,6 +63,7 @@ module Window : sig
   val get_mouse_button : 'a t -> int -> bool
 end
 
-val show_all : 'a Window.t list -> unit
+val show_all : ?update_in_background:bool -> 'a Window.t list -> unit
 
-val show : (string * Bimage.Image.any) list -> unit
+val show :
+  ?update_in_background:bool -> (string * Bimage.Image.any) list -> unit

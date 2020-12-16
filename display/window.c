@@ -34,12 +34,9 @@ value bimage_create_texture(value width, value height, value has_alpha,
   case CAML_BA_FLOAT32:
     texture_kind = GL_FLOAT;
     break;
-  /*case CAML_BA_INT32:
-    texture_kind = GL_INT32;
+  case CAML_BA_INT32:
+    texture_kind = GL_INT;
     break;
-  case CAML_BA_INT64:
-    texture_kind = GL_INT64;
-    break;*/
   default:
     caml_failwith("Invalid image type");
     break;
@@ -52,6 +49,8 @@ value bimage_create_texture(value width, value height, value has_alpha,
       texture_internal = GL_RGB16;
     } else if (texture_kind == GL_FLOAT) {
       texture_internal = GL_RGB32F;
+    } else if (texture_kind == GL_INT) {
+      texture_internal = GL_RGB32I;
     }
   } else if (texture_color == GL_RGBA) {
     if (texture_kind == GL_UNSIGNED_BYTE) {
@@ -60,6 +59,8 @@ value bimage_create_texture(value width, value height, value has_alpha,
       texture_internal = GL_RGBA16;
     } else if (texture_kind == GL_FLOAT) {
       texture_internal = GL_RGBA32F;
+    } else if (texture_kind == GL_INT) {
+      texture_internal = GL_RGBA32I;
     }
   }
 

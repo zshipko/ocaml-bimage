@@ -93,6 +93,16 @@ let grayscale_invert =
   let open Expr in
   map (fun a -> pixel (Pixel.map_inplace (fun i -> 1.0 -. i) a)) (grayscale ~@0)
 
+let test_blur_grayscale ~output input =
+  let b =
+    Kernel.of_array
+      [| [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |] |]
+  in
+  let h = Expr.kernel_3x3 ~@0 b in
+  Filter.(join [| of_expr h; of_expr Expr.(grayscale ~@0) |])
+    ~output
+    [| Image.any input |]
+
 let test_grayscale_invert ~output input =
   Filter.of_expr grayscale_invert ~output [| Image.any input |]
 
@@ -116,6 +126,7 @@ let tests =
     test "sobel" test_sobel ~input ~output;
     test "sobel_x" test_sobel_x ~input ~output;
     test "gaussian-blur" test_gausssian_blur ~input ~output;
+    test "blur-grayscale" test_blur_grayscale ~input ~output;
     test "rotate-270" test_rotate_270 ~input
       ~output:(Image.create u8 rgb input.Image.height input.Image.width);
     test "resize" test_resize ~input ~output:(Image.create u8 rgb 123 456);

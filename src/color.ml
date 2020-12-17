@@ -195,3 +195,6 @@ let channels (type a) (module C : COLOR with type t = a) = C.channels C.t
 let name (type a) (module C : COLOR with type t = a) = C.name C.t
 
 let has_alpha (type a) (module C : COLOR with type t = a) = C.has_alpha C.t
+
+let alpha_channel (type a) (module C : COLOR with type t = a) =
+  if C.has_alpha C.t then Some (C.channels C.t - 1) else None

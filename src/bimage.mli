@@ -133,6 +133,9 @@ module Color : sig
 
   val channels : 'a t -> int
   (** Returns the number of channels for a color *)
+
+  val alpha_channel : 'a t -> int option
+  (** Returns the index of the alpha channel if available *)
 end
 
 type gray = Color.Gray.t
@@ -524,17 +527,10 @@ module Image : sig
   val mean_std : ?channel:int -> ('a, 'b, 'c) t -> float * float
   (** Calculate the mean and standard deviation of an image *)
 
-  val fold : ('a -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
-  (** Fold over image data *)
-
-  val fold2 :
-    ('a -> 'e -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
-  (** Fold over data from two images *)
-
-  val fold_data :
+  val fold :
     (int -> int -> ('a, 'b) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
 
-  val fold_data2 :
+  val fold2 :
     (int -> int -> ('a, 'b) Data.t -> ('e, 'f) Data.t -> 'd -> 'd) ->
     ('a, 'b, 'c) t ->
     ('e, 'f, 'c) t ->

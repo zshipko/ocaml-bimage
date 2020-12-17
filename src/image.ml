@@ -167,7 +167,7 @@ let map2 f img b =
   let dest = copy img in
   map2_inplace f dest b
 
-let[@inline] for_each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
+let for_each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
     match width with Some w -> min (img.width - x) w | None -> img.width - x
   in
@@ -184,7 +184,7 @@ let[@inline] for_each_pixel f ?(x = 0) ?(y = 0) ?width ?height img =
     done
   done
 
-let[@inline] for_each f ?(x = 0) ?(y = 0) ?width ?height img =
+let for_each f ?(x = 0) ?(y = 0) ?width ?height img =
   let width =
     match width with Some w -> min (img.width - x) w | None -> img.width - x
   in
@@ -261,16 +261,12 @@ let mean_std ?(channel = 0) image =
   let std = sqrt ((!x2 /. len) -. (mean *. mean)) in
   (mean, std)
 
-let fold f image init = Data.fold f image.data init
-
-let fold2 f a b init = Data.fold2 f a.data b.data init
-
-let fold_data f image init =
+let fold f image init =
   let acc = ref init in
   for_each (fun x y px -> acc := f x y px !acc) image;
   !acc
 
-let fold_data2 f a b init =
+let fold2 f a b init =
   let acc = ref init in
   for_each
     (fun x y px ->

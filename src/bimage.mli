@@ -13,21 +13,26 @@ open Bigarray
 
 module type TYPE = sig
   type t
+  (** Bigarray OCaml type *)
 
   type elt
+  (** Bigarray storage type *)
 
   type kind = (t, elt) Bigarray.kind
+  (** Bigarray kind type *)
 
   val name : string
+  (** Type name *)
 
   val kind : kind
+  (** kind value **)
 
   val of_float : float -> t
+  (** Convert from float *)
 
   val to_float : t -> float
+  (** Convert to float *)
 end
-
-type ('a, 'b) kind = ('a, 'b) Bigarray.kind
 
 exception Unsupported
 (** Raised when attempting to use Bigarray types other than u8, u16, f32, f64, i32, i64*)
@@ -88,16 +93,22 @@ module type COLOR = sig
   type t
 
   val t : t
+  (** Color type value *)
 
   val name : t -> string
+  (** Color name *)
 
   val channels : t -> int
+  (** Returns the number of channels *)
 
   val has_alpha : t -> bool
+  (** Returns true when a color has an alpha channel, which will always be the last channel *)
 
   val to_rgb : t -> floatarray -> floatarray
+  (** Convert a color to RGB *)
 
-  val from_rgb : t -> floatarray -> floatarray
+  val of_rgb : t -> floatarray -> floatarray
+  (** Convert a color from RGB *)
 end
 
 (** Color contains methods for creating and inspecting color types *)
@@ -194,6 +205,7 @@ module Type : sig
   (** Sclaes a value to the range (type_min-type_max) *)
 
   val convert : from:('a, 'b) Type.t -> ('c, 'd) Type.t -> 'a -> 'c
+  (** Convert a value of one type to another *)
 end
 
 type u8 = int8_unsigned_elt
@@ -234,7 +246,7 @@ module Data : sig
   val to_array : ('a, 'b) t -> 'a array
   (** Converts a [Data.t] to an array *)
 
-  val create : ('a, 'b) Type.t -> int -> ('a, 'b) t
+  val v : ('a, 'b) Type.t -> int -> ('a, 'b) t
   (** Create a new [Data.t] with the given length. *)
 
   val length : ('a, 'b) t -> int
@@ -288,7 +300,7 @@ module Pixel : sig
   val empty : 'a Color.t -> 'a t
   (** Create a new pixel with all channels set to 0 *)
 
-  val make : 'a Color.t -> float list -> 'a t
+  val v : 'a Color.t -> float list -> 'a t
   (** Create a new pixel filled using the values from a list *)
 
   val fill : 'a t -> float -> unit
@@ -297,14 +309,18 @@ module Pixel : sig
   (** Get the number of channels in a pixel *)
 
   val get : 'a t -> int -> float
+  (** Get value at index *)
 
   val set : 'a t -> int -> float -> unit
+  (** Set value at index *)
 
   val compare : 'a t -> 'a t -> int
+  (** Compare two pixels *)
 
   val equal : 'a t -> 'a t -> bool
+  (** Returns true when two pixels are equal *)
 
-  val from_data : 'c Color.t -> ('a, 'b) Data.t -> 'c t
+  val of_data : 'c Color.t -> ('a, 'b) Data.t -> 'c t
   (** Create a new pixel from existing image data *)
 
   val to_data : dest:('a, 'b) Data.t -> 'c t -> unit
@@ -314,23 +330,29 @@ module Pixel : sig
   (** Returns the underlying pixel data *)
 
   val color : 'a t -> 'a Color.t
+  (** Get pixel color *)
 
   val to_rgb : 'a t -> rgb t
+  (** Convert pixel to RGB *)
 
-  val from_rgb : 'a Color.t -> rgb t -> 'a t
+  val of_rgb : 'a Color.t -> rgb t -> 'a t
+  (** Convert pixel from RGB *)
 
   val iter : (int -> float -> unit) -> 'a t -> unit
+  (** Iterate over pixel values *)
 
-  val map : (float -> float) -> 'a t -> 'a t
+  val map : ?ignore_alpha:bool -> (float -> float) -> 'a t -> 'a t
   (** [map f x] executes [f] for each value in [x], returning a new Pixel.t *)
 
-  val map_inplace : (float -> float) -> 'a t -> 'a t
+  val map_inplace : ?ignore_alpha:bool -> (float -> float) -> 'a t -> 'a t
   (** [map_inplace f x] executes [f] for each value in [x], assigning the new value to the same
    *  index *)
 
-  val map2_inplace : (float -> float -> float) -> 'a t -> 'a t -> 'a t
+  val map2_inplace :
+    ?ignore_alpha:bool -> (float -> float -> float) -> 'a t -> 'a t -> 'a t
+  (** Executes a function over each item in two pixels *)
 
-  val fold : (float -> 'a -> 'a) -> 'b t -> 'a -> 'a
+  val fold : ?ignore_alpha:bool -> (float -> 'a -> 'a) -> 'b t -> 'a -> 'a
   (** Reduction over a pixel *)
 
   val pp : Format.formatter -> 'a t -> unit
@@ -365,12 +387,15 @@ module Image : sig
   }
   (** Image type *)
 
-  type any = Any : ('a, 'b, 'c) t -> any
+  type any =
+    | Any : ('a, 'b, 'c) t -> any
+        (** Generic image type, used for input parameters *)
 
   val any : ('a, 'b, 'c) t -> any
+  (** Make an image generic *)
 
-  val create : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
-  (** [create ty color width height] makes a new image with the given [ty], [color] and dimensions *)
+  val v : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
+  (** [v ty color width height] makes a new image with the given [ty], [color] and dimensions *)
 
   val compare : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> int
 
@@ -386,8 +411,10 @@ module Image : sig
   (** [like img] creates a new image with the same dimensions, color and ty as [img] *)
 
   val like_with_color : 'd Color.t -> ('a, 'b, 'c) t -> ('a, 'b, 'd) t
+  (** Create an image with the same dimensions and type *)
 
   val like_with_ty : ('d, 'e) Type.t -> ('a, 'b, 'c) t -> ('d, 'e, 'c) t
+  (** Create an image with the name dimensions and color *)
 
   val copy : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   (** Makes a copy of an image and underlying image data *)
@@ -416,10 +443,6 @@ module Image : sig
   val convert :
     ('d, 'e) Type.t -> 'f Color.t -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t
   (** Convert an image to a new image of another ty *)
-
-  (*val of_any_color :
-    ('a, 'b, any) t -> 'c Color.t -> (('a, 'b, 'c) t, Error.t) result*)
-  (** Convert from [any] color to the given color *)
 
   val get : ('a, 'b, 'c) t -> int -> int -> int -> 'a
   (** [get image x y c] returns a the value at (x, y, c) *)
@@ -466,6 +489,7 @@ module Image : sig
     ?height:int ->
     ('a, 'b, 'c) t ->
     unit
+  (** Iterate over each pixel in an image *)
 
   val avg :
     ?x:int ->
@@ -501,9 +525,11 @@ module Image : sig
   (** Calculate the mean and standard deviation of an image *)
 
   val fold : ('a -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
+  (** Fold over image data *)
 
   val fold2 :
     ('a -> 'e -> 'd -> 'd) -> ('a, 'b, 'c) t -> ('e, 'f, 'c) t -> 'd -> 'd
+  (** Fold over data from two images *)
 
   val fold_data :
     (int -> int -> ('a, 'b) Data.t -> 'd -> 'd) -> ('a, 'b, 'c) t -> 'd -> 'd
@@ -538,8 +564,8 @@ end
 module Kernel : sig
   type t
 
-  val create : int -> int -> t
-  (** [create rows cols] makes a new Kernel with the given dimensions *)
+  val v : rows:int -> cols:int -> t
+  (** [v ~rows ~cols] makes a new Kernel with the given dimensions *)
 
   val rows : t -> int
   (** Returns the number of rows in a kernel *)
@@ -547,7 +573,7 @@ module Kernel : sig
   val cols : t -> int
   (** Returns the number of columns in a kernel *)
 
-  val join : (float -> float -> float) -> t -> t -> t
+  val combine : (float -> float -> float) -> t -> t -> t
   (** Joins two kernels using the given operation *)
 
   val of_array : ?norm:bool -> float array array -> t
@@ -583,17 +609,17 @@ end
 module Input : sig
   type t = Image.any array
 
-  type index = private int
+  type index = int
 
-  val index : int -> index
-
-  val int_of_index : index -> int
+  val or_default : index option -> index
+  (** Returns the provided index, if not [None] or the default index *)
 
   val get : t -> index -> Image.any
   (** Get an image from the input, raising [Error.Exc (`Invalid_input index)]
       if the provided index is out of bounds. *)
 
   val shape : t -> int * int * int
+  (** Get input shape *)
 end
 
 module Transform : sig
@@ -610,6 +636,7 @@ module Transform : sig
     float ->
     float ->
     t
+  (** Create new transformation *)
 
   val neg : t -> t
 
@@ -686,7 +713,9 @@ module Expr : sig
     | Shape : Input.index -> (int * int * int) t
     | Option : 'a t option -> 'a option t
 
-  val op : ?x:int ref -> ?y:int ref -> pixel t -> Input.t -> int -> int -> pixel
+  val compute_at :
+    ?x:int ref -> ?y:int ref -> pixel t -> Input.t -> int -> int -> pixel
+  (** Compute value of expression at the given point *)
 
   val int : int -> int t
   (** Create an int [Expr] *)
@@ -708,43 +737,59 @@ module Expr : sig
 
   val pixel : 'a Pixel.t -> pixel t
 
-  val kernel : Input.index -> Kernel.t -> pixel t
-  (** Create a kernel expr from an existing kernel *)
+  val pixel_map : (float -> float) -> pixel t -> pixel t
 
-  val join_kernel :
-    Input.index -> (float -> float -> float) -> Kernel.t -> Kernel.t -> pixel t
-  (** Create a kernel expession using two kernels combined using the designated operation *)
-
-  val transform : Input.index -> Transform.t -> pixel t
-  (** Apply a transformation *)
-
-  val rotate : Input.index -> ?center:float * float -> float -> pixel t
-
-  val scale : Input.index -> float -> float -> pixel t
-
-  val pair : 'a t -> 'b t -> ('a * 'b) t
-  (** Create a new Pair expr, used for joining existing expressions *)
-
-  val map2 : ('a -> 'b -> 'c t) -> 'a t -> 'b t -> 'c t
-
-  val type_min : Input.index -> float t
-
-  val type_max : Input.index -> float t
-
-  val channels : Input.index -> int t
+  val input : ?index:Input.index -> int t -> int t -> pixel t
+  (** Get input data from the specified index *)
 
   val value : 'a -> 'a t
   (** Create a Value expr *)
 
-  val shape : Input.index -> (int * int * int) t
+  val shape : ?input:Input.index -> unit -> (int * int * int) t
 
   val func : 'b t -> (int -> int -> 'b -> 'a t) -> 'a t
   (** Create a Func expr *)
 
+  val kernel : ?input:Input.index -> Kernel.t -> pixel t
+  (** Create a kernel expr from an existing kernel *)
+
+  val combine_kernel :
+    ?input:Input.index ->
+    (float -> float -> float) ->
+    Kernel.t ->
+    Kernel.t ->
+    pixel t
+  (** Create a kernel expession using two kernels combined using the designated operation *)
+
+  val kernel_3x3 : ?input:Input.index -> Kernel.t -> pixel t
+
+  val gaussian_blur : ?std:float -> ?input:Input.index -> int -> pixel t
+
+  val sobel_x : ?input:Input.index -> unit -> pixel t
+
+  val sobel_y : ?input:Input.index -> unit -> pixel t
+
+  val sobel : ?input:Input.index -> unit -> pixel t
+
+  val transform : ?input:Input.index -> Transform.t -> pixel t
+  (** Apply a transformation *)
+
+  val rotate : ?input:Input.index -> ?center:float * float -> float -> pixel t
+
+  val scale : ?input:Input.index -> float -> float -> pixel t
+
+  val pair : 'a t -> 'b t -> ('a * 'b) t
+  (** Create a new Pair expr, used for joining existing expressions *)
+
+  val type_min : ?input:Input.index -> unit -> float t
+
+  val type_max : ?input:Input.index -> unit -> float t
+
+  val channels : ?input:Input.index -> unit -> int t
+
   val map : ('b -> 'a t) -> 'b t -> 'a t
 
-  val input : Input.index -> int t -> int t -> pixel t
-  (** Get input data from the specified index *)
+  val map2 : ('a -> 'b -> 'c t) -> 'a t -> 'b t -> 'c t
 
   val fadd : float t -> float t -> float t
 
@@ -782,23 +827,23 @@ module Expr : sig
 
   val cond : bool t -> 'a t -> 'a t -> 'a t
 
-  val blend : Input.index -> Input.index -> pixel t
+  val blend : ?input0:Input.index -> ?input1:Input.index -> unit -> pixel t
   (** An expression to average two images *)
 
-  val min : Input.index -> Input.index -> pixel t
+  val min : ?input0:Input.index -> ?input1:Input.index -> unit -> pixel t
   (** An expression to take the lowest value from two images *)
 
-  val max : Input.index -> Input.index -> pixel t
+  val max : ?input0:Input.index -> ?input1:Input.index -> unit -> pixel t
   (** An expression to take the highest value from two images *)
 
-  val brightness : Input.index -> float t -> pixel t
+  val brightness : ?input:Input.index -> float t -> pixel t
   (** Multiply each pixel component *)
 
-  val grayscale : Input.index -> pixel t
+  val grayscale : ?input:Input.index -> unit -> pixel t
 
-  val color : Input.index -> pixel t
+  val color : ?input:Input.index -> unit -> pixel t
 
-  val kernel_3x3 : Input.index -> Kernel.t -> pixel t
+  val invert : ?input:Input.index -> unit -> pixel t
 
   module Infix : sig
     val ( && ) : bool t -> bool t -> bool t
@@ -855,97 +900,18 @@ module Expr : sig
   end
 end
 
-(** Op is used to define pixel-level operations. These operations are performed on normalized floating-point values *)
-module Op : sig
-  type t = Image.any array -> int -> int -> Expr.pixel
-
-  type f = Expr.pixel Expr.t -> t
-
-  val blend : ?input:Input.index -> ?input1:Input.index -> t
-  (** Blend two images: [a + b / 2] *)
-
-  val min : ?input:Input.index -> ?input1:Input.index -> t
-  (** Minimum pixel value of two images *)
-
-  val max : ?input:Input.index -> ?input1:Input.index -> t
-  (** Maximum pixel value of two images *)
-
-  val pixel : 'a Pixel.t -> t
-
-  val grayscale : ?input:Input.index -> t
-  (** Convert a color image to grayscale *)
-
-  val color : ?input:Input.index -> t
-  (** Convert a grayscale image to color *)
-
-  val join : (Expr.pixel -> Expr.pixel -> Expr.pixel) -> t -> t -> t
-  (** [join f a b] builds a new operation of [f(a, b)] *)
-
-  val apply : f -> t -> t
-  (** [apply f a] builds a new operation of [f(a)] *)
-
-  val invert : ?input:Input.index -> t
-  (** Invert the values in an image *)
-
-  val cond : (Input.t -> int -> int -> bool) -> t -> t -> t
-  (** Conditional operation *)
-
-  val sobel_x : ?input:Input.index -> t
-  (** Sobel in the X direction *)
-
-  val sobel_y : ?input:Input.index -> t
-  (** Sobel in the Y direction *)
-
-  val sobel : ?input:Input.index -> t
-  (** Sobel kernel *)
-
-  val gaussian_blur : ?input:Input.index -> ?std:float -> int -> t
-  (** Blur using gaussian kernel. The size must be an odd number. *)
-
-  val transform : ?input:Input.index -> Transform.t -> t
-  (** Apply a transformation *)
-
-  val rotate : ?input:Input.index -> ?center:float * float -> Angle.t -> t
-  (** Rotation operation *)
-
-  val scale : ?input:Input.index -> float -> float -> t
-  (** Scale an image by the given amount *)
-
-  val brightness : ?input:Input.index -> float Expr.t -> t
-  (** Adjust the brightness of an image. 0.0 will remove all brightness and 1.0 will keep the image as-is. *)
-
-  module Infix : sig
-    val ( &+ ) : t -> t -> t
-    (** Infix operator for [join] using addition *)
-
-    val ( &- ) : t -> t -> t
-    (** Infix operator for [join] using subtraction *)
-
-    val ( &* ) : t -> t -> t
-    (** Infix operator for [join] using multiplication *)
-
-    val ( &/ ) : t -> t -> t
-    (** Infix operator for [join] using division *)
-
-    val ( $ ) : t -> f -> t
-    (** Infix operator for [map] *)
-  end
-end
-
 module type FILTER = sig
   type 'a io
 
   type ('a, 'b, 'c) t =
     output:('a, 'b, 'c) Image.t -> Image.any array -> unit io
 
-  val join : ('a, 'b, 'c) t array -> ('a, 'b, 'c) t
+  val join : ('a, 'b, 'c) t list -> ('a, 'b, 'c) t
 
-  val make : ?x:int ref -> ?y:int ref -> Op.t -> ('a, 'b, 'c) t
-
-  val of_expr : Expr.pixel Expr.t -> ('a, 'b, 'c) t
+  val v : ?x:int ref -> ?y:int ref -> Expr.pixel Expr.t -> ('a, 'b, 'c) t
 
   val run :
-    ('a, 'b, 'c) t -> output:('a, 'b, 'c) Image.t -> Image.any array -> unit
+    output:('a, 'b, 'c) Image.t -> Image.any array -> ('a, 'b, 'c) t -> unit
 end
 
 module Filter : sig

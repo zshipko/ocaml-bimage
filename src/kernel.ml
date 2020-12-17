@@ -1,9 +1,9 @@
 type t = float array array
 
-let create rows cols = Array.make_matrix rows cols 0.0
+let v ~rows ~cols = Array.make_matrix rows cols 0.0
 
 let from f rows cols =
-  let k = create rows cols in
+  let k = v ~rows ~cols in
   for j = 0 to rows - 1 do
     for i = 0 to cols - 1 do
       k.(j).(i) <- f i j
@@ -26,10 +26,10 @@ let normalize kernel =
   let sum = sum kernel in
   if sum = 0.0 then kernel else Array.map (Array.map (fun x -> x /. sum)) kernel
 
-let join op a b =
+let combine op a b =
   let rows = rows a in
   let cols = cols a in
-  let dest = create rows cols in
+  let dest = v ~rows ~cols in
   for r = 0 to rows - 1 do
     for c = 0 to cols - 1 do
       dest.(r).(c) <- op a.(r).(c) b.(r).(c)

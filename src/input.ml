@@ -8,6 +8,8 @@ let input x = Image.any x
 
 let int_of_index i = i
 
+let or_default = function Some x -> x | None -> 0
+
 let get inputs i =
   if i < Array.length inputs then inputs.(i) else Error.exc (`Invalid_input i)
 

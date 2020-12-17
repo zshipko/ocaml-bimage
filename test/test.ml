@@ -6,6 +6,7 @@
 
 open Bimage
 open Bimage_unix
+module Filter = Thread.Filter
 
 exception Assert of string
 
@@ -35,11 +36,6 @@ let image_eq a b =
         done)
       a )
 
-let sobel =
-  let open Expr in
-  let open Infix.Pixel in
-  kernel ~@0 Kernel.sobel_x + kernel ~@0 Kernel.sobel_y
-
 let test name f ~input ~output =
   ( name,
     fun () ->
@@ -55,35 +51,36 @@ let test name f ~input ~output =
 let test_write ~output input = Image.copy_to ~dest:output input
 
 let test_invert ~output input =
-  Filter.make Op.invert ~output [| Image.any input |]
+  Filter.v (Expr.invert ()) |> Filter.run ~output [| Image.any input |]
 
 let test_blend ~output input =
-  Filter.make Op.blend ~output [| Image.any input; Image.any input |]
+  Filter.v (Expr.blend ())
+  |> Filter.run ~output [| Image.any input; Image.any input |]
 
 let test_grayscale ~output input =
-  Op.(Filter.make grayscale ~output [| Image.any input |])
+  Filter.v (Expr.grayscale ()) |> Filter.run ~output [| Image.any input |]
 
 let test_blur ~output input =
   let b =
     Kernel.of_array
       [| [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |] |]
   in
-  let h = Expr.kernel_3x3 ~@0 b in
-  Filter.of_expr h ~output [| Image.any input |]
+  let h = Expr.kernel_3x3 b in
+  Filter.v h |> Filter.run ~output [| Image.any input |]
 
 let test_sobel ~output input =
-  Op.(Filter.make sobel ~output [| Image.any input |])
+  Filter.v Expr.(sobel ()) |> Filter.run ~output [| Image.any input |]
 
 let test_sobel_x ~output input =
   let k =
     Kernel.of_array
       [| [| 1.0; 0.0; -1.0 |]; [| 2.0; 0.0; -2.0 |]; [| 1.0; 0.0; -1.0 |] |]
   in
-  let h = Expr.kernel_3x3 ~@0 k in
-  Filter.of_expr h ~output [| Image.any input |]
+  let h = Expr.kernel_3x3 k in
+  Filter.v h |> Filter.run ~output [| Image.any input |]
 
 let test_gausssian_blur ~output input =
-  Filter.make (Op.gaussian_blur 3) ~output [| Image.any input |]
+  Filter.v (Expr.gaussian_blur 3) |> Filter.run ~output [| Image.any input |]
 
 let test_rotate_270 ~output input =
   let tmp = Image.rotate_270 input in
@@ -91,20 +88,19 @@ let test_rotate_270 ~output input =
 
 let grayscale_invert =
   let open Expr in
-  map (fun a -> pixel (Pixel.map_inplace (fun i -> 1.0 -. i) a)) (grayscale ~@0)
+  map (fun a -> pixel (Pixel.map_inplace (fun i -> 1.0 -. i) a)) (grayscale ())
 
 let test_blur_grayscale ~output input =
   let b =
     Kernel.of_array
       [| [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |] |]
   in
-  let h = Expr.kernel_3x3 ~@0 b in
-  Filter.(join [| of_expr h; of_expr Expr.(grayscale ~@0) |])
-    ~output
-    [| Image.any input |]
+  let h = Expr.kernel_3x3 b in
+  Filter.(join [ v h; v Expr.(grayscale ()) ])
+  |> Filter.run ~output [| Image.any input |]
 
 let test_grayscale_invert ~output input =
-  Filter.of_expr grayscale_invert ~output [| Image.any input |]
+  Filter.v grayscale_invert |> Filter.run ~output [| Image.any input |]
 
 let test_resize ~output input =
   let im = Image.resize 123 456 input in
@@ -128,13 +124,13 @@ let tests =
     test "gaussian-blur" test_gausssian_blur ~input ~output;
     test "blur-grayscale" test_blur_grayscale ~input ~output;
     test "rotate-270" test_rotate_270 ~input
-      ~output:(Image.create u8 rgb input.Image.height input.Image.width);
-    test "resize" test_resize ~input ~output:(Image.create u8 rgb 123 456);
+      ~output:(Image.v u8 rgb input.Image.height input.Image.width);
+    test "resize" test_resize ~input ~output:(Image.v u8 rgb 123 456);
     test "invert" test_invert ~input ~output;
     test "blend" test_blend ~input ~output;
     test "grayscale" test_grayscale ~input
       ~output:(Image.like_with_color gray input);
-    test "crop" test_crop ~input ~output:(Image.create u8 rgb 200 400);
+    test "crop" test_crop ~input ~output:(Image.v u8 rgb 200 400);
   ]
 
 let () =

@@ -26,9 +26,9 @@ end
 
 let any image = Any image
 
-let create (type color) ty (module C : COLOR with type t = color) width height =
+let v (type color) ty (module C : COLOR with type t = color) width height =
   let channels = C.channels C.t in
-  let data = Data.create ty (width * height * channels) in
+  let data = Data.v ty (width * height * channels) in
   { width; height; ty; color = (module C); data }
 
 let compare a b = Data.compare a.data b.data
@@ -45,13 +45,12 @@ let of_data (type color) (module C : COLOR with type t = color) width height
   if width * height * channels <> Data.length data then Error.exc `Invalid_shape
   else { width; height; ty; color = (module C); data }
 
-let like image =
-  create (Data.ty image.data) image.color image.width image.height
+let like image = v (Data.ty image.data) image.color image.width image.height
 
-let like_with_ty ty image = create ty image.color image.width image.height
+let like_with_ty ty image = v ty image.color image.width image.height
 
 let like_with_color color image =
-  create (Data.ty image.data) color image.width image.height
+  v (Data.ty image.data) color image.width image.height
 
 let copy image =
   let data = Data.copy image.data in
@@ -82,7 +81,7 @@ let data { data; _ } = data
 
 let empty_pixel image = Pixel.empty image.color
 
-let empty_data image = Data.create (ty image) (channels image)
+let empty_data image = Data.v (ty image) (channels image)
 
 let[@inline] index image x y c =
   let channels = channels image in
@@ -206,12 +205,12 @@ let convert_to ~dest img =
   for_each_pixel
     (fun x y px ->
       let rgb = Pixel.to_rgb px in
-      let color = Pixel.from_rgb dest.color rgb in
+      let color = Pixel.of_rgb dest.color rgb in
       set_pixel dest x y color)
     img
 
 let convert k (c : 'c Color.t) img =
-  let dest = create k c img.width img.height in
+  let dest = v k c img.width img.height in
   convert_to ~dest img;
   dest
 
@@ -222,7 +221,7 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let height =
     match height with None -> img.height - y | Some h -> min h (img.width - y)
   in
-  let avg = Data.create Type.f64 (channels img) in
+  let avg = Data.v Type.f64 (channels img) in
   let channels = channels img in
   let size = float_of_int (width * height) in
   let ty = ty img in
@@ -238,7 +237,7 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   avg
 
 let crop im ~x ~y ~width ~height =
-  let dest = create (ty im) im.color width height in
+  let dest = v (ty im) im.color width height in
   for_each
     (fun i j _ ->
       for c = 0 to channels im - 1 do

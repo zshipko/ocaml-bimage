@@ -11,7 +11,7 @@ module type COLOR = sig
 
   val to_rgb : t -> floatarray -> floatarray
 
-  val from_rgb : t -> floatarray -> floatarray
+  val of_rgb : t -> floatarray -> floatarray
 end
 
 open Float.Array
@@ -29,7 +29,7 @@ module Rgb : COLOR with type t = [ `Rgb ] = struct
 
   let to_rgb _ x = x
 
-  let from_rgb _ x = x
+  let of_rgb _ x = x
 end
 
 module Rgba : COLOR with type t = [ `Rgba ] = struct
@@ -51,7 +51,7 @@ module Rgba : COLOR with type t = [ `Rgba ] = struct
     set x 3 1.0;
     x
 
-  let from_rgb _ x =
+  let of_rgb _ x =
     let dest = Float.Array.create 4 in
     set dest 0 (get x 0);
     set dest 1 (get x 1);
@@ -73,7 +73,7 @@ module Gray : COLOR with type t = [ `Gray ] = struct
 
   let to_rgb _ (px : floatarray) = make 3 (get px 0)
 
-  let from_rgb _ (px : floatarray) =
+  let of_rgb _ (px : floatarray) =
     make 1 ((get px 0 *. 0.21) +. (get px 1 *. 0.72) +. (get px 2 *. 0.07))
 end
 
@@ -110,7 +110,7 @@ module Xyz : COLOR with type t = [ `Xyz ] = struct
       else 12.92 *. var_b );
     rgb
 
-  let from_rgb _ px =
+  let of_rgb _ px =
     let xyz = make 3 0.0 in
     let r = get px 0 in
     let g = get px 1 in
@@ -157,7 +157,7 @@ module Yuv : COLOR with type t = [ `Yuv ] = struct
     set rgb 2 (y +. (2.032 *. u));
     rgb
 
-  let from_rgb _ (px : floatarray) =
+  let of_rgb _ (px : floatarray) =
     let yuv = make 3 0.0 in
     let r = get px 0 in
     let g = get px 1 in

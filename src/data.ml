@@ -4,14 +4,13 @@ type ('a, 'b) t = ('a, 'b, c_layout) Array1.t
 
 let[@inline] ty t = Array1.kind t |> Type.of_kind
 
-let create (type a b) (module T : Type.TYPE with type t = a and type elt = b) n
-    =
+let v (type a b) (module T : Type.TYPE with type t = a and type elt = b) n =
   let arr = Bigarray.Array1.create T.kind Bigarray.C_layout n in
   Array1.fill arr (T.of_float 0.0);
   arr
 
 let random t n =
-  let dest = create t n in
+  let dest = v t n in
   for i = 0 to n - 1 do
     dest.{i} <- Type.of_float t (Random.float (Type.max_f t))
   done;
@@ -68,7 +67,7 @@ let map2_inplace f a b =
 let copy_to ~dest src = Bigarray.Array1.blit src dest
 
 let copy data =
-  let dest = create (ty data) (length data) in
+  let dest = v (ty data) (length data) in
   copy_to ~dest data;
   dest
 
@@ -80,7 +79,7 @@ let convert_to fn ~dest data =
 
 let convert ty fn data =
   let len = length data in
-  let dst = create ty len in
+  let dst = v ty len in
   for i = 0 to len - 1 do
     dst.{i} <- fn data.{i}
   done;

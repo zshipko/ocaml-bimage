@@ -16,8 +16,6 @@ module type TYPE = sig
   val to_float : t -> float
 end
 
-type ('a, 'b) kind = ('a, 'b) Bigarray.kind
-
 type ('a, 'b) t = (module TYPE with type t = 'a and type elt = 'b)
 
 exception Unsupported

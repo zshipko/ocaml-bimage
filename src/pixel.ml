@@ -5,7 +5,7 @@ let empty (type c) color =
   let p = Float.Array.make (C.channels C.t) 0.0 in
   (color, p)
 
-let make color values =
+let v color values =
   assert (Color.channels color = List.length values);
   (color, Float.Array.of_list values)
 
@@ -28,11 +28,11 @@ let to_rgb (type color) (color, a) : Color.rgb t =
   let (module C : Color.COLOR with type t = color) = color in
   ((module Color.Rgb : Color.COLOR with type t = Color.rgb), C.to_rgb C.t a)
 
-let from_rgb (type color) color (_rgb, a) =
+let of_rgb (type color) color (_rgb, a) =
   let (module C : Color.COLOR with type t = color) = color in
-  (color, C.from_rgb C.t a)
+  (color, C.of_rgb C.t a)
 
-let from_data (type a b) color data =
+let of_data (type a b) color data =
   let len = Data.length data in
   let px = empty color in
   let (module T : Type.TYPE with type t = a and type elt = b) = Data.ty data in
@@ -54,28 +54,52 @@ let color (c, _) = c
 
 let iter f px = Float.Array.iteri f (data px)
 
-let map_inplace f px =
-  Float.Array.iteri (fun i x -> set px i (f x)) (data px);
+let map_inplace ?(ignore_alpha = true) f px =
+  let color = color px in
+  let alpha =
+    if ignore_alpha && Color.has_alpha color then Color.channels color - 1
+    else -1
+  in
+  Float.Array.iteri (fun i x -> if i <> alpha then set px i (f x)) (data px);
   px
 
-let map2_inplace f px px' =
-  Float.Array.iteri (fun i x -> set px i (f x (get px' i))) (data px);
+let map2_inplace ?(ignore_alpha = true) f px px' =
+  let color = color px in
+  let alpha =
+    if ignore_alpha && Color.has_alpha color then Color.channels color - 1
+    else -1
+  in
+  Float.Array.iteri
+    (fun i x -> if i <> alpha then set px i (f x (get px' i)))
+    (data px);
   px
 
-let map f (color, px) =
+let map ?ignore_alpha f (color, px) =
   let dest = (color, Float.Array.copy px) in
-  map_inplace f dest
+  map_inplace ?ignore_alpha f dest
 
-let convert_in_place from to_ px =
-  map
+let convert_in_place ?ignore_alpha from to_ px =
+  map ?ignore_alpha
     (fun x ->
       let x = Type.normalize from x in
       Type.denormalize to_ x)
     px
 
-let clamp (x : 'a t) : 'a t = map_inplace (fun x -> Type.clamp Type.f32 x) x
+let clamp (x : 'a t) : 'a t =
+  map_inplace ~ignore_alpha:false (fun x -> Type.clamp Type.f32 x) x
 
-let fold f (_, px) a = Float.Array.fold_left (fun a b -> f b a) a px
+let fold ?(ignore_alpha = true) f (color, px) a =
+  let alpha =
+    if ignore_alpha && Color.has_alpha color then Color.channels color - 1
+    else -1
+  in
+  let index = ref 0 in
+  Float.Array.fold_left
+    (fun a b ->
+      let i = !index in
+      incr index;
+      if i <> alpha then f b a else a)
+    a px
 
 let pp fmt px =
   let len = length px - 1 in

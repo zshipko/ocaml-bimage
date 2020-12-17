@@ -26,15 +26,15 @@ type base_type =
   | Ptr
 
 let base_type_of_ty : type a b. (a, b) Type.t -> base_type =
-  fun (module T) ->
-  match T.kind with
-  | Float64 -> Double
-  | Float32 -> Float
-  | Int8_unsigned -> UInt8
-  | Int16_unsigned -> UInt16
-  | Int32 -> Int32
-  | Int64 -> Int64
-  | _ -> raise Unsupported
+ fun (module T) ->
+   match T.kind with
+   | Float64 -> Double
+   | Float32 -> Float
+   | Int8_unsigned -> UInt8
+   | Int16_unsigned -> UInt16
+   | Int32 -> Int32
+   | Int64 -> Int64
+   | _ -> raise Unsupported
 
 external image_spec : int -> int -> int -> base_type -> spec = "image_spec"
 
@@ -62,13 +62,14 @@ external output_write_image : output -> spec -> ('a, 'b) Data.t -> unit
   = "output_write_image"
 
 module Spec = struct
-  type 'a attr =
-    | Int: int attr
-    | Float: float attr
-    | String: string attr
+  type 'a attr = Int : int attr | Float : float attr | String : string attr
 
-  external spec_get_attr : spec -> string -> 'a attr -> 'a option = "spec_get_attr"
-  external spec_set_attr : spec -> string -> 'a attr -> 'a -> unit  = "spec_set_attr"
+  external spec_get_attr : spec -> string -> 'a attr -> 'a option
+    = "spec_get_attr"
+
+  external spec_set_attr : spec -> string -> 'a attr -> 'a -> unit
+    = "spec_set_attr"
+
   external spec_get_attr_names : spec -> string array = "spec_get_attr_names"
 
   type t = spec
@@ -76,10 +77,13 @@ module Spec = struct
   let shape t = spec_shape t
 
   let base_type t = spec_base_type t
+
   let make : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> t = make_spec
 
   let get_attr t name = spec_get_attr t name
+
   let set_attr t name value = spec_set_attr t name value
+
   let attr_names t = spec_get_attr_names t
 end
 
@@ -105,7 +109,7 @@ module Input = struct
     let width, height, channels = Spec.shape spec in
     if channels > Color.channels color then Error `Invalid_color
     else
-      let image = Image.create ty color width height in
+      let image = Image.v ty color width height in
       match read_image ?index input image with
       | Ok () -> Ok image
       | Error e -> Error e
@@ -127,7 +131,7 @@ module Output = struct
         match spec with
         | Some spec -> spec
         | None ->
-          make_spec (Image.ty image) image.color image.width image.height
+            make_spec (Image.ty image) image.color image.width image.height
       in
       let () = open_ ~append (filename, output) spec in
       let () = output_write_image output spec (Image.data image) in

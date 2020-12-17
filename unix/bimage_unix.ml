@@ -4,25 +4,23 @@ module Data_unix = Data
 module Image_unix = Image
 
 module Thread = struct
-  module IO = struct
-    type 'a t = Thread.t list * 'a
-  end
-
   module Filter = struct
     include Bimage.Filter.Make (struct
-      type 'a io = 'a IO.t
+      type 'a io = 'a
 
-      let bind (t, x) (f : unit -> unit io) =
-        let t', x = f x in
-        (t @ t', x)
+      let threads = Hashtbl.create 12
+
+      let bind x (f : unit -> unit io) =
+        let x = f x in
+        x
 
       let detach f x =
-        let t' = Thread.create f x in
-        ([ t' ], ())
+        let t = Thread.create f x in
+        Hashtbl.replace threads (Thread.id t) t
 
-      let wrap f = ([], f ())
+      let wrap f = f ()
 
-      let wait (t, ()) = List.iter Thread.join t
+      let wait () = Hashtbl.iter (fun _ v -> Thread.join v) threads
     end)
   end
 end

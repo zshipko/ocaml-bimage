@@ -64,21 +64,25 @@ let func i f = Func (i, f)
 
 let map f x = Func (x, fun _ _ a -> f a)
 
+let pixel_map f (px : 'c Pixel.t t) = map (fun px -> pixel @@ Pixel.map f px) px
+
 let pair a b = Pair (a, b)
 
 let map2 f a b = Func (pair a b, fun _ _ (a, b) -> f a b)
 
-let type_min input = Type_min input
+let default_input = function Some x -> x | None -> 0
 
-let type_max input = Type_max input
+let type_min ?input () = Type_min (default_input input)
 
-let channels input = Channels input
+let type_max ?input () = Type_max (default_input input)
+
+let channels ?input () = Channels (default_input input)
 
 let value x = Value x
 
-let shape i = Shape i
+let shape ?input () = Shape (default_input input)
 
-let input i x y = Input (i, x, y)
+let input ?index x y = Input (default_input index, x, y)
 
 let fadd a b = Fadd (a, b)
 
@@ -104,31 +108,38 @@ let not_ a = Not a
 
 let cond v a b = Cond (v, a, b)
 
-let blend a b : pixel t =
+let blend ?input0 ?input1 () : pixel t =
+  let a = Input.or_default input0 in
+  let b = match input1 with Some x -> x | None -> 1 in
   map
     (fun (a, b) -> Pixel Pixel.Infix.((a + b) /@ 2.))
-    (pair (input a X Y) (input b X Y))
+    (pair (input ~index:a X Y) (input ~index:b X Y))
 
-let min a b : pixel t =
+let min ?input0 ?input1 () : pixel t =
+  let a = Input.or_default input0 in
+  let b = match input1 with Some x -> x | None -> 1 in
   map
     (fun (a, b) -> if a < b then Pixel a else Pixel b)
-    (pair (input a X Y) (input b X Y))
+    (pair (input ~index:a X Y) (input ~index:b X Y))
 
-let max a b : pixel t =
+let max ?input0 ?input1 () : pixel t =
+  let a = Input.or_default input0 in
+  let b = match input1 with Some x -> x | None -> 1 in
   map
     (fun (a, b) -> if a > b then Pixel a else Pixel b)
-    (pair (input a X Y) (input b X Y))
+    (pair (input ~index:a X Y) (input ~index:b X Y))
 
-let brightness i scale : pixel t =
+let brightness ?input:i scale : pixel t =
   func
-    (pair scale (input i X Y))
+    (pair scale (input ?index:i X Y))
     (fun _ _ (scale, x) -> Pixel Pixel.Infix.(x *@ scale))
 
-let grayscale f : pixel t =
-  func (input f X Y) (fun _ _ px ->
-      Pixel (Pixel.from_rgb Color.gray px |> Pixel.to_rgb))
+let grayscale ?input:i () : pixel t =
+  func (input ?index:i X Y) (fun _ _ px ->
+      Pixel (Pixel.of_rgb Color.gray px |> Pixel.to_rgb))
 
-let color f : pixel t = func (input f X Y) (fun _ _ px -> Pixel px)
+let color ?input:i () : pixel t =
+  func (input ?index:i X Y) (fun _ _ px -> Pixel px)
 
 module Infix = struct
   let ( && ) a b = And (a, b)
@@ -178,7 +189,7 @@ module Infix = struct
   end
 end
 
-let kernel_3x3 input kernel : pixel t =
+let kernel_3x3 ?input kernel : pixel t =
   let k00 = Kernel.get kernel 0 0 |> float in
   let k10 = Kernel.get kernel 1 0 |> float in
   let k20 = Kernel.get kernel 2 0 |> float in
@@ -188,7 +199,7 @@ let kernel_3x3 input kernel : pixel t =
   let k02 = Kernel.get kernel 0 2 |> float in
   let k12 = Kernel.get kernel 1 2 |> float in
   let k22 = Kernel.get kernel 2 2 |> float in
-  let get a b = Input (input, Iadd (X, int a), Iadd (Y, int b)) in
+  let get a b = Input (default_input input, Iadd (X, int a), Iadd (Y, int b)) in
   let open Infix.Pixel in
   map
     (fun px -> Pixel (Pixel.clamp px))
@@ -202,12 +213,12 @@ let kernel_3x3 input kernel : pixel t =
     + (get 1 0 *@ k12)
     + (get 1 1 *@ k22) )
 
-let kernel input k =
+let kernel ?input k =
   let rows = Kernel.rows k in
   let cols = Kernel.cols k in
   let r2 = rows / 2 in
   let c2 = cols / 2 in
-  if rows = 3 && cols = 3 then kernel_3x3 input k
+  if rows = 3 && cols = 3 then kernel_3x3 ?input k
   else
     func (value k) (fun x y k ->
         let f = ref (Pixel (Pixel.empty Color.rgb)) in
@@ -215,42 +226,47 @@ let kernel input k =
           let kr = k.(ky + r2) in
           for kx = -c2 to c2 do
             let idx = kx + c2 in
-            let input = Infix.(Input (input, int x + int kx, int y + int ky)) in
+            let input =
+              Infix.(
+                Input (default_input input, int x + int kx, int y + int ky))
+            in
             f := Infix.Pixel.(!f + (input *@ float kr.(idx)))
           done
         done;
         map (fun px -> Pixel (Pixel.clamp px)) !f)
 
-let join_kernel input fn k k2 = Kernel (input, Kernel.join fn k k2)
+let combine_kernel ?input fn k k2 =
+  Kernel (default_input input, Kernel.combine fn k k2)
 
-let transform input t =
+let transform ?input t =
+  let input = default_input input in
   func (value t) (fun x y t ->
       let x = Float.of_int x in
       let y = Float.of_int y in
       let x', y' = Transform.transform t (x, y) in
       let x0', y0' = (Float.to_int (ceil x'), Float.to_int (ceil y')) in
       let x1', y1' = (Float.to_int (floor x'), Float.to_int (floor y')) in
-      func (shape input) (fun _ _ (w, h, _) ->
+      func (shape ~input ()) (fun _ _ (w, h, _) ->
           if x0' >= 0 && y0' >= 0 && x0' < w && y0' < h then
             let open Infix.Pixel in
             (Input (input, int x0', int y0') + Input (input, int x1', int y1'))
             /@ float 2.0
           else pixel (Pixel.empty Color.rgb)))
 
-let rotate input ?center angle =
+let rotate ?input ?center angle =
   let r = Transform.rotate ?center angle in
-  transform input r
+  transform ?input r
 
-let scale input x y =
+let scale ?input x y =
   let s = Transform.scale x y in
-  transform input s
+  transform ?input s
 
 let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
  fun x y expr inputs ->
    match expr with
    | Option None -> None
    | Option (Some a) -> Some (prepare x y a inputs)
-   | Kernel (i, k) -> prepare x y (kernel i k) inputs
+   | Kernel (i, k) -> prepare x y (kernel ~input:i k) inputs
    | Input (input, x', y') ->
        let x' = prepare x y x' inputs in
        let y' = prepare x y y' inputs in
@@ -375,7 +391,7 @@ let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
        let (Any input) = inputs.(index) in
        Image.shape input
 
-let op ?(x = ref 0) ?(y = ref 0) (body : pixel t) inputs x' y' =
+let compute_at ?(x = ref 0) ?(y = ref 0) (body : pixel t) inputs x' y' =
   x := x';
   y := y';
   prepare x y body inputs
@@ -391,3 +407,16 @@ let cos a = Fcos a
 let tan a = Ftan a
 
 let pi () = float Util.pi
+
+let sobel_x ?input () = kernel_3x3 ?input Kernel.sobel_x
+
+let sobel_y ?input () = kernel_3x3 ?input Kernel.sobel_y
+
+let[@inline] sobel ?input () =
+  kernel ?input (Kernel.combine ( +. ) Kernel.sobel_x Kernel.sobel_y)
+
+let gaussian_blur ?std ?input n = kernel ?input (Kernel.gaussian ?std n)
+
+let invert ?input () =
+  let input = Input (default_input input, X, Y) in
+  map (fun px -> Pixel.map_inplace (fun i -> 1.0 -. i) px |> pixel) input

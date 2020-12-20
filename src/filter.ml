@@ -3,7 +3,7 @@ module type FILTER = sig
 
   type ('a, 'b, 'c) t = output:('a, 'b, 'c) Image.t -> Input.t -> unit io
 
-  val join : ('a, 'b, 'c) t list -> ('a, 'b, 'c) t
+  val join : Expr.pixel Expr.t list -> ('a, 'b, 'c) t
 
   val v : ?x:int ref -> ?y:int ref -> Expr.pixel Expr.t -> ('a, 'b, 'c) t
 
@@ -53,18 +53,6 @@ end) : FILTER with type 'a io = 'a S.io = struct
 
   type ('a, 'b, 'c) t = output:('a, 'b, 'c) Image.t -> Input.t -> unit io
 
-  let join filters : ('a, 'b, 'c) t =
-    let filters = Array.of_list filters in
-    fun ~output (inputs : Input.t) ->
-      let rec inner i =
-        if i >= Array.length filters then ()
-        else
-          let () = if i > 0 then inputs.(0) <- Image.any (Image.copy output) in
-          S.wait (filters.(i) ~output inputs);
-          inner (i + 1)
-      in
-      S.wrap (fun () -> inner 0)
-
   let v ?(x = ref 0) ?(y = ref 0) expr : ('a, 'b, 'c) t =
     let op = Expr.compute_at expr in
     fun ~output inputs ->
@@ -89,6 +77,18 @@ end) : FILTER with type 'a io = 'a S.io = struct
               inner ())
       in
       inner ()
+
+  let join (filters : Expr.pixel Expr.t list) : ('a, 'b, 'c) t =
+    let filters = Array.of_list filters in
+    fun ~output (inputs : Input.t) ->
+      let rec inner i =
+        if i >= Array.length filters then ()
+        else
+          let () = if i > 0 then inputs.(0) <- Image.any (Image.copy output) in
+          let () = S.wait (v filters.(i) ~output inputs) in
+          inner (i + 1)
+      in
+      S.wrap (fun () -> inner 0)
 
   let run ~output inputs t =
     S.wait (t ~output inputs);

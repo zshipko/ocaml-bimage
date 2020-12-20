@@ -100,7 +100,7 @@ let test_blur_grayscale ~output input =
       [| [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |]; [| 3.0; 3.0; 3.0 |] |]
   in
   let h = Expr.kernel_3x3 b in
-  Filter.(join [ v h; v Expr.(grayscale ()) ])
+  Filter.(join [ h; Expr.(grayscale ()) ])
   |> Filter.run ~output [| Image.any input |]
 
 let test_grayscale_invert ~output input =

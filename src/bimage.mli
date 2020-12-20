@@ -13,14 +13,16 @@ open Bigarray
 
 module type TYPE = Type.TYPE
 
+module type COLOR = Color.COLOR
+
+module type FILTER = Filter.FILTER
+
 exception Unsupported
 (** Raised when attempting to use Bigarray types other than u8, u16, f32, f64, i32, i64*)
 
 module Error = Error
 module Angle = Util.Angle
 module Point = Util.Point
-
-module type COLOR = Color.COLOR
 
 module Color = Color
 (** Color contains methods for creating and inspecting color types *)
@@ -82,13 +84,13 @@ val f32 : (float, f32) Type.t
 val f64 : (float, f64) Type.t
 
 module Data = Data
-(** The Data module defines several operations on one dimensional image data *)
+(** [Data] provides some extra operations for [Bigarray.Array1] *)
 
 module Pixel = Pixel
-(** The pixel module defines operations on individual pixels *)
+(** [Pixel] defines operations on individual pixels, which are stored as [floatarray] *)
 
 module Image = Image
-(** The Image module defines an interface for manipulating images *)
+(** [Image] defines an image type and functions that manipulate images directly *)
 
 type 'c image_u8 = (int, u8, 'c) Image.t
 
@@ -103,36 +105,36 @@ type 'c image_f32 = (float, f32, 'c) Image.t
 type 'c image_f64 = (float, f64, 'c) Image.t
 
 module Kernel = Kernel
-(** Kernels are used for filtering images using convolution *)
-
-module Input = Input
-(** Defines the type used as input to operations *)
+(** Convolution kernels *)
 
 module Transform = Transform
 
-module Expr = Expr
-(** Expr implements an operation combinator which can be used to build operations from low-level functions *)
+module Input = Input
+(** [Input] contains methods for working with [Expr]/[Filter] inputs *)
 
-module type FILTER = Filter.FILTER
+module Expr = Expr
+(** [Expr] define a combinator which can be used to build filters *)
 
 module Filter = Filter
+(** [Filter] contains functions that can be used to execute expressions *)
 
 type ('a, 'b, 'c) filter = output:('a, 'b, 'c) Image.t -> Input.t -> unit
 
 module Hash = Hash
+(** Perceptual hashing *)
 
 (*---------------------------------------------------------------------------
-   Copyright (c) 2018 Zach Shipko
+  Copyright (c) 2018 Zach Shipko
 
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
 
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   ---------------------------------------------------------------------------*)

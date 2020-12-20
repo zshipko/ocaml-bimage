@@ -3,7 +3,7 @@ module type FILTER = sig
 
   type ('a, 'b, 'c) t = output:('a, 'b, 'c) Image.t -> Input.t -> unit io
 
-  val join : ('a, 'b, 'c) t list -> ('a, 'b, 'c) t
+  val join : Expr.pixel Expr.t list -> ('a, 'b, 'c) t
 
   val v : ?x:int ref -> ?y:int ref -> Expr.pixel Expr.t -> ('a, 'b, 'c) t
 

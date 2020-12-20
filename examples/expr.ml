@@ -17,4 +17,4 @@ let avg_times_3 = Expr.Infix.Pixel.(avg *@ float 3.0)
 
 let () =
   let dest = Image.like a in
-  Filter.v avg |> Filter.run ~output:dest [| Image.any a |]
+  ignore (Filter.v avg |> Filter.run ~output:dest [| Image.any a |])

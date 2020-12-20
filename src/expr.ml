@@ -1,30 +1,17 @@
 type pixel = Color.rgb Pixel.t
 
+type image = Image.any
+
 type 'a t =
   | Kernel : Input.index * Kernel.t -> pixel t
+  | Transform : Input.index * Transform.t -> pixel t
+  | Image : Input.index -> image t
   | Input : Input.index * int t * int t -> pixel t
   | X : int t
   | Y : int t
   | Int : int -> int t
   | Float : float -> float t
   | Bool : bool -> bool t
-  | Float_of_int : int t -> float t
-  | Int_of_float : float t -> int t
-  | Fadd : float t * float t -> float t
-  | Fsub : float t * float t -> float t
-  | Fmul : float t * float t -> float t
-  | Fdiv : float t * float t -> float t
-  | Fpow : float t * float t -> float t
-  | Fsqrt : float t -> float t
-  | Fsin : float t -> float t
-  | Fcos : float t -> float t
-  | Ftan : float t -> float t
-  | Fmod : float t * float t -> float t
-  | Iadd : int t * int t -> int t
-  | Isub : int t * int t -> int t
-  | Imul : int t * int t -> int t
-  | Idiv : int t * int t -> int t
-  | Imod : int t * int t -> int t
   | Gt : 'a t * 'a t -> bool t
   | Eq : 'a t * 'a t -> bool t
   | Lt : 'a t * 'a t -> bool t
@@ -33,20 +20,15 @@ type 'a t =
   | Not : bool t -> bool t
   | Cond : bool t * 'a t * 'a t -> 'a t
   | Func : 'b t * (int -> int -> 'b -> 'a t) -> 'a t
-  | Pixel : 'b Pixel.t -> Color.rgb Pixel.t t
+  | Pixel : 'b Pixel.t -> pixel t
+  | Pixel_get : pixel t * int t -> float t
+  | Pixel_set : pixel t * int t * float t -> pixel t
   | Value : 'a -> 'a t
   | Pair : 'a t * 'b t -> ('a * 'b) t
-  | Type_min : Input.index -> float t
-  | Type_max : Input.index -> float t
-  | Channels : Input.index -> int t
   | Shape : Input.index -> (int * int * int) t
   | Option : 'a t option -> 'a option t
 
 let int i = Int i
-
-let int_of_float x = Int_of_float x
-
-let float_of_int x = Float_of_int x
 
 let float f = Float f
 
@@ -60,23 +42,33 @@ let none = Option None
 
 let pixel x = Pixel x
 
+let get px i = Pixel_get (px, i)
+
+let set px i f = Pixel_set (px, i, f)
+
+let set_rgb px r g b =
+  Pixel_set (Pixel_set (Pixel_set (px, int 0, r), int 1, g), int 2, b)
+
 let func i f = Func (i, f)
 
 let map f x = Func (x, fun _ _ a -> f a)
-
-let pixel_map f (px : 'c Pixel.t t) = map (fun px -> pixel @@ Pixel.map f px) px
 
 let pair a b = Pair (a, b)
 
 let map2 f a b = Func (pair a b, fun _ _ (a, b) -> f a b)
 
+let int_of_float x = map (fun x -> Int (int_of_float x)) x
+
+let float_of_int x = map (fun x -> Float (float_of_int x)) x
+
+let pixel_map f (px : 'c Pixel.t t) = map (fun px -> pixel @@ Pixel.map f px) px
+
 let default_input = function Some x -> x | None -> 0
 
-let type_min ?input () = Type_min (default_input input)
+let image ?input () = Image (default_input input)
 
-let type_max ?input () = Type_max (default_input input)
-
-let channels ?input () = Channels (default_input input)
+let channels ?input () =
+  map (fun (_, _, c) -> Int c) (Shape (default_input input))
 
 let value x = Value x
 
@@ -84,21 +76,21 @@ let shape ?input () = Shape (default_input input)
 
 let input ?index x y = Input (default_input index, x, y)
 
-let fadd a b = Fadd (a, b)
+let fadd a b = map2 (fun a b -> a +. b |> float) a b
 
-let fsub a b = Fsub (a, b)
+let fsub a b = map2 (fun a b -> a -. b |> float) a b
 
-let fdiv a b = Fdiv (a, b)
+let fdiv a b = map2 (fun a b -> a /. b |> float) a b
 
-let fmul a b = Fmul (a, b)
+let fmul a b = map2 (fun a b -> a *. b |> float) a b
 
-let iadd a b = Iadd (a, b)
+let iadd a b = map2 (fun a b -> a + b |> int) a b
 
-let isub a b = Isub (a, b)
+let isub a b = map2 (fun a b -> a - b |> int) a b
 
-let idiv a b = Idiv (a, b)
+let idiv a b = map2 (fun a b -> a / b |> int) a b
 
-let imul a b = Imul (a, b)
+let imul a b = map2 (fun a b -> a * b |> int) a b
 
 let and_ a b = And (a, b)
 
@@ -107,6 +99,18 @@ let or_ a b = Or (a, b)
 let not_ a = Not a
 
 let cond v a b = Cond (v, a, b)
+
+let pow a b = map2 (fun a b -> a ** b |> float) a b
+
+let sqrt a = map (fun a -> Float.sqrt a |> float) a
+
+let sin a = map (fun a -> Float.sin a |> float) a
+
+let cos a = map (fun a -> Float.cos a |> float) a
+
+let tan a = map (fun a -> Float.tan a |> float) a
+
+let pi () = float Util.pi
 
 let blend ?input0 ?input1 () : pixel t =
   let a = Input.or_default input0 in
@@ -141,30 +145,53 @@ let grayscale ?input:i () : pixel t =
 let color ?input:i () : pixel t =
   func (input ?index:i X Y) (fun _ _ px -> Pixel px)
 
+let combine_kernel ?input fn k k2 =
+  map2 (fun k k2 -> Kernel (default_input input, Kernel.combine fn k k2)) k k2
+
 module Infix = struct
   let ( && ) a b = And (a, b)
 
   let ( || ) a b = Or (a, b)
 
-  let ( + ) a b = Iadd (a, b)
+  let ( + ) a b = iadd a b
 
-  let ( - ) a b = Isub (a, b)
+  let ( - ) a b = isub a b
 
-  let ( * ) a b = Imul (a, b)
+  let ( * ) a b = imul a b
 
-  let ( / ) a b = Idiv (a, b)
+  let ( / ) a b = idiv a b
 
-  let ( +. ) a b = Fadd (a, b)
+  let ( +. ) a b = fadd a b
 
-  let ( -. ) a b = Fsub (a, b)
+  let ( -. ) a b = fsub a b
 
-  let ( *. ) a b = Fmul (a, b)
+  let ( *. ) a b = fmul a b
 
-  let ( /. ) a b = Fdiv (a, b)
+  let ( /. ) a b = fdiv a b
 
-  let ( ** ) a b = Fpow (a, b)
+  let ( ** ) a b = pow a b
 
   let ( ?> ) a b = map b a
+
+  module Kernel = struct
+    let ( + ) a b = combine_kernel Float.add a b
+
+    let ( - ) a b = combine_kernel Float.sub a b
+
+    let ( * ) a b = combine_kernel Float.mul a b
+
+    let ( / ) a b = combine_kernel Float.div a b
+  end
+
+  module Transform = struct
+    let ( + ) a b = map2 (fun a b -> Transform (0, Transform.add a b)) a b
+
+    let ( - ) a b = map2 (fun a b -> Transform (0, Transform.sub a b)) a b
+
+    let ( * ) a b = map2 (fun a b -> Transform (0, Transform.mul a b)) a b
+
+    let ( / ) a b = map2 (fun a b -> Transform (0, Transform.div a b)) a b
+  end
 
   module Pixel = struct
     let ( + ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a + b)) a b
@@ -199,7 +226,7 @@ let kernel_3x3 ?input kernel : pixel t =
   let k02 = Kernel.get kernel 0 2 |> float in
   let k12 = Kernel.get kernel 1 2 |> float in
   let k22 = Kernel.get kernel 2 2 |> float in
-  let get a b = Input (default_input input, Iadd (X, int a), Iadd (Y, int b)) in
+  let get a b = Input (default_input input, iadd X (int a), iadd Y (int b)) in
   let open Infix.Pixel in
   map
     (fun px -> Pixel (Pixel.clamp px))
@@ -235,9 +262,6 @@ let kernel ?input k =
         done;
         map (fun px -> Pixel (Pixel.clamp px)) !f)
 
-let combine_kernel ?input fn k k2 =
-  Kernel (default_input input, Kernel.combine fn k k2)
-
 let transform ?input t =
   let input = default_input input in
   func (value t) (fun x y t ->
@@ -257,9 +281,58 @@ let rotate ?input ?center angle =
   let r = Transform.rotate ?center angle in
   transform ?input r
 
+let rotate_90 ?input () =
+  let input = default_input input in
+  map
+    (fun i ->
+      let (Image.Any image) = i in
+      let open Image in
+      let open Util in
+      let center =
+        (Float.of_int image.height /. 2., Float.of_int image.height /. 2.)
+      in
+      rotate ~input ~center (Angle.of_degrees 90.))
+    (Image input)
+
+let rotate_180 ?input () =
+  let input = default_input input in
+  map
+    (fun i ->
+      let (Image.Any image) = i in
+      let open Image in
+      let open Util in
+      let center =
+        (Float.of_int image.width /. 2., Float.of_int image.height /. 2.)
+      in
+      rotate ~input ~center (Angle.of_degrees 180.))
+    (Image input)
+
+let rotate_270 ?input () =
+  let input = default_input input in
+  map
+    (fun i ->
+      let (Image.Any image) = i in
+      let open Image in
+      let open Util in
+      let center =
+        (Float.of_int image.width /. 2., Float.of_int image.width /. 2.)
+      in
+      rotate ~center (Angle.of_degrees 270.) ~input)
+    (Image input)
+
 let scale ?input x y =
   let s = Transform.scale x y in
   transform ?input s
+
+let resize ?input width height =
+  let input = default_input input in
+  map
+    (fun input ->
+      let (Image.Any image) = input in
+      let x = Float.of_int width /. Float.of_int image.width in
+      let y = Float.of_int height /. Float.of_int image.height in
+      scale x y)
+    (Image input)
 
 let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
  fun x y expr inputs ->
@@ -267,6 +340,8 @@ let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
    | Option None -> None
    | Option (Some a) -> Some (prepare x y a inputs)
    | Kernel (i, k) -> prepare x y (kernel ~input:i k) inputs
+   | Transform (i, t) -> prepare x y (transform ~input:i t) inputs
+   | Image input -> Input.get inputs input
    | Input (input, x', y') ->
        let x' = prepare x y x' inputs in
        let y' = prepare x y y' inputs in
@@ -278,68 +353,6 @@ let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
    | Bool b -> b
    | Int i -> i
    | Float f -> f
-   | Float_of_int i ->
-       let a = prepare x y i inputs in
-       Float.of_int a
-   | Int_of_float f ->
-       let a = prepare x y f inputs in
-       Float.to_int a
-   | Fadd (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a +. b
-   | Fsub (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a -. b
-   | Fmul (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a *. b
-   | Fdiv (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a /. b
-   | Fpow (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a ** b
-   | Fsqrt a ->
-       let a = prepare x y a inputs in
-       sqrt a
-   | Fsin a ->
-       let a = prepare x y a inputs in
-       sin a
-   | Fcos a ->
-       let a = prepare x y a inputs in
-       cos a
-   | Ftan a ->
-       let a = prepare x y a inputs in
-       tan a
-   | Fmod (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       mod_float a b
-   | Iadd (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a + b
-   | Isub (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a - b
-   | Imul (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a * b
-   | Idiv (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a / b
-   | Imod (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a mod b
    | Gt (a, b) ->
        let a = prepare x y a inputs in
        let b = prepare x y b inputs in
@@ -373,40 +386,34 @@ let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
        let r = func x' y' f in
        prepare x y r inputs
    | Pixel px -> Pixel.to_rgb px
+   | Pixel_get (px, i) ->
+       let px = prepare x y px inputs in
+       let i = prepare x y i inputs in
+       Pixel.get px i
+   | Pixel_set (px, i, f) ->
+       let px = prepare x y px inputs in
+       let i = prepare x y i inputs in
+       let f = prepare x y f inputs in
+       Pixel.set px i f;
+       px
    | Value x -> x
    | Pair (a, b) ->
        let a = prepare x y a inputs in
        let b = prepare x y b inputs in
        (a, b)
-   | Type_min index ->
-       let (Any input) = inputs.(index) in
-       Image.ty input |> Type.min_f
-   | Type_max index ->
-       let (Any input) = inputs.(index) in
-       Image.ty input |> Type.max_f
-   | Channels index ->
-       let (Any input) = inputs.(index) in
-       Image.channels input
    | Shape index ->
        let (Any input) = inputs.(index) in
        Image.shape input
 
+let transform ?input t = Transform (default_input input, t)
+
+let kernel ?input k = Kernel (default_input input, k)
+
 let compute_at ?(x = ref 0) ?(y = ref 0) (body : pixel t) inputs x' y' =
+  (* TODO: add some form of caching *)
   x := x';
   y := y';
   prepare x y body inputs
-
-let pow a b = Fpow (a, b)
-
-let sqrt a = Fsqrt a
-
-let sin a = Fsin a
-
-let cos a = Fcos a
-
-let tan a = Ftan a
-
-let pi () = float Util.pi
 
 let sobel_x ?input () = kernel_3x3 ?input Kernel.sobel_x
 

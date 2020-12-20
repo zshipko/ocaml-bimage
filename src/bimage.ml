@@ -15,20 +15,27 @@ module Pixel = Pixel
 module Kernel = Kernel
 module Transform = Transform
 module Type = Type
-
-module Image = struct
-  include Image
-  include Impl
-end
-
+module Image = Image
 module Input = Input
 module Expr = Expr
 module Hash = Hash
 module Filter = Filter
 
+exception Unsupported
+
 type ('a, 'b, 'c) filter = ('a, 'b, 'c) Filter.t
 
-let ( ~@ ) = Input.index
+type 'c image_u8 = (int, u8, 'c) Image.t
+
+type 'c image_u16 = (int, u16, 'c) Image.t
+
+type 'c image_i32 = (int32, i32, 'c) Image.t
+
+type 'c image_i64 = (int64, i64, 'c) Image.t
+
+type 'c image_f32 = (float, f32, 'c) Image.t
+
+type 'c image_f64 = (float, f64, 'c) Image.t
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 Zach Shipko

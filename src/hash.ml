@@ -15,7 +15,10 @@ let pixel_avg px =
   Pixel.fold (fun a b -> a +. b) px 0.0 /. float_of_int (Pixel.length px)
 
 let phash im =
-  let im = Impl.resize 8 8 im in
+  let im =
+    Filter.run_expr (Expr.resize 8 8) ~width:8 ~height:8 im.Image.ty im.color
+      [| Image.any im |]
+  in
   let h = ref Int64.zero in
   let index = ref 0 in
   for j = 0 to 7 do

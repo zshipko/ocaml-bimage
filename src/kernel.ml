@@ -62,3 +62,13 @@ let gaussian ?(std = 1.4) n =
       a *. ((Util.e ** -1.) *. x))
     n n
   |> normalize
+
+module Infix = struct
+  let ( + ) = combine ( +. )
+
+  let ( - ) = combine ( -. )
+
+  let ( * ) = combine ( *. )
+
+  let ( / ) = combine ( /. )
+end

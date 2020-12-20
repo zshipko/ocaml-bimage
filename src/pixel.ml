@@ -78,13 +78,6 @@ let map ?ignore_alpha f (color, px) =
   let dest = (color, Float.Array.copy px) in
   map_inplace ?ignore_alpha f dest
 
-let convert_in_place ?ignore_alpha from to_ px =
-  map ?ignore_alpha
-    (fun x ->
-      let x = Type.normalize from x in
-      Type.denormalize to_ x)
-    px
-
 let clamp (x : 'a t) : 'a t =
   map_inplace ~ignore_alpha:false (fun x -> Type.clamp Type.f32 x) x
 

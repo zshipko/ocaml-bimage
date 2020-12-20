@@ -17,10 +17,6 @@ type t = {
 let v e00 e01 e02 e10 e11 e12 e20 e21 e22 =
   { e00; e10; e20; e01; e11; e21; e02; e12; e22 }
 
-module Point = struct
-  type t = float * float
-end
-
 let id = v 1. 0. 0. 0. 1. 0. 0. 0. 1.
 
 (* Functions *)
@@ -69,8 +65,6 @@ let smul a s =
     (s *. a.e12) (s *. a.e20) (s *. a.e21) (s *. a.e22)
 
 let transpose a = v a.e00 a.e10 a.e20 a.e01 a.e11 a.e21 a.e02 a.e12 a.e22
-
-let trace a = a.e00 +. a.e11 +. a.e22
 
 let det a =
   let m00 = (a.e11 *. a.e22) -. (a.e21 *. a.e12) in
@@ -125,3 +119,13 @@ let rotate ?center angle =
   rot2 ?pt:center angle
 
 let scale x y = scale2 (1.0 /. x, 1.0 /. y)
+
+module Infix = struct
+  let ( + ) = add
+
+  let ( - ) = sub
+
+  let ( * ) = mul
+
+  let ( / ) = div
+end

@@ -10,21 +10,7 @@ type ('a, 'b, 'c) t = {
 
 type any = Any : ('a, 'b, 'c) t -> any
 
-module type TYPE = sig
-  type t
-
-  type repr
-
-  type storage
-
-  val kind : (repr, storage) Bigarray.kind
-
-  val to_float : repr -> float
-
-  val of_float : float -> repr
-end
-
-let any image = Any image
+let any x = Any x
 
 let v (type color) ty (module C : COLOR with type t = color) width height =
   let channels = C.channels C.t in
@@ -86,10 +72,6 @@ let empty_data image = Data.v (ty image) (channels image)
 let[@inline] index image x y c =
   let channels = channels image in
   (y * image.width * channels) + (channels * x) + c
-
-let index_at image offs =
-  let channels = channels image in
-  Data.slice image.data ~offs ~length:channels
 
 let[@inline] get image x y c =
   let index = index image x y c in

@@ -7,7 +7,20 @@ module type FILTER = sig
 
   val v : ?x:int ref -> ?y:int ref -> Expr.pixel Expr.t -> ('a, 'b, 'c) t
 
-  val run : output:('a, 'b, 'c) Image.t -> Input.t -> ('a, 'b, 'c) t -> unit
+  val run :
+    output:('a, 'b, 'c) Image.t ->
+    Input.t ->
+    ('a, 'b, 'c) t ->
+    ('a, 'b, 'c) Image.t
+
+  val run_expr :
+    Expr.pixel Expr.t ->
+    ('a, 'b) Type.t ->
+    'c Color.t ->
+    ?width:int ->
+    ?height:int ->
+    Input.t ->
+    ('a, 'b, 'c) Image.t
 end
 
 module Make (S : sig
@@ -31,16 +44,13 @@ end) : FILTER with type 'a io = 'a S.io = struct
       let rec inner i =
         if i >= Array.length filters then ()
         else
-          let () =
-            if i > 0 then inputs.(0) <- Input.input (Image.copy output)
-          in
+          let () = if i > 0 then inputs.(0) <- Image.any (Image.copy output) in
           S.wait (filters.(i) ~output inputs);
           inner (i + 1)
       in
       S.wrap (fun () -> inner 0)
 
-  let v ?(x = ref 0) ?(y = ref 0) expr :
-      output:('a, 'b, 'c) Image.t -> Input.t -> unit io =
+  let v ?(x = ref 0) ?(y = ref 0) expr : ('a, 'b, 'c) t =
     let op = Expr.compute_at expr in
     fun ~output inputs ->
       let width, height, _channels = Image.shape output in
@@ -53,7 +63,7 @@ end) : FILTER with type 'a io = 'a S.io = struct
                (fun y ->
                  for x' = 0 to width - 1 do
                    x := x';
-                   let px = op x' y in
+                   let px = op x' y |> Pixel.of_rgb output.color in
                    Image.set_pixel output x' y px
                  done)
                !y)
@@ -65,7 +75,17 @@ end) : FILTER with type 'a io = 'a S.io = struct
       in
       inner ()
 
-  let run ~output inputs t = S.wait (t ~output inputs)
+  let run ~output inputs t =
+    S.wait (t ~output inputs);
+    output
+
+  let run_expr expr ty color ?width ?height inputs =
+    let (Image.Any first) = Input.get inputs 0 in
+    let w, h, _ = Image.shape first in
+    let width = match width with Some x -> x | None -> w in
+    let height = match height with Some x -> x | None -> h in
+    let output = Image.v ty color width height in
+    run ~output inputs (v expr)
 end
 
 include Make (struct

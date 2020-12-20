@@ -84,7 +84,7 @@ let test_gausssian_blur ~output input =
 
 let test_rotate_270 ~output input =
   let tmp =
-    Filter.run_expr (Expr.rotate_270 ()) input.Image.ty input.color
+    Filter.eval_expr (Expr.rotate_270 ()) input.Image.ty input.color
       ~width:input.height ~height:input.width
       [| Image.any input |]
   in
@@ -109,7 +109,7 @@ let test_grayscale_invert ~output input =
 let test_resize ~output input =
   let expr = Expr.resize 123 456 in
   let im =
-    Filter.run_expr expr ~width:123 ~height:456 input.Image.ty input.color
+    Filter.eval_expr expr ~width:123 ~height:456 input.Image.ty input.color
       [| Image.any input |]
   in
   Image.copy_to ~dest:output im

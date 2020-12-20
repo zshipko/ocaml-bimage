@@ -14,6 +14,21 @@ module type FILTER = sig
     ('a, 'b, 'c) Image.t
 
   val run_expr :
+    output:('a, 'b, 'c) Image.t ->
+    Input.t ->
+    Expr.pixel Expr.t ->
+    ('a, 'b, 'c) Image.t
+
+  val eval :
+    ('a, 'b, 'c) t ->
+    ('a, 'b) Type.t ->
+    'c Color.t ->
+    ?width:int ->
+    ?height:int ->
+    Input.t ->
+    ('a, 'b, 'c) Image.t
+
+  val eval_expr :
     Expr.pixel Expr.t ->
     ('a, 'b) Type.t ->
     'c Color.t ->
@@ -79,13 +94,18 @@ end) : FILTER with type 'a io = 'a S.io = struct
     S.wait (t ~output inputs);
     output
 
-  let run_expr expr ty color ?width ?height inputs =
+  let run_expr ~output inputs x = run ~output inputs (v x)
+
+  let eval t ty color ?width ?height inputs =
     let (Image.Any first) = Input.get inputs 0 in
     let w, h, _ = Image.shape first in
     let width = match width with Some x -> x | None -> w in
     let height = match height with Some x -> x | None -> h in
     let output = Image.v ty color width height in
-    run ~output inputs (v expr)
+    run ~output inputs t
+
+  let eval_expr expr ty color ?width ?height inputs =
+    eval (v expr) ty color ?width ?height inputs
 end
 
 include Make (struct

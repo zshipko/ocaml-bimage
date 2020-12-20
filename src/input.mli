@@ -11,3 +11,5 @@ val get : t -> index -> Image.any
 
 val shape : t -> int * int * int
 (** Get input shape *)
+
+val of_image : ('a, 'b, 'c) Image.t -> t

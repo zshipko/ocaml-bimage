@@ -16,7 +16,7 @@ let pixel_avg px =
 
 let phash im =
   let im =
-    Filter.run_expr (Expr.resize 8 8) ~width:8 ~height:8 im.Image.ty im.color
+    Filter.eval_expr (Expr.resize 8 8) ~width:8 ~height:8 im.Image.ty im.color
       [| Image.any im |]
   in
   let h = ref Int64.zero in

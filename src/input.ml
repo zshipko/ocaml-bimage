@@ -10,3 +10,5 @@ let get inputs i =
 let shape inputs =
   let (Image.Any a) = get inputs 0 in
   Image.shape a
+
+let of_image image = [| Image.any image |]

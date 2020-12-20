@@ -31,7 +31,9 @@ let of_data (type color) (module C : COLOR with type t = color) width height
   if width * height * channels <> Data.length data then Error.exc `Invalid_shape
   else { width; height; ty; color = (module C); data }
 
-let like image = v (Data.ty image.data) image.color image.width image.height
+let like image = v image.ty image.color image.width image.height
+
+let like_with_size image w h = v image.ty image.color w h
 
 let like_with_ty ty image = v ty image.color image.width image.height
 

@@ -34,6 +34,8 @@ val of_data : 'c Color.t -> int -> int -> ('a, 'b) Data.t -> ('a, 'b, 'c) t
 val like : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 (** [like img] creates a new image with the same dimensions, color and ty as [img] *)
 
+val like_with_size : ('a, 'b, 'c) t -> int -> int -> ('a, 'b, 'c) t
+
 val like_with_color : 'd Color.t -> ('a, 'b, 'c) t -> ('a, 'b, 'd) t
 (** Create an image with the same dimensions and type *)
 

@@ -4,10 +4,6 @@ let convert_command = ref "convert"
 
 let identify_command = ref "identify"
 
-let use_graphicsmagick () =
-  convert_command := "gm convert";
-  identify_command := "gm identify"
-
 let read (type color) ?(create = fun _name -> Image.v) t
     (module C : COLOR with type t = color) ?format filename =
   let format =

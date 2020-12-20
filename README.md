@@ -40,6 +40,21 @@ $ opam install bimage-unix
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.
 
+## Getting started
+
+- `Type.t`: Defines the type of an image: `u8`, `u16`, `f32`, `f64`, i32` or `i64`
+- `Color.t`: Defines the color of an image: `gray`, `rgb`, `rgba`, `xyz` and `yuv`
+  * It's possible to extend the color type by implementing [COLOR](https://github.com/zshipko/ocaml-bimage/blob/master/src/color.ml)
+- `Image.t`: Image type
+- `Kernel.t`: Convolution kernels
+- `Transform.t`: Image transformations
+- `Expr.t`: Expression combinator
+  * Building blocks for image processing filters
+- `Filter.t`: Executable image filter
+  * Makes `Expr.t` executable
+
+There is a corresponding file for each of these types in [src/](https://github.com/zshipko/ocaml-bimage/tree/master/src).
+
 ## Examples
 
 See [examples/](https://github.com/zshipko/ocaml-bimage/tree/master/examples) for usage examples

@@ -1,7 +1,7 @@
 open Bimage
 
 module Thread : sig
-  module Filter : sig
+  module Filter () : sig
     include Bimage.FILTER with type 'a io = 'a
   end
 end

@@ -57,7 +57,6 @@ end) : FILTER with type 'a io = 'a S.io = struct
     let op = Expr.compute_at expr in
     fun ~output inputs ->
       let width, height, _channels = Image.shape output in
-      let op = op inputs in
       let rec inner () =
         if !y >= height then S.wrap (fun () -> ())
         else
@@ -66,7 +65,7 @@ end) : FILTER with type 'a io = 'a S.io = struct
                (fun y ->
                  for x' = 0 to width - 1 do
                    x := x';
-                   let px = op x' y |> Pixel.of_rgb output.color in
+                   let px = op inputs x' y |> Pixel.of_rgb output.color in
                    Image.set_pixel output x' y px
                  done)
                !y)

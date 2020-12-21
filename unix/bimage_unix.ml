@@ -4,7 +4,7 @@ module Data_unix = Data
 module Image_unix = Image
 
 module Thread = struct
-  module Filter = struct
+  module Filter () = struct
     include Bimage.Filter.Make (struct
       type 'a io = 'a
 

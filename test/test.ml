@@ -6,7 +6,8 @@
 
 open Bimage
 open Bimage_unix
-module Filter = Thread.Filter
+
+module Filter = Thread.Filter ()
 
 exception Assert of string
 

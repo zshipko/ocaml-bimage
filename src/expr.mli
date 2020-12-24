@@ -178,6 +178,12 @@ val color : ?input:Input.index -> unit -> pixel t
 
 val invert : ?input:Input.index -> unit -> pixel t
 
+val gamma : ?input:Input.index -> float -> pixel t
+
+val gamma_log : ?input:Input.index -> ?gamma:float -> unit -> pixel t
+
+val gamma_lin : ?input:Input.index -> ?gamma:float -> unit -> pixel t
+
 module Infix : sig
   val ( && ) : bool t -> bool t -> bool t
 

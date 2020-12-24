@@ -168,6 +168,82 @@ module Yuv : COLOR with type t = [ `Yuv ] = struct
     yuv
 end
 
+module Hsv : COLOR with type t = [ `Hsv ] = struct
+  type t = [ `Hsv ]
+
+  let t = `Hsv
+
+  let name _ = "hsv"
+
+  let channels _ = 3
+
+  let has_alpha _ = false
+
+  let to_rgb _ (px : floatarray) =
+    let h = get px 0 in
+    let s = get px 1 in
+    let v = get px 2 in
+    if s = 0. then
+      let () = set px 0 v in
+      let () = set px 1 v in
+      let () = set px 2 v in
+      px
+    else
+      let var_h = h *. 6. in
+      let var_h = if var_h = 6. then 0.0 else var_h in
+      let var_i = Float.floor var_h in
+      let var_1 = v *. (1. -. s) in
+      let var_2 = v *. (1. -. (s *. (var_h -. var_i))) in
+      let var_3 = v *. (1. -. (s *. (1. -. (var_h -. var_i)))) in
+      let () =
+        if var_i = 0. then
+          let () = set px 0 v in
+          let () = set px 1 var_3 in
+          set px 2 var_1
+        else if var_i = 1. then
+          let () = set px 0 var_2 in
+          let () = set px 1 v in
+          set px 2 var_1
+        else if var_i = 2. then
+          let () = set px 0 var_1 in
+          let () = set px 1 v in
+          set px 2 var_3
+        else if var_i = 3. then
+          let () = set px 0 var_1 in
+          let () = set px 1 var_2 in
+          set px 2 v
+        else if var_i = 4. then
+          let () = set px 0 var_3 in
+          let () = set px 1 var_1 in
+          set px 2 v
+        else
+          let () = set px 0 v in
+          let () = set px 1 var_1 in
+          set px 2 var_2
+      in
+      px
+
+  let of_rgb _ (px : floatarray) =
+    let r = get px 0 in
+    let g = get px 1 in
+    let b = get px 2 in
+    let cmax = Float.max (Float.max r g) b in
+    let cmin = Float.min (Float.min r g) b in
+    let delta = cmax -. cmin in
+    let del_r = (((cmax -. r) /. 6.) +. (delta /. 2.)) /. delta in
+    let del_g = (((cmax -. g) /. 6.) +. (delta /. 2.)) /. delta in
+    let del_b = (((cmax -. b) /. 6.) +. (delta /. 2.)) /. delta in
+    set px 0
+      ( if cmin = cmax then 0.0
+      else if cmax = r then del_b -. del_g
+      else if cmax = g then (1. /. 3.) +. del_r -. del_b
+      else if cmax = b then (2. /. 3.) +. del_g -. del_r
+      else -1.0 );
+    set px 1 (if cmax = 0. then 0.0 else delta /. cmax);
+    set px 2 cmax;
+    px
+end
+
 type 'a t = (module COLOR with type t = 'a)
 
 type rgb = Rgb.t
@@ -180,6 +256,8 @@ type xyz = Xyz.t
 
 type yuv = Yuv.t
 
+type hsv = Hsv.t
+
 let rgb : rgb t = (module Rgb)
 
 let rgba : rgba t = (module Rgba)
@@ -189,6 +267,8 @@ let gray : gray t = (module Gray)
 let xyz : xyz t = (module Xyz)
 
 let yuv : yuv t = (module Yuv)
+
+let hsv : hsv t = (module Hsv)
 
 let channels (type a) (module C : COLOR with type t = a) = C.channels C.t
 

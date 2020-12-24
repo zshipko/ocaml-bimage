@@ -45,10 +45,10 @@ val channels : 'a t -> int
 val alpha_channel : 'a t -> int option
 (** Returns the index of the alpha channel if available *)
 
-type gray = Gray.t
+type gray = [ `Gray ]
 (** 1-channels gray color type *)
 
-type rgb = Rgb.t
+type rgb = [ `Rgb ]
 (** 3-channel RGB color type *)
 
 type xyz = [ `Xyz ]
@@ -57,8 +57,11 @@ type xyz = [ `Xyz ]
 type yuv = [ `Yuv ]
 (** 3-channel YUV color type *)
 
-type rgba = Rgba.t
+type rgba = [ `Rgba ]
 (** 4-channel RGBA image *)
+
+type hsv = [ `Hsv ]
+(** 3-channel HSV color type *)
 
 val gray : [ `Gray ] t
 (** Gray color *)
@@ -66,11 +69,14 @@ val gray : [ `Gray ] t
 val rgb : [ `Rgb ] t
 (** RGB color *)
 
-val xyz : xyz t
+val xyz : [ `Xyz ] t
 (** XYZ color *)
 
-val yuv : yuv t
+val yuv : [ `Yuv ] t
 (** YUV color *)
 
 val rgba : [ `Rgba ] t
 (** RGBA color *)
+
+val hsv : [ `Hsv ] t
+(** HSV color *)

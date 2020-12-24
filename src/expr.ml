@@ -427,3 +427,15 @@ let gaussian_blur ?std ?input n = kernel ?input (Kernel.gaussian ?std n)
 let invert ?input () =
   let input = Input (default_input input, X, Y) in
   map (fun px -> Pixel.map_inplace (fun i -> 1.0 -. i) px |> pixel) input
+
+let gamma ?input g =
+  let input = Input (default_input input, X, Y) in
+  pixel_map (fun i -> Float.pow i g) input
+
+let gamma_log ?input ?gamma:g () =
+  let g = match g with Some g -> g | None -> 2.2 in
+  gamma ?input (1.0 /. g)
+
+let gamma_lin ?input ?gamma:g () =
+  let g = match g with Some g -> g | None -> 2.2 in
+  gamma ?input g

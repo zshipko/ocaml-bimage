@@ -35,7 +35,7 @@ let image_eq a b =
             (Printf.sprintf "image: pixel %dx%d %d=%d" x y px.{i} px'.{i})
             px.{i} px'.{i}
         done)
-      a )
+      a)
 
 let test name f ~input ~output =
   ( name,

@@ -29,8 +29,8 @@ module Texture = struct
     with Failure s when s = "Invalid image type" ->
       raise
         (Invalid_argument
-           ( "Invalid image type: " ^ Type.name image.ty ^ ", "
-           ^ Color.name image.color ))
+           ("Invalid image type: " ^ Type.name image.ty ^ ", "
+          ^ Color.name image.color))
 
   let draw t window image =
     let () = GLFW.makeContextCurrent ~window:(Some window) in
@@ -154,7 +154,7 @@ let show_all ?(update_in_background = false) windows' =
             then Some v
             else (
               if update_in_background then Window.update v;
-              None ))
+              None))
       windows None
   in
   while not (should_close ()) do

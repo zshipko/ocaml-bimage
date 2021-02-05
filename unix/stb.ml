@@ -24,33 +24,33 @@ let free = foreign "free" (ptr void @-> returning void)
 
 let stbi_load_u8 =
   foreign ~release_runtime_lock:true "stbi_load"
-    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
-    @-> returning (ptr uint8_t) )
+    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr uint8_t))
 
 let stbi_load_u16 =
   foreign ~release_runtime_lock:true "stbi_load_16"
-    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
-    @-> returning (ptr uint16_t) )
+    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr uint16_t))
 
 let stbi_load_u16_from_memory =
   foreign ~release_runtime_lock:true "stbi_load_16_from_memory"
-    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
-    @-> returning (ptr uint16_t) )
+    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr uint16_t))
 
 let stbi_load_u8_from_memory =
   foreign ~release_runtime_lock:true "stbi_load_from_memory"
-    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
-    @-> returning (ptr uint8_t) )
+    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr uint8_t))
 
 let stbi_load_f32_from_memory =
   foreign ~release_runtime_lock:true "stbi_loadf_from_memory"
-    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
-    @-> returning (ptr float) )
+    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr float))
 
 let stbi_load_f =
   foreign ~release_runtime_lock:true "stbi_loadf"
-    ( string @-> ptr int @-> ptr int @-> ptr int @-> int
-    @-> returning (ptr float) )
+    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    @-> returning (ptr float))
 
 let read (type color) f a b c (module C : Bimage.COLOR with type t = color)
     filename =

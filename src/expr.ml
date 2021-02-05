@@ -230,7 +230,7 @@ let kernel_3x3 ?input kernel : pixel t =
   let open Infix.Pixel in
   map
     (fun px -> Pixel (Pixel.clamp px))
-    ( (get (-1) (-1) *@ k00)
+    ((get (-1) (-1) *@ k00)
     + (get (-1) 0 *@ k10)
     + (get (-1) 1 *@ k20)
     + (get 0 (-1) *@ k01)
@@ -238,7 +238,7 @@ let kernel_3x3 ?input kernel : pixel t =
     + (get 0 1 *@ k21)
     + (get 1 (-1) *@ k02)
     + (get 1 0 *@ k12)
-    + (get 1 1 *@ k22) )
+    + (get 1 1 *@ k22))
 
 let kernel ?input k =
   let rows = Kernel.rows k in

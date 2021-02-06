@@ -12,7 +12,7 @@ depexts: [
   ["libopenimageio-dev"] {os-family = "debian"}
   ["openimageio-devel"] {os-distribution = "fedora"}
   ["openimageio-devel" "epel-release"] {os-distribution = "centos"}
-  ["openimageio-devel"] {os-family = "suse"}
+  ["OpenImageIO-devel"] {os-family = "suse"}
   ["openimageio-dev"] {os-distribution = "alpine"}
   ["openimageio"] {os = "macos" & os-distribution = "homebrew"}
   ["openimageio"] {os = "macos" & os-distribution = "macports"}

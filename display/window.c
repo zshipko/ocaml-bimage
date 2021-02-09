@@ -62,6 +62,8 @@ value bimage_create_texture(value width, value height, value has_alpha,
     } else if (texture_kind == GL_INT) {
       texture_internal = GL_RGBA32I;
     }
+  } else {
+    caml_failwith("Invalid image color");
   }
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

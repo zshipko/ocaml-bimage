@@ -42,7 +42,7 @@ instructions.
 
 ## Getting started
 
-- `Type.t`: Defines the type of an image: `u8`, `u16`, `f32`, `f64`, i32` or `i64`
+- `Type.t`: Defines the type of an image: `u8`, `u16`, `f32`, `f64`, `i32` or `i64`
 - `Color.t`: Defines the color of an image: `gray`, `rgb`, `rgba`, `xyz` and `yuv`
   * It's possible to extend the color type by implementing [COLOR](https://github.com/zshipko/ocaml-bimage/blob/master/src/color.ml)
 - `Image.t`: Image type

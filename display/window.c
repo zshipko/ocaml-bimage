@@ -8,12 +8,16 @@
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 
-value bimage_create_texture(value width, value height, value has_alpha,
+value bimage_create_texture(value width, value height, value channels,
                             value data) {
   glewExperimental = GL_TRUE;
   glewInit();
-  CAMLparam4(width, height, has_alpha, data);
+  CAMLparam4(width, height, channels, data);
   CAMLlocal1(tex);
+
+  if (Int_val(channels) != 3 && Int_val(channels) != 4) {
+    caml_failwith("Invalid image type");
+  }
 
   GLuint framebuffer = 0, texture_id = 0, texture_internal = 0,
          texture_kind = 0, texture_color = 0;
@@ -22,7 +26,7 @@ value bimage_create_texture(value width, value height, value has_alpha,
   glGenTextures(1, &texture_id);
   glBindTexture(GL_TEXTURE_2D, texture_id);
 
-  texture_color = Int_val(has_alpha) == 0 ? GL_RGB : GL_RGBA;
+  texture_color = Int_val(channels) == 3 ? GL_RGB : GL_RGBA;
 
   switch (Caml_ba_array_val(data)->flags & BIGARRAY_KIND_MASK) {
   case CAML_BA_UINT8:
@@ -63,7 +67,7 @@ value bimage_create_texture(value width, value height, value has_alpha,
       texture_internal = GL_RGBA32I;
     }
   } else {
-    caml_failwith("Invalid image color");
+    caml_failwith("Invalid image type");
   }
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -81,7 +85,7 @@ value bimage_create_texture(value width, value height, value has_alpha,
   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
   tex = caml_alloc(8, 0);
-  Store_field(tex, 0, has_alpha);
+  Store_field(tex, 0, channels);
   Store_field(tex, 1, Val_int(texture_id));
   Store_field(tex, 2, Val_int(texture_internal));
   Store_field(tex, 3, Val_int(texture_kind));

@@ -2,7 +2,7 @@ open Bimage
 
 module Texture = struct
   type t = {
-    has_alpha : bool;
+    channels : int;
     id : int;
     internal : int;
     kind : int;
@@ -13,7 +13,7 @@ module Texture = struct
   }
 
   external create :
-    int -> int -> bool -> ('a, 'b, Bigarray.c_layout) Bigarray.Array1.t -> t
+    int -> int -> int -> ('a, 'b, Bigarray.c_layout) Bigarray.Array1.t -> t
     = "bimage_create_texture"
 
   external draw :
@@ -24,12 +24,13 @@ module Texture = struct
     let () = GLFW.makeContextCurrent ~window:(Some window) in
     try
       create image.Image.width image.Image.height
-        (Color.has_alpha image.Image.color)
+        (Color.channels image.Image.color)
         image.Image.data
-    with Failure s when s = "Invalid image type" ->
+    with Failure _ ->
+      GLFW.destroyWindow ~window;
       raise
         (Invalid_argument
-           ("Invalid image type: " ^ Type.name image.ty ^ ", "
+           ("Invalid image type in Window.create: " ^ Type.name image.ty ^ ", "
           ^ Color.name image.color))
 
   let draw t window image =

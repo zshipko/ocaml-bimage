@@ -1,3 +1,7 @@
+# v0.3.1
+- More aggressive image type checking in `bimage-display` to fix possible
+  segmentation faults
+
 # v0.3.0
 - Overhaul of `Color` and `Type`
 - Added `FILTER`/`Filter`

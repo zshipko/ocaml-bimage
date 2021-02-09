@@ -1,6 +1,6 @@
 module Texture : sig
   type t = {
-    has_alpha : bool;
+    channels : int;
     id : int;
     internal : int;
     kind : int;
@@ -24,7 +24,7 @@ module Window : sig
     ?width:int ->
     ?height:int ->
     string ->
-    ('a, 'b, 'c) Bimage.Image.t ->
+    ('a, 'b, [< `Rgb | `Rgba ]) Bimage.Image.t ->
     'a ->
     'a t
 
@@ -42,7 +42,7 @@ module Window : sig
 
   val set_callback : 'a t -> ('a t -> unit) option -> unit
 
-  val replace_image : 'x t -> ('a, 'b, 'c) Bimage.Image.t -> unit
+  val replace_image : 'x t -> ('a, 'b, [< `Rgb | `Rgba ]) Bimage.Image.t -> unit
 
   val mouse_position : 'a t -> float -> float -> float * float
 
@@ -67,3 +67,4 @@ val show_all : ?update_in_background:bool -> 'a Window.t list -> unit
 
 val show :
   ?update_in_background:bool -> (string * Bimage.Image.any) list -> unit
+(** Note: [show] should only be called on RGB and RGBA images, otherwise an `Invalid_argument` exception will be raised *)

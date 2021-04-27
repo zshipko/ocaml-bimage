@@ -1,3 +1,6 @@
+# v0.4
+- Added `let*` and `let+` operators
+
 # v0.3.1
 - More aggressive image type checking in `bimage-display` to fix possible
   segmentation faults

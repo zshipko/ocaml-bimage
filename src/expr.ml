@@ -53,6 +53,10 @@ let func i f = Func (i, f)
 
 let map f x = Func (x, fun _ _ a -> f a)
 
+let ( let* ) x f = map f x
+
+let ( let+ ) x f = Value (f x)
+
 let pair a b = Pair (a, b)
 
 let map2 f a b = Func (pair a b, fun _ _ (a, b) -> f a b)

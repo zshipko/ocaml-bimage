@@ -122,6 +122,10 @@ val channels : ?input:Input.index -> unit -> int t
 
 val map : ('b -> 'a t) -> 'b t -> 'a t
 
+val ( let* ) : 'b t -> ('b -> 'a t) -> 'a t
+
+val ( let+ ) : 'b -> ('b -> 'a) -> 'a t
+
 val map2 : ('a -> 'b -> 'c t) -> 'a t -> 'b t -> 'c t
 
 val fadd : float t -> float t -> float t

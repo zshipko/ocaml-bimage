@@ -55,7 +55,7 @@ let map f x = Func (x, fun _ _ a -> f a)
 
 let ( let* ) x f = map f x
 
-let ( let+ ) x f = Value (f x)
+let ( let+ ) x f = map (fun x -> Value (f x)) x
 
 let pair a b = Pair (a, b)
 

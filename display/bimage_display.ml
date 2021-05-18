@@ -74,6 +74,8 @@ module Window = struct
     let (Image.Any image) = window.image in
     Texture.draw window.texture window.window image
 
+  let window { window; _ } = window
+
   let on_mouse_button f window =
     let g _window i b keys = f window i b keys in
     ignore (GLFW.setMouseButtonCallback ~window:window.window ~f:(Some g))

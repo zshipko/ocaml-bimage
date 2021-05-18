@@ -20,13 +20,15 @@ module Window : sig
   type 'a t
 
   val create :
-    ?callback:('a t -> unit) ->
+    ?callback:('c t -> unit) ->
     ?width:int ->
     ?height:int ->
     string ->
     ('a, 'b, [< `Rgb | `Rgba ]) Bimage.Image.t ->
-    'a ->
-    'a t
+    'c ->
+    'c t
+
+  val window : 'a t -> GLFW.window
 
   val show : 'a t -> unit
 

@@ -1,9 +1,7 @@
-# v0.4.1
-- Added `Window.window`
-- Fix type in `Bimage_display`
-
 # v0.4
 - Added `let*` and `let+` operators
+- Added `Window.window`
+- Fix type in `Bimage_display`
 
 # v0.3.1
 - More aggressive image type checking in `bimage-display` to fix possible

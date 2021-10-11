@@ -54,6 +54,8 @@ module Window = struct
     GLFW.windowHint ~hint:GLFW.ContextVersionMajor ~value:3;
     GLFW.windowHint ~hint:GLFW.ContextVersionMinor ~value:0
 
+  let image t = t.image
+
   let data t = t.data
 
   let set_data t data = t.data <- data

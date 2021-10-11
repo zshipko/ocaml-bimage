@@ -30,6 +30,8 @@ module Window : sig
 
   val window : 'a t -> GLFW.window
 
+  val image : 'a t -> Bimage.Image.any
+
   val show : 'a t -> unit
 
   val hide : 'a t -> unit
@@ -69,4 +71,3 @@ val show_all : ?update_in_background:bool -> 'a Window.t list -> unit
 
 val show :
   ?update_in_background:bool -> (string * Bimage.Image.any) list -> unit
-(** Note: [show] should only be called on RGB and RGBA images, otherwise an `Invalid_argument` exception will be raised *)

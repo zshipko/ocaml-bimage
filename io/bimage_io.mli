@@ -71,11 +71,9 @@ end
 
 val read :
   ('a, 'b) Bimage.Type.t ->
-  ([< `Rgba | `Rgb | `Gray ] as 'c) Bimage.Color.t ->
+  ([< `Rgb | `Gray ] as 'c) Bimage.Color.t ->
   string ->
   (('a, 'b, 'c) Bimage.Image.t, error) result
 
 val write :
-  string ->
-  ('a, 'b, [< `Rgba | `Rgb | `Gray ]) Bimage.Image.t ->
-  (unit, error) result
+  string -> ('a, 'b, [< `Rgb | `Gray ]) Bimage.Image.t -> (unit, error) result

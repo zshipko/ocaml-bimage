@@ -134,7 +134,7 @@ value bimage_draw_texture(value tex, value window_width, value window_height,
   glBindTexture(GL_TEXTURE_2D, 0);
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
-  glViewport(0, 0, 512, 512);
+  glViewport(0, 0, display_width, display_height);
   glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                          GL_TEXTURE_2D, texture_id, 0);
   glBlitFramebuffer(0, height, width, 0, x, y, x + display_width,

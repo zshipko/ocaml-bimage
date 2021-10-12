@@ -1,6 +1,12 @@
 (executables
  (names for_each expr compose)
+ (modules for_each expr compose)
  (libraries bimage-unix))
+
+(executables
+ (names display)
+ (modules display)
+ (libraries bimage-unix bimage-display))
 
 (alias
  (name examples)

@@ -57,6 +57,10 @@ val map2_inplace :
   ?ignore_alpha:bool -> (float -> float -> float) -> 'a t -> 'a t -> 'a t
 (** Executes a function over each item in two pixels *)
 
+val map2 :
+  ?ignore_alpha:bool -> (float -> float -> float) -> 'a t -> 'a t -> 'a t
+(** [map2 f x y] executes [f] for each value in [x] and [y], returning a new Pixel.t *)
+
 val fold : ?ignore_alpha:bool -> (float -> 'a -> 'a) -> 'b t -> 'a -> 'a
 (** Reduction over a pixel *)
 

@@ -78,6 +78,10 @@ let map ?ignore_alpha f (color, px) =
   let dest = (color, Float.Array.copy px) in
   map_inplace ?ignore_alpha f dest
 
+let map2 ?ignore_alpha f (color, px) b =
+  let dest = (color, Float.Array.copy px) in
+  map2_inplace ?ignore_alpha f dest b
+
 let clamp (x : 'a t) : 'a t =
   map_inplace ~ignore_alpha:false (fun x -> Type.clamp Type.f32 x) x
 

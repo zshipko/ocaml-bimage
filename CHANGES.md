@@ -1,3 +1,6 @@
+# Unrealeased
+- Removed `Bimage_unix.Thread.Filter`
+
 # v0.4
 - Added `let*` and `let+` operators
 - Added `Window.window`

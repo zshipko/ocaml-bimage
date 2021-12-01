@@ -1,11 +1,5 @@
 open Bimage
 
-module Thread : sig
-  module Filter () : sig
-    include Bimage.FILTER with type 'a io = 'a
-  end
-end
-
 module Stb = Stb
 (** Stb contains image I/O operationgs using stb_image *)
 

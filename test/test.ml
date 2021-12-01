@@ -7,8 +7,6 @@
 open Bimage
 open Bimage_unix
 
-module Filter = Thread.Filter ()
-
 exception Assert of string
 
 let check name a b =

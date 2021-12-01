@@ -100,7 +100,7 @@ let read_u8 color filename =
 
 let read_u8_from_memory color data =
   read_from_memory stbi_load_u8_from_memory uint8_t int Bimage.u8 color
-    (Bytes.to_string data)
+    (Bytes.unsafe_to_string data)
 
 let read_u16 color filename =
   read stbi_load_u16 uint16_t int Bimage.u16 color filename
@@ -110,7 +110,7 @@ let read_f32 color filename =
 
 let read_f32_from_memory color data =
   read_from_memory stbi_load_f32_from_memory float float Bimage.f32 color
-    (Bytes.to_string data)
+    (Bytes.unsafe_to_string data)
 
 let read kind color filename =
   match read_u16 color filename with

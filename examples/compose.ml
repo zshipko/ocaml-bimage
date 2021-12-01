@@ -1,6 +1,6 @@
 open Bimage
 open Bimage_unix
-open Expr
+open Bimage.Expr
 
 let _ =
   (* Load an image using ImageMagick *)
@@ -11,7 +11,7 @@ let _ =
   in
 
   (* Create an operation to convert to grayscale and subtract 0.5 *)
-  let f = Infix.Pixel.(grayscale () - pixel (Pixel.v gray [ 0.5 ])) in
+  let f = Infix.Pixel.(grayscale () - pixel (Pixel.v rgb [ 0.5; 0.5; 0.5 ])) in
 
   (* Create a destination image *)
   let dest = Image.like_with_color gray a in

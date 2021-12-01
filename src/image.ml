@@ -82,7 +82,7 @@ let[@inline] get image x y c =
 
 let[@inline] set image x y c v =
   let index = index image x y c in
-  image.data.{index} <- v
+  if index < Data.length image.data then image.data.{index} <- v
 
 let get_f image x y c =
   let ty = ty image in

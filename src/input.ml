@@ -2,6 +2,10 @@ type t = Image.any array
 
 type index = int
 
+let empty = [||]
+
+let append a image = Array.append a [| Image.any image |]
+
 let or_default = function Some x -> x | None -> 0
 
 let get inputs i =

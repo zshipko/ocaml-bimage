@@ -2,6 +2,10 @@ type t = Image.any array
 
 type index = int
 
+val empty : t
+
+val append : t -> ('a, 'b, 'c) Image.t -> t
+
 val or_default : index option -> index
 (** Returns the provided index, if not [None] or the default index *)
 

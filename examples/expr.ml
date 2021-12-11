@@ -12,7 +12,6 @@ let avg =
       Pixel px)
 
 let avg_minus_1 = Expr.Infix.Pixel.(avg -@ float 1.0)
-
 let avg_times_3 = Expr.Infix.Pixel.(avg *@ float 3.0)
 
 let () =

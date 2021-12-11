@@ -12,11 +12,8 @@ let from f rows cols =
   k
 
 let rows kernel = Array.length kernel
-
 let cols kernel = Array.length kernel.(0)
-
 let get kernel r c = kernel.(r).(c)
-
 let set kernel r c d = kernel.(r).(c) <- d
 
 let sum (kernel : t) =
@@ -65,10 +62,7 @@ let gaussian ?(std = 1.4) n =
 
 module Infix = struct
   let ( + ) = combine ( +. )
-
   let ( - ) = combine ( -. )
-
   let ( * ) = combine ( *. )
-
   let ( / ) = combine ( /. )
 end

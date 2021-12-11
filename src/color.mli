@@ -24,11 +24,8 @@ module Rgb : COLOR with type t = [ `Rgb ]
 (** Color contains methods for creating and inspecting color types *)
 
 module Rgba : COLOR with type t = [ `Rgba ]
-
 module Gray : COLOR with type t = [ `Gray ]
-
 module Xyz : COLOR with type t = [ `Xyz ]
-
 module Yuv : COLOR with type t = [ `Yuv ]
 
 type 'a t = (module COLOR with type t = 'a)

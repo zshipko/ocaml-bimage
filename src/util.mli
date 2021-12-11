@@ -1,5 +1,4 @@
 val pi : float
-
 val e : float
 
 (** The Angle type is used instead of a float whenever a function expects an angle

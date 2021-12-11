@@ -1,5 +1,4 @@
 type pixel = Color.rgb Pixel.t
-
 type image = Image.any
 
 type 'a t =
@@ -29,91 +28,53 @@ type 'a t =
   | Option : 'a t option -> 'a option t
 
 let int i = Int i
-
 let float f = Float f
-
 let x = X
-
 let y = Y
-
 let some x = Option (Some x)
-
 let none = Option None
-
 let pixel x = Pixel x
-
 let get px i = Pixel_get (px, i)
-
 let set px i f = Pixel_set (px, i, f)
 
 let set_rgb px r g b =
   Pixel_set (Pixel_set (Pixel_set (px, int 0, r), int 1, g), int 2, b)
 
 let func i f = Func (i, f)
-
 let map f x = Func (x, fun _ _ a -> f a)
-
 let ( let* ) x f = map f x
-
 let ( let+ ) x f = map (fun x -> Value (f x)) x
-
 let pair a b = Pair (a, b)
-
 let map2 f a b = Func (pair a b, fun _ _ (a, b) -> f a b)
-
 let int_of_float x = map (fun x -> Int (int_of_float x)) x
-
 let float_of_int x = map (fun x -> Float (float_of_int x)) x
-
 let pixel_map f (px : 'c Pixel.t t) = map (fun px -> pixel @@ Pixel.map f px) px
-
 let default_input = function Some x -> x | None -> 0
-
 let image ?input () = Image (default_input input)
 
 let channels ?input () =
   map (fun (_, _, c) -> Int c) (Shape (default_input input))
 
 let value x = Value x
-
 let shape ?input () = Shape (default_input input)
-
 let input ?index x y = Input (default_input index, x, y)
-
 let fadd a b = map2 (fun a b -> a +. b |> float) a b
-
 let fsub a b = map2 (fun a b -> a -. b |> float) a b
-
 let fdiv a b = map2 (fun a b -> a /. b |> float) a b
-
 let fmul a b = map2 (fun a b -> a *. b |> float) a b
-
 let iadd a b = map2 (fun a b -> a + b |> int) a b
-
 let isub a b = map2 (fun a b -> a - b |> int) a b
-
 let idiv a b = map2 (fun a b -> a / b |> int) a b
-
 let imul a b = map2 (fun a b -> a * b |> int) a b
-
 let and_ a b = And (a, b)
-
 let or_ a b = Or (a, b)
-
 let not_ a = Not a
-
 let cond v a b = Cond (v, a, b)
-
 let pow a b = map2 (fun a b -> a ** b |> float) a b
-
 let sqrt a = map (fun a -> Float.sqrt a |> float) a
-
 let sin a = map (fun a -> Float.sin a |> float) a
-
 let cos a = map (fun a -> Float.cos a |> float) a
-
 let tan a = map (fun a -> Float.tan a |> float) a
-
 let pi () = float Util.pi
 
 let blend ?input0 ?input1 () : pixel t =
@@ -154,56 +115,36 @@ let combine_kernel ?input fn k k2 =
 
 module Infix = struct
   let ( && ) a b = And (a, b)
-
   let ( || ) a b = Or (a, b)
-
   let ( + ) a b = iadd a b
-
   let ( - ) a b = isub a b
-
   let ( * ) a b = imul a b
-
   let ( / ) a b = idiv a b
-
   let ( +. ) a b = fadd a b
-
   let ( -. ) a b = fsub a b
-
   let ( *. ) a b = fmul a b
-
   let ( /. ) a b = fdiv a b
-
   let ( ** ) a b = pow a b
-
   let ( ?> ) a b = map b a
 
   module Kernel = struct
     let ( + ) a b = combine_kernel Float.add a b
-
     let ( - ) a b = combine_kernel Float.sub a b
-
     let ( * ) a b = combine_kernel Float.mul a b
-
     let ( / ) a b = combine_kernel Float.div a b
   end
 
   module Transform = struct
     let ( + ) a b = map2 (fun a b -> Transform (0, Transform.add a b)) a b
-
     let ( - ) a b = map2 (fun a b -> Transform (0, Transform.sub a b)) a b
-
     let ( * ) a b = map2 (fun a b -> Transform (0, Transform.mul a b)) a b
-
     let ( / ) a b = map2 (fun a b -> Transform (0, Transform.div a b)) a b
   end
 
   module Pixel = struct
     let ( + ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a + b)) a b
-
     let ( - ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a - b)) a b
-
     let ( * ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a * b)) a b
-
     let ( / ) a b = map2 (fun a b -> Pixel Pixel.Infix.(a / b)) a b
 
     let ( +@ ) a (b : float t) =
@@ -410,7 +351,6 @@ let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
        Image.shape input
 
 let transform ?input t = Transform (default_input input, t)
-
 let kernel ?input k = Kernel (default_input input, k)
 
 let compute_at ?(x = ref 0) ?(y = ref 0) (body : pixel t) inputs x' y' =
@@ -420,7 +360,6 @@ let compute_at ?(x = ref 0) ?(y = ref 0) (body : pixel t) inputs x' y' =
   prepare x y body inputs
 
 let sobel_x ?input () = kernel_3x3 ?input Kernel.sobel_x
-
 let sobel_y ?input () = kernel_3x3 ?input Kernel.sobel_y
 
 let[@inline] sobel ?input () =

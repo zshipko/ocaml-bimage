@@ -24,17 +24,11 @@ module Filter = Filter
 exception Unsupported
 
 type ('a, 'b, 'c) filter = ('a, 'b, 'c) Filter.t
-
 type 'c image_u8 = (int, u8, 'c) Image.t
-
 type 'c image_u16 = (int, u16, 'c) Image.t
-
 type 'c image_i32 = (int32, i32, 'c) Image.t
-
 type 'c image_i64 = (int64, i64, 'c) Image.t
-
 type 'c image_f32 = (float, f32, 'c) Image.t
-
 type 'c image_f64 = (float, f64, 'c) Image.t
 
 (*---------------------------------------------------------------------------

@@ -2,22 +2,16 @@ open Ctypes
 open Foreign
 
 external _stbi_load_stub : unit -> unit = "stbi_load"
-
 external _stbi_load_from_memory_stub : unit -> unit = "stbi_load_from_memory"
-
 external _stbi_load16_stub : unit -> unit = "stbi_load_16"
 
 external _stbi_load_16_from_memory_stub : unit -> unit
   = "stbi_load_16_from_memory"
 
 external _stbi_loadf_stub : unit -> unit = "stbi_loadf"
-
 external _stbi_loadf_from_memory_stub : unit -> unit = "stbi_loadf_from_memory"
-
 external _stbi_write_png : unit -> unit = "stbi_write_png"
-
 external _stbi_write_jpg : unit -> unit = "stbi_write_jpg"
-
 external _stbi_write_hdr : unit -> unit = "stbi_write_hdr"
 
 let free = foreign "free" (ptr void @-> returning void)

@@ -55,11 +55,8 @@ module Window = struct
     GLFW.windowHint ~hint:GLFW.ContextVersionMinor ~value:0
 
   let image t = t.image
-
   let data t = t.data
-
   let set_data t data = t.data <- data
-
   let set_callback t f = t.callback <- f
 
   let rec create ?callback ?width ?height title image data =
@@ -113,11 +110,8 @@ module Window = struct
     mouse_position t x y
 
   let get_key t key = GLFW.getKey ~window:t.window ~key
-
   let get_mouse_button t button = GLFW.getMouseButton ~window:t.window ~button
-
   let show window = GLFW.showWindow ~window:window.window
-
   let hide window = GLFW.hideWindow ~window:window.window
 
   let close window =

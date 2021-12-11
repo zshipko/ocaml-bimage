@@ -67,25 +67,15 @@ val convert : from:('a, 'b) t -> ('c, 'd) t -> 'a -> 'c
 (** Convert a value of one type to another *)
 
 type u8 = int8_unsigned_elt
-
 type u16 = int16_unsigned_elt
-
 type i32 = int32_elt
-
 type i64 = int64_elt
-
 type f32 = float32_elt
-
 type f64 = float64_elt
 
 val u8 : (int, u8) t
-
 val u16 : (int, u16) t
-
 val i32 : (int32, i32) t
-
 val i64 : (int64, i64) t
-
 val f32 : (float, f32) t
-
 val f64 : (float, f64) t

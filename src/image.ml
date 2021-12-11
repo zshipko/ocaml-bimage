@@ -32,9 +32,7 @@ let of_data (type color) (module C : COLOR with type t = color) width height
   else { width; height; ty; color = (module C); data }
 
 let like image = v image.ty image.color image.width image.height
-
 let like_with_size image w h = v image.ty image.color w h
-
 let like_with_ty ty image = v ty image.color image.width image.height
 
 let like_with_color color image =
@@ -56,7 +54,6 @@ let channels (type c) { color; _ } =
   C.channels C.t
 
 let[@inline] ty { data; _ } = Data.ty data
-
 let color { color; _ } = color
 
 let shape (type c) { width; height; color; _ } =
@@ -64,11 +61,8 @@ let shape (type c) { width; height; color; _ } =
   (width, height, C.channels C.t)
 
 let[@inline] length t = t.width * t.height * channels t
-
 let data { data; _ } = data
-
 let empty_pixel image = Pixel.empty image.color
-
 let empty_data image = Data.v (ty image) (channels image)
 
 let[@inline] index image x y c =

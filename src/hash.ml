@@ -38,7 +38,5 @@ let diff a b =
   !diff
 
 let equal a b = diff a b = 0
-
 let to_string hash = Printf.sprintf "%016Lx" hash
-
 let to_int64 hash = hash

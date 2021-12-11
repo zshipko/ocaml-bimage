@@ -1,10 +1,8 @@
 module type FILTER = sig
   type 'a io
-
   type ('a, 'b, 'c) t = output:('a, 'b, 'c) Image.t -> Input.t -> unit io
 
   val join : Expr.pixel Expr.t list -> ('a, 'b, 'c) t
-
   val v : ?x:int ref -> ?y:int ref -> Expr.pixel Expr.t -> ('a, 'b, 'c) t
 
   val run :
@@ -44,10 +42,7 @@ module Make (S : sig
   type 'a io
 
   val bind : unit io -> (unit -> unit io) -> unit io
-
   val detach : ('a -> unit) -> 'a -> unit io
-
   val wait : unit io -> unit
-
   val wrap : (unit -> 'a) -> 'a io
 end) : FILTER with type 'a io = 'a S.io

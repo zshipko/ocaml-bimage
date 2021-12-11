@@ -34,5 +34,4 @@ val write_jpg :
   ?quality:int -> string -> (int, u8, 'c) Image.t -> (unit, Error.t) result
 
 val write_hdr : string -> (float, f32, 'c) Image.t -> (unit, Error.t) result
-
 val write : string -> ('a, 'b, 'c) Image.t -> (unit, Error.t) result

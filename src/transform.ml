@@ -122,10 +122,7 @@ let scale x y = scale2 (1.0 /. x, 1.0 /. y)
 
 module Infix = struct
   let ( + ) = add
-
   let ( - ) = sub
-
   let ( * ) = mul
-
   let ( / ) = div
 end

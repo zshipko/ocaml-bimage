@@ -1,11 +1,8 @@
 open Bimage
 
 type input
-
 type output
-
 type spec
-
 type error = [ Error.t | `File_not_found of string ]
 
 type base_type =
@@ -43,11 +40,8 @@ let make_spec ty color width height =
   image_spec width height (Color.channels color) base
 
 external spec_shape : spec -> int * int * int = "spec_shape"
-
 external spec_base_type : spec -> base_type = "spec_base_type"
-
 external input_open : string -> input = "input_open"
-
 external input_get_spec : input -> spec = "input_get_spec"
 
 external input_read :
@@ -55,7 +49,6 @@ external input_read :
   = "input_read"
 
 external output_create : string -> output = "output_create"
-
 external output_open : output -> string -> spec -> bool -> unit = "output_open"
 
 external output_write_image : output -> spec -> ('a, 'b) Data.t -> unit
@@ -75,15 +68,10 @@ module Spec = struct
   type t = spec
 
   let shape t = spec_shape t
-
   let base_type t = spec_base_type t
-
   let make : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> t = make_spec
-
   let get_attr t name = spec_get_attr t name
-
   let set_attr t name value = spec_set_attr t name value
-
   let attr_names t = spec_get_attr_names t
 end
 

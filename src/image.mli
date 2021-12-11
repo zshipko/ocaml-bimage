@@ -20,9 +20,7 @@ val v : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
 (** [v ty color width height] makes a new image with the given [ty], [color] and dimensions *)
 
 val random : ('a, 'b) Type.t -> 'c Color.t -> int -> int -> ('a, 'b, 'c) t
-
 val compare : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> int
-
 val equal : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> bool
 
 val data : ('a, 'b, 'c) t -> ('a, 'b) Data.t
@@ -143,7 +141,6 @@ val fold2 :
   'd
 
 val map_inplace : ('a -> 'a) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-
 val map : ('a -> 'a) -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
 
 val map2_inplace :
@@ -156,7 +153,6 @@ module Diff : sig
   type diff
 
   val apply : diff -> ('a, 'b, 'c) t -> unit
-
   val length : diff -> int
 end
 

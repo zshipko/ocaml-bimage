@@ -10,9 +10,7 @@ let v color values =
   (color, Float.Array.of_list values)
 
 let fill (_, px) x = Float.Array.fill px 0 (Float.Array.length px) x
-
 let length (_color, p) = Float.Array.length p
-
 let compare a b = if a < b then -1 else if a > b then 1 else 0
 
 let equal (_, a) (_, b) =
@@ -21,7 +19,6 @@ let equal (_, a) (_, b) =
   !result
 
 let get (_, a) = Float.Array.get a
-
 let set (_, a) = Float.Array.set a
 
 let to_rgb (type color) (color, a) : Color.rgb t =
@@ -49,9 +46,7 @@ let to_data ~dest px =
   done
 
 let data (_, px) = px
-
 let color (c, _) = c
-
 let iter f px = Float.Array.iteri f (data px)
 
 let map_inplace ?(ignore_alpha = true) f px =
@@ -109,18 +104,11 @@ let pp fmt px =
 
 module Infix = struct
   let ( + ) a b = map2_inplace ( +. ) a b
-
   let ( - ) a b = map2_inplace ( -. ) a b
-
   let ( * ) a b = map2_inplace ( *. ) a b
-
   let ( / ) a b = map2_inplace ( /. ) a b
-
   let ( +@ ) a b = map_inplace (fun a -> a +. b) a
-
   let ( -@ ) a b = map_inplace (fun a -> a -. b) a
-
   let ( *@ ) a b = map_inplace (fun a -> a *. b) a
-
   let ( /@ ) a b = map_inplace (fun a -> a /. b) a
 end

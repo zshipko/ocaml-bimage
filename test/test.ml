@@ -118,7 +118,6 @@ let test_crop ~output input =
   Image.copy_to ~dest:output im
 
 let input = Error.unwrap @@ Stb.read_u8 rgb "test.jpg"
-
 let output = Image.like input
 
 let tests =

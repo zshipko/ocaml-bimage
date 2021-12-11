@@ -65,23 +65,15 @@ val fold : ?ignore_alpha:bool -> (float -> 'a -> 'a) -> 'b t -> 'a -> 'a
 (** Reduction over a pixel *)
 
 val clamp : 'a t -> 'a t
-
 val pp : Format.formatter -> 'a t -> unit
 
 module Infix : sig
   val ( + ) : 'a t -> 'a t -> 'a t
-
   val ( - ) : 'a t -> 'a t -> 'a t
-
   val ( * ) : 'a t -> 'a t -> 'a t
-
   val ( / ) : 'a t -> 'a t -> 'a t
-
   val ( +@ ) : 'a t -> float -> 'a t
-
   val ( -@ ) : 'a t -> float -> 'a t
-
   val ( *@ ) : 'a t -> float -> 'a t
-
   val ( /@ ) : 'a t -> float -> 'a t
 end

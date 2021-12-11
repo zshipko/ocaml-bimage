@@ -12,9 +12,7 @@ open Bigarray
 (** {1 Bimage} *)
 
 module type TYPE = Type.TYPE
-
 module type COLOR = Color.COLOR
-
 module type FILTER = Filter.FILTER
 
 exception Unsupported
@@ -60,27 +58,17 @@ val rgba : [ `Rgba ] Color.t
 module Type = Type
 
 type u8 = int8_unsigned_elt
-
 type u16 = int16_unsigned_elt
-
 type i32 = int32_elt
-
 type i64 = int64_elt
-
 type f32 = float32_elt
-
 type f64 = float64_elt
 
 val u8 : (int, u8) Type.t
-
 val u16 : (int, u16) Type.t
-
 val i32 : (int32, i32) Type.t
-
 val i64 : (int64, i64) Type.t
-
 val f32 : (float, f32) Type.t
-
 val f64 : (float, f64) Type.t
 
 module Data = Data
@@ -93,15 +81,10 @@ module Image = Image
 (** [Image] defines an image type and functions that manipulate images directly *)
 
 type 'c image_u8 = (int, u8, 'c) Image.t
-
 type 'c image_u16 = (int, u16, 'c) Image.t
-
 type 'c image_i32 = (int32, i32, 'c) Image.t
-
 type 'c image_i64 = (int64, i64, 'c) Image.t
-
 type 'c image_f32 = (float, f32, 'c) Image.t
-
 type 'c image_f64 = (float, f64, 'c) Image.t
 
 module Kernel = Kernel

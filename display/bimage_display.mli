@@ -29,25 +29,15 @@ module Window : sig
     'c t
 
   val window : 'a t -> GLFW.window
-
   val image : 'a t -> Bimage.Image.any
-
   val show : 'a t -> unit
-
   val hide : 'a t -> unit
-
   val close : 'a t -> unit
-
   val update : 'a t -> unit
-
   val data : 'a t -> 'a
-
   val set_data : 'a t -> 'a -> unit
-
   val set_callback : 'a t -> ('a t -> unit) option -> unit
-
   val replace_image : 'x t -> ('a, 'b, [< `Rgb | `Rgba ]) Bimage.Image.t -> unit
-
   val mouse_position : 'a t -> float -> float -> float * float
 
   val on_mouse_button :
@@ -61,9 +51,7 @@ module Window : sig
     unit
 
   val get_mouse_position : 'a t -> float * float
-
   val get_key : 'a t -> GLFW.key -> bool
-
   val get_mouse_button : 'a t -> int -> bool
 end
 

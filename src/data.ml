@@ -33,11 +33,8 @@ let fold f a init =
   !acc
 
 let hash a = Hashtbl.hash a
-
 let compare a b = compare a b
-
 let equal a b = compare a b = 0
-
 let of_array t arr = Array1.of_array (Type.kind t) C_layout arr
 
 let to_array data =
@@ -49,7 +46,6 @@ let to_array data =
   arr
 
 let fill = Bigarray.Array1.fill
-
 let slice ~offs ~length d = Bigarray.Array1.sub d offs length
 
 let map_inplace f a =

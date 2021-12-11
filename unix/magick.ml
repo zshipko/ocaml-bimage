@@ -1,7 +1,6 @@
 open Bimage
 
 let convert_command = ref "convert"
-
 let identify_command = ref "identify"
 
 let read (type color) ?(create = fun _name -> Image.v) t

@@ -2,15 +2,10 @@ module type COLOR = sig
   type t
 
   val t : t
-
   val name : t -> string
-
   val channels : t -> int
-
   val has_alpha : t -> bool
-
   val to_rgb : t -> floatarray -> floatarray
-
   val of_rgb : t -> floatarray -> floatarray
 end
 
@@ -20,15 +15,10 @@ module Rgb : COLOR with type t = [ `Rgb ] = struct
   type t = [ `Rgb ]
 
   let t = `Rgb
-
   let name _ = "rgb"
-
   let channels _ = 3
-
   let has_alpha _ = false
-
   let to_rgb _ x = x
-
   let of_rgb _ x = x
 end
 
@@ -36,11 +26,8 @@ module Rgba : COLOR with type t = [ `Rgba ] = struct
   type t = [ `Rgba ]
 
   let t = `Rgba
-
   let name _ = "rgba"
-
   let channels _ = 4
-
   let has_alpha _ = true
 
   let to_rgb _ x =
@@ -64,13 +51,9 @@ module Gray : COLOR with type t = [ `Gray ] = struct
   type t = [ `Gray ]
 
   let t = `Gray
-
   let name _ = "gray"
-
   let channels _ = 1
-
   let has_alpha _ = false
-
   let to_rgb _ (px : floatarray) = make 3 (get px 0)
 
   let of_rgb _ (px : floatarray) =
@@ -81,11 +64,8 @@ module Xyz : COLOR with type t = [ `Xyz ] = struct
   type t = [ `Xyz ]
 
   let t = `Xyz
-
   let name _ = "xyz"
-
   let channels _ = 3
-
   let has_alpha _ = false
 
   let to_rgb _ (px : floatarray) =
@@ -140,11 +120,8 @@ module Yuv : COLOR with type t = [ `Yuv ] = struct
   type t = [ `Yuv ]
 
   let t = `Yuv
-
   let name _ = "yuv"
-
   let channels _ = 3
-
   let has_alpha _ = false
 
   let to_rgb _ (px : floatarray) =
@@ -172,11 +149,8 @@ module Hsv : COLOR with type t = [ `Hsv ] = struct
   type t = [ `Hsv ]
 
   let t = `Hsv
-
   let name _ = "hsv"
-
   let channels _ = 3
-
   let has_alpha _ = false
 
   let to_rgb _ (px : floatarray) =
@@ -245,35 +219,21 @@ module Hsv : COLOR with type t = [ `Hsv ] = struct
 end
 
 type 'a t = (module COLOR with type t = 'a)
-
 type rgb = Rgb.t
-
 type rgba = Rgba.t
-
 type gray = Gray.t
-
 type xyz = Xyz.t
-
 type yuv = Yuv.t
-
 type hsv = Hsv.t
 
 let rgb : rgb t = (module Rgb)
-
 let rgba : rgba t = (module Rgba)
-
 let gray : gray t = (module Gray)
-
 let xyz : xyz t = (module Xyz)
-
 let yuv : yuv t = (module Yuv)
-
 let hsv : hsv t = (module Hsv)
-
 let channels (type a) (module C : COLOR with type t = a) = C.channels C.t
-
 let name (type a) (module C : COLOR with type t = a) = C.name C.t
-
 let has_alpha (type a) (module C : COLOR with type t = a) = C.has_alpha C.t
 
 let alpha_channel (type a) (module C : COLOR with type t = a) =

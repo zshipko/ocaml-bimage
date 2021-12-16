@@ -98,58 +98,58 @@ let name : type a b. (a, b) t -> string = fun (module T) -> T.name
 
 let depth : type a b. (a, b) t -> int =
  fun (module T) ->
-   match T.kind with
-   | Int8_unsigned -> 8
-   | Int16_unsigned -> 16
-   | Int32 -> 32
-   | Int64 -> 64
-   | Float32 -> 32
-   | Float64 -> 32
-   | _ -> raise Unsupported
+  match T.kind with
+  | Int8_unsigned -> 8
+  | Int16_unsigned -> 16
+  | Int32 -> 32
+  | Int64 -> 64
+  | Float32 -> 32
+  | Float64 -> 32
+  | _ -> raise Unsupported
 
 let[@inline] max : type a b. (a, b) t -> a =
  fun (module T) ->
-   match T.kind with
-   | Int8_unsigned -> 255
-   | Int16_unsigned -> 65535
-   | Int32 -> Int32.max_int
-   | Int64 -> Int64.max_int
-   | Float32 -> 1.0
-   | Float64 -> 1.0
-   | _ -> raise Unsupported
+  match T.kind with
+  | Int8_unsigned -> 255
+  | Int16_unsigned -> 65535
+  | Int32 -> Int32.max_int
+  | Int64 -> Int64.max_int
+  | Float32 -> 1.0
+  | Float64 -> 1.0
+  | _ -> raise Unsupported
 
 let[@inline] min : type a b. (a, b) t -> a =
  fun (module T) ->
-   match T.kind with
-   | Int8_unsigned -> 0
-   | Int16_unsigned -> 0
-   | Int32 -> Int32.min_int
-   | Int64 -> Int64.min_int
-   | Float32 -> 0.0
-   | Float64 -> 0.0
-   | _ -> raise Unsupported
+  match T.kind with
+  | Int8_unsigned -> 0
+  | Int16_unsigned -> 0
+  | Int32 -> Int32.min_int
+  | Int64 -> Int64.min_int
+  | Float32 -> 0.0
+  | Float64 -> 0.0
+  | _ -> raise Unsupported
 
 let[@inline] max_f : type a b. (a, b) t -> float =
  fun (module T) ->
-   match T.kind with
-   | Int8_unsigned -> 255.
-   | Int16_unsigned -> 65535.
-   | Int32 -> Int32.max_int |> Int32.to_float
-   | Int64 -> Int64.max_int |> Int64.to_float
-   | Float32 -> 1.0
-   | Float64 -> 1.0
-   | _ -> raise Unsupported
+  match T.kind with
+  | Int8_unsigned -> 255.
+  | Int16_unsigned -> 65535.
+  | Int32 -> Int32.max_int |> Int32.to_float
+  | Int64 -> Int64.max_int |> Int64.to_float
+  | Float32 -> 1.0
+  | Float64 -> 1.0
+  | _ -> raise Unsupported
 
 let[@inline] min_f : type a b. (a, b) t -> float =
  fun (module T) ->
-   match T.kind with
-   | Int8_unsigned -> 0.0
-   | Int16_unsigned -> 0.0
-   | Int32 -> Int32.min_int |> Int32.to_float
-   | Int64 -> Int64.min_int |> Int64.to_float
-   | Float32 -> 0.0
-   | Float64 -> 0.0
-   | _ -> raise Unsupported
+  match T.kind with
+  | Int8_unsigned -> 0.0
+  | Int16_unsigned -> 0.0
+  | Int32 -> Int32.min_int |> Int32.to_float
+  | Int64 -> Int64.min_int |> Int64.to_float
+  | Float32 -> 0.0
+  | Float64 -> 0.0
+  | _ -> raise Unsupported
 
 let[@inline] to_float : type a b. (a, b) t -> a -> float =
  fun (module T) v -> T.to_float v

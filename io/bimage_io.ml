@@ -24,14 +24,14 @@ type base_type =
 
 let base_type_of_ty : type a b. (a, b) Type.t -> base_type =
  fun (module T) ->
-   match T.kind with
-   | Float64 -> Double
-   | Float32 -> Float
-   | Int8_unsigned -> UInt8
-   | Int16_unsigned -> UInt16
-   | Int32 -> Int32
-   | Int64 -> Int64
-   | _ -> raise Unsupported
+  match T.kind with
+  | Float64 -> Double
+  | Float32 -> Float
+  | Int8_unsigned -> UInt8
+  | Int16_unsigned -> UInt16
+  | Int32 -> Int32
+  | Int64 -> Int64
+  | _ -> raise Unsupported
 
 external image_spec : int -> int -> int -> base_type -> spec = "image_spec"
 

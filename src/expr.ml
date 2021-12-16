@@ -274,74 +274,74 @@ let resize ?input width height =
 
 let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
  fun x y expr inputs ->
-   match expr with
-   | Option None -> None
-   | Option (Some a) -> Some (prepare x y a inputs)
-   | Kernel (i, k) -> prepare x y (kernel ~input:i k) inputs
-   | Transform (i, t) -> prepare x y (transform ~input:i t) inputs
-   | Image input -> Input.get inputs input
-   | Input (input, x', y') ->
-       let x' = prepare x y x' inputs in
-       let y' = prepare x y y' inputs in
-       let (Any input) = Input.get inputs input in
-       let f = Image.get_pixel input x' y' in
-       Pixel.to_rgb f
-   | X -> !x
-   | Y -> !y
-   | Bool b -> b
-   | Int i -> i
-   | Float f -> f
-   | Gt (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a > b
-   | Eq (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a = b
-   | Lt (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a < b
-   | And (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a && b
-   | Or (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       a || b
-   | Not a ->
-       let a = prepare x y a inputs in
-       not a
-   | Cond (cond, a, b) ->
-       let cond = prepare x y cond inputs in
-       if cond then prepare x y a inputs else prepare x y b inputs
-   | Func (f, func) ->
-       let x' = prepare x y X inputs in
-       let y' = prepare x y Y inputs in
-       let f = prepare x y f inputs in
-       let r = func x' y' f in
-       prepare x y r inputs
-   | Pixel px -> Pixel.to_rgb px
-   | Pixel_get (px, i) ->
-       let px = prepare x y px inputs in
-       let i = prepare x y i inputs in
-       Pixel.get px i
-   | Pixel_set (px, i, f) ->
-       let px = prepare x y px inputs in
-       let i = prepare x y i inputs in
-       let f = prepare x y f inputs in
-       Pixel.set px i f;
-       px
-   | Value x -> x
-   | Pair (a, b) ->
-       let a = prepare x y a inputs in
-       let b = prepare x y b inputs in
-       (a, b)
-   | Shape index ->
-       let (Any input) = inputs.(index) in
-       Image.shape input
+  match expr with
+  | Option None -> None
+  | Option (Some a) -> Some (prepare x y a inputs)
+  | Kernel (i, k) -> prepare x y (kernel ~input:i k) inputs
+  | Transform (i, t) -> prepare x y (transform ~input:i t) inputs
+  | Image input -> Input.get inputs input
+  | Input (input, x', y') ->
+      let x' = prepare x y x' inputs in
+      let y' = prepare x y y' inputs in
+      let (Any input) = Input.get inputs input in
+      let f = Image.get_pixel input x' y' in
+      Pixel.to_rgb f
+  | X -> !x
+  | Y -> !y
+  | Bool b -> b
+  | Int i -> i
+  | Float f -> f
+  | Gt (a, b) ->
+      let a = prepare x y a inputs in
+      let b = prepare x y b inputs in
+      a > b
+  | Eq (a, b) ->
+      let a = prepare x y a inputs in
+      let b = prepare x y b inputs in
+      a = b
+  | Lt (a, b) ->
+      let a = prepare x y a inputs in
+      let b = prepare x y b inputs in
+      a < b
+  | And (a, b) ->
+      let a = prepare x y a inputs in
+      let b = prepare x y b inputs in
+      a && b
+  | Or (a, b) ->
+      let a = prepare x y a inputs in
+      let b = prepare x y b inputs in
+      a || b
+  | Not a ->
+      let a = prepare x y a inputs in
+      not a
+  | Cond (cond, a, b) ->
+      let cond = prepare x y cond inputs in
+      if cond then prepare x y a inputs else prepare x y b inputs
+  | Func (f, func) ->
+      let x' = prepare x y X inputs in
+      let y' = prepare x y Y inputs in
+      let f = prepare x y f inputs in
+      let r = func x' y' f in
+      prepare x y r inputs
+  | Pixel px -> Pixel.to_rgb px
+  | Pixel_get (px, i) ->
+      let px = prepare x y px inputs in
+      let i = prepare x y i inputs in
+      Pixel.get px i
+  | Pixel_set (px, i, f) ->
+      let px = prepare x y px inputs in
+      let i = prepare x y i inputs in
+      let f = prepare x y f inputs in
+      Pixel.set px i f;
+      px
+  | Value x -> x
+  | Pair (a, b) ->
+      let a = prepare x y a inputs in
+      let b = prepare x y b inputs in
+      (a, b)
+  | Shape index ->
+      let (Any input) = inputs.(index) in
+      Image.shape input
 
 let transform ?input t = Transform (default_input input, t)
 let kernel ?input k = Kernel (default_input input, k)

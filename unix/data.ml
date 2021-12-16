@@ -14,7 +14,8 @@ let mmap (type a b) ?(offset = 0L) ?(mode = 0o0655)
   let arr =
     if Sys.file_exists filename then
       let stat = Unix.stat filename in
-      if stat.Unix.st_size = Int64.to_int offset + n then
+      let d = Bimage.Type.depth (module T) / 8 in
+      if stat.Unix.st_size = d + Int64.to_int offset + n then
         let fd = Unix.openfile filename Unix.[ O_RDWR ] mode in
         Unix.map_file ~pos:offset fd T.kind Bigarray.C_layout true [| n |]
         |> Bigarray.array1_of_genarray

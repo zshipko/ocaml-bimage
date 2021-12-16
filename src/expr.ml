@@ -205,7 +205,8 @@ let kernel ?input k =
             f := Infix.Pixel.(!f + (input *@ float kr.(idx)))
           done
         done;
-        map (fun px -> Pixel (Pixel.clamp px)) !f)
+        let* px = !f in
+        Pixel (Pixel.clamp px))
 
 let transform ?input t =
   let input = default_input input in
@@ -228,42 +229,36 @@ let rotate ?input ?center angle =
 
 let rotate_90 ?input () =
   let input = default_input input in
-  map
-    (fun i ->
-      let (Image.Any image) = i in
-      let open Image in
-      let open Util in
-      let center =
-        (Float.of_int image.height /. 2., Float.of_int image.height /. 2.)
-      in
-      rotate ~input ~center (Angle.of_degrees 90.))
-    (Image input)
+  let* i = Image input in
+  let (Image.Any image) = i in
+  let open Image in
+  let open Util in
+  let center =
+    (Float.of_int image.height /. 2., Float.of_int image.height /. 2.)
+  in
+  rotate ~input ~center (Angle.of_degrees 90.)
 
 let rotate_180 ?input () =
   let input = default_input input in
-  map
-    (fun i ->
-      let (Image.Any image) = i in
-      let open Image in
-      let open Util in
-      let center =
-        (Float.of_int image.width /. 2., Float.of_int image.height /. 2.)
-      in
-      rotate ~input ~center (Angle.of_degrees 180.))
-    (Image input)
+  let* i = Image input in
+  let (Image.Any image) = i in
+  let open Image in
+  let open Util in
+  let center =
+    (Float.of_int image.width /. 2., Float.of_int image.height /. 2.)
+  in
+  rotate ~input ~center (Angle.of_degrees 180.)
 
 let rotate_270 ?input () =
   let input = default_input input in
-  map
-    (fun i ->
-      let (Image.Any image) = i in
-      let open Image in
-      let open Util in
-      let center =
-        (Float.of_int image.width /. 2., Float.of_int image.width /. 2.)
-      in
-      rotate ~center (Angle.of_degrees 270.) ~input)
-    (Image input)
+  let* i = Image input in
+  let (Image.Any image) = i in
+  let open Image in
+  let open Util in
+  let center =
+    (Float.of_int image.width /. 2., Float.of_int image.width /. 2.)
+  in
+  rotate ~center (Angle.of_degrees 270.) ~input
 
 let scale ?input x y =
   let s = Transform.scale x y in
@@ -271,13 +266,11 @@ let scale ?input x y =
 
 let resize ?input width height =
   let input = default_input input in
-  map
-    (fun input ->
-      let (Image.Any image) = input in
-      let x = Float.of_int width /. Float.of_int image.width in
-      let y = Float.of_int height /. Float.of_int image.height in
-      scale x y)
-    (Image input)
+  let* input = Image input in
+  let (Image.Any image) = input in
+  let x = Float.of_int width /. Float.of_int image.width in
+  let y = Float.of_int height /. Float.of_int image.height in
+  scale x y
 
 let rec prepare : type a. int ref -> int ref -> a t -> Input.t -> a =
  fun x y expr inputs ->

@@ -1,7 +1,7 @@
-# Unrealeased
+# v0.5
 - Removed `Bimage_unix.Thread.Filter`
-- Rename `Bimage_unix.{Data_unix,Image_unix}.create_mmap` to `mmap`
-- Remove `Filter.Make` and `bimage-lwt`
+- Renamed `Bimage_unix.{Data_unix,Image_unix}.create_mmap` to `mmap`
+- Removed `Filter.Make`, `FILTER` and `bimage-lwt`
 
 # v0.4
 - Added `let*` and `let+` operators

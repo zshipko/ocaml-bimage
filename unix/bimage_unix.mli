@@ -8,7 +8,7 @@ module Magick = Magick
     command-line *)
 
 module Data_unix : sig
-  val create_mmap :
+  val mmap :
     ?offset:int64 ->
     ?mode:int ->
     ('a, 'b) Type.t ->
@@ -18,7 +18,7 @@ module Data_unix : sig
 end
 
 module Image_unix : sig
-  val create_mmap :
+  val mmap :
     ?offset:int64 ->
     ?mode:int ->
     ('a, 'b) Type.t ->

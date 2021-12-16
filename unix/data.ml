@@ -1,13 +1,24 @@
 open Bigarray
 
-let create_mmap (type a b) ?(offset = 0L) ?(mode = 0o0655)
+let mmap (type a b) ?(offset = 0L) ?(mode = 0o0655)
     (module T : Bimage.TYPE with type t = a and type elt = b) ~filename n =
-  let arr =
+  let make_new () =
     let fd = Unix.openfile filename Unix.[ O_RDWR; O_CREAT ] mode in
     let arr =
       Unix.map_file ~pos:offset fd T.kind Bigarray.C_layout true [| n |]
     in
-    Bigarray.array1_of_genarray arr
+    let arr = Bigarray.array1_of_genarray arr in
+    Array1.fill arr (Bimage.Type.of_float (module T) 0.0);
+    arr
   in
-  Array1.fill arr (Bimage.Type.of_float (module T) 0.0);
+  let arr =
+    if Sys.file_exists filename then
+      let stat = Unix.stat filename in
+      if stat.Unix.st_size = Int64.to_int offset + n then
+        let fd = Unix.openfile filename Unix.[ O_RDWR ] mode in
+        Unix.map_file ~pos:offset fd T.kind Bigarray.C_layout true [| n |]
+        |> Bigarray.array1_of_genarray
+      else make_new ()
+    else make_new ()
+  in
   arr

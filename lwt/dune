@@ -1,4 +1,0 @@
-(library
- (name bimage_lwt)
- (public_name bimage-lwt)
- (libraries bimage lwt.unix))

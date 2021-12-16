@@ -13,7 +13,6 @@ open Bigarray
 
 module type TYPE = Type.TYPE
 module type COLOR = Color.COLOR
-module type FILTER = Filter.FILTER
 
 exception Unsupported
 (** Raised when attempting to use Bigarray types other than u8, u16, f32, f64, i32, i64*)

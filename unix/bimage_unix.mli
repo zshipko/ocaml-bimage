@@ -9,11 +9,17 @@ module Magick = Magick
 
 module Data_unix : sig
   val create_mmap :
-    ?mode:int -> ('a, 'b) Type.t -> filename:string -> int -> ('a, 'b) Data.t
+    ?offset:int64 ->
+    ?mode:int ->
+    ('a, 'b) Type.t ->
+    filename:string ->
+    int ->
+    ('a, 'b) Data.t
 end
 
 module Image_unix : sig
   val create_mmap :
+    ?offset:int64 ->
     ?mode:int ->
     ('a, 'b) Type.t ->
     'c Color.t ->

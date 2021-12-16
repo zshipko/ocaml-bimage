@@ -36,16 +36,13 @@ module Input : sig
   val spec : t -> Spec.t
 
   val read_image :
-    ?index:int ->
-    t ->
-    ('a, 'b, [> `Rgb | `Gray ]) Bimage.Image.t ->
-    (unit, error) result
+    ?index:int -> t -> ('a, 'b, [ `Rgb ]) Bimage.Image.t -> (unit, error) result
 
   val read :
     ?index:int ->
     t ->
     ('a, 'b) Bimage.Type.t ->
-    ([< `Rgb | `Gray ] as 'c) Bimage.Color.t ->
+    ([ `Rgb ] as 'c) Bimage.Color.t ->
     (('a, 'b, 'c) Bimage.Image.t, error) result
 end
 
@@ -64,7 +61,7 @@ end
 
 val read :
   ('a, 'b) Bimage.Type.t ->
-  ([< `Rgb | `Gray ] as 'c) Bimage.Color.t ->
+  'c Bimage.Color.t ->
   string ->
   (('a, 'b, 'c) Bimage.Image.t, error) result
 

@@ -188,9 +188,12 @@ let convert_to ~dest img =
     img
 
 let convert k (c : 'c Color.t) img =
-  let dest = v k c img.width img.height in
-  convert_to ~dest img;
-  dest
+  if Color.name img.color = Color.name c && Type.name img.ty = Type.name k then
+    Obj.magic img (* Color/type are alreaddy checked, so this is safe *)
+  else
+    let dest = v k c img.width img.height in
+    convert_to ~dest img;
+    dest
 
 let avg ?(x = 0) ?(y = 0) ?width ?height img =
   let width =

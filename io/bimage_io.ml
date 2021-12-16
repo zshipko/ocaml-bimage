@@ -134,5 +134,6 @@ let write filename image =
 
 let read t c filename =
   match Input.init filename with
-  | Ok input -> Input.read input t c
+  | Ok input ->
+      Result.map (fun image -> Image.convert t c image) (Input.read input t rgb)
   | Error e -> Error e

@@ -28,3 +28,5 @@ Window system for Bimage
 description: """
 Allows for Bimage Images to be displayed using OpenGL
 """
+
+available: os = "linux"

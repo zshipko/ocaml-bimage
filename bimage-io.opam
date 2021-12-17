@@ -27,3 +27,5 @@ Input/output for Bimage using OpenImageIO
 description: """
 Input/output for Bimage using OpenImageIO
 """
+
+available: os = "linux"

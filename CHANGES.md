@@ -1,3 +1,6 @@
+# Unreleased
+- Fixed `Bimage_display.Window.mouse_position`
+
 # v0.5.0
 - Removed `Bimage_unix.Thread.Filter`
 - Renamed `Bimage_unix.{Data_unix,Image_unix}.create_mmap` to `mmap`

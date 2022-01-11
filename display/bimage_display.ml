@@ -80,22 +80,22 @@ module Window = struct
     ignore (GLFW.setMouseButtonCallback ~window:window.window ~f:(Some g))
 
   let mouse_position t x y =
-    let w, h = GLFW.getWindowSize ~window:t.window in
-    let w, h = Float.of_int w, Float.of_int h in
+    let win_w, win_h = GLFW.getWindowSize ~window:t.window in
+    let win_w, win_h = Float.of_int win_w, Float.of_int win_h in
     let (Any image) = t.image in
     let image_width = Float.of_int image.width in
     let image_height = Float.of_int image.height in
-    let w_ratio = w /. image_width in
-    let h_ratio = h /. image_height in
-    let ratio = if w_ratio > h_ratio then w_ratio  else h_ratio in
+    let w_ratio = win_w /. image_width in
+    let h_ratio = win_h /. image_height in
+    let ratio = if w_ratio < h_ratio then w_ratio  else h_ratio in
     let x' =
-      Float.max (w -. Float.of_int t.texture.width) 0.0 /. 2.
+      Float.max (win_w -. Float.of_int t.texture.width) 0.0 /. 2.
     in
     let y' =
-      Float.max (h -. Float.of_int t.texture.height) 0.0 /. 2.
+      Float.max (win_h -. Float.of_int t.texture.height) 0.0 /. 2.
     in
-    let x = Float.min (Float.max (x -. x') 0.0) w in
-    let y = Float.min (Float.max (y -. y') 0.0) h in
+    let x = Float.min (Float.max (x -. x') 0.0) win_w in
+    let y = Float.min (Float.max (y -. y') 0.0) win_h in
     (x /. ratio, y /. ratio)
 
   let on_mouse_move f window =

@@ -1,5 +1,7 @@
-# Unreleased
+# v0.6.0
 - Fixed `Bimage_display.Window.mouse_position`
+- Link against `libOpenImageIO_Util`
+- Added `Expr.prepare`
 
 # v0.5.0
 - Removed `Bimage_unix.Thread.Filter`

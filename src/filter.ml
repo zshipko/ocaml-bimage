@@ -1,19 +1,19 @@
 type ('a, 'b, 'c) t = output:('a, 'b, 'c) Image.t -> Input.t -> unit
 
 let v ?(x = ref 0) ?(y = ref 0) expr : ('a, 'b, 'c) t =
-  let op = Expr.compute_at expr in
+  let op = Expr.prepare x y expr in
   fun ~output inputs ->
     let width, height, _channels = Image.shape output in
     let rec inner () =
       if !y >= height then ()
       else
         let y' = !y in
-        for x' = 0 to width - 1 do
+        let () = for x' = 0 to width - 1 do
           x := x';
-          let px = op inputs x' y' |> Pixel.of_rgb output.color in
+          let px = op inputs |> Pixel.of_rgb output.color in
           Image.set_pixel output x' y' px
-        done;
-        incr y;
+        done in
+        let () = incr y in
         inner ()
     in
     inner ()

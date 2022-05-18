@@ -29,6 +29,8 @@ type 'a t =
   | Shape : Input.index -> (int * int * int) t
   | Option : 'a t option -> 'a option t
 
+val prepare: int ref -> int ref -> 'a t -> Input.t -> 'a
+
 val compute_at :
   ?x:int ref -> ?y:int ref -> pixel t -> Input.t -> int -> int -> pixel
 (** Compute value of expression at the given point *)

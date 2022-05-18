@@ -28,7 +28,7 @@ value bimage_create_texture(value width, value height, value channels,
 
   texture_color = Int_val(channels) == 3 ? GL_RGB : GL_RGBA;
 
-  switch (Caml_ba_array_val(data)->flags & BIGARRAY_KIND_MASK) {
+  switch (Caml_ba_array_val(data)->flags & CAML_BA_KIND_MASK) {
   case CAML_BA_UINT8:
     texture_kind = GL_UNSIGNED_BYTE;
     break;

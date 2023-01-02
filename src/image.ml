@@ -63,11 +63,18 @@ let shape (type c) { width; height; color; _ } =
 let[@inline] length t = t.width * t.height * channels t
 let data { data; _ } = data
 let empty_pixel image = Pixel.empty image.color
-let empty_data image = Data.v (ty image) (channels image)
 
 let[@inline] index image x y c =
   let channels = channels image in
   (y * image.width * channels) + (channels * x) + c
+
+let[@inline] unsafe_get image x y c =
+  let index = index image x y c in
+  Bigarray.Array1.unsafe_get image.data index
+
+let[@inline] unsafe_set image x y c v =
+  let index = index image x y c in
+  Bigarray.Array1.unsafe_set image.data index v
 
 let[@inline] get image x y c =
   let index = index image x y c in
@@ -127,7 +134,7 @@ let set_data image x y px =
   let index = index image x y 0 in
   let c = channels image in
   let data = Data.slice image.data ~offs:index ~length:c in
-  Data.copy_to ~dest:px data
+  Data.copy_to ~dest:data px
 
 let map_inplace f img =
   let _ = Data.map_inplace f img.data in
@@ -171,10 +178,9 @@ let for_each f ?(x = 0) ?(y = 0) ?width ?height img =
     | Some h -> min (img.height - y) h
     | None -> img.height - y
   in
-  let px = empty_data img in
   for j = y to y + height - 1 do
     for i = x to x + width - 1 do
-      let px = get_data img ~dest:px i j in
+      let px = get_data img i j in
       f i j px
     done
   done
@@ -200,7 +206,7 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
     match width with None -> img.width - x | Some w -> min w (img.width - x)
   in
   let height =
-    match height with None -> img.height - y | Some h -> min h (img.width - y)
+    match height with None -> img.height - y | Some h -> min h (img.height - y)
   in
   let avg = Data.v Type.f64 (channels img) in
   let channels = channels img in
@@ -218,14 +224,13 @@ let avg ?(x = 0) ?(y = 0) ?width ?height img =
   avg
 
 let crop im ~x ~y ~width ~height =
-  let dest = v (ty im) im.color width height in
+  let new_image = v (ty im) im.color width height in
   for_each
-    (fun i j _ ->
-      for c = 0 to channels im - 1 do
-        set dest i j c (get im (x + i) (y + j) c)
-      done)
-    dest;
-  dest
+    (fun i j dest ->
+      let src = get_data im (i + x) (j + y) in
+      Data.copy_to src ~dest)
+    new_image;
+  new_image
 
 let mean_std ?(channel = 0) image =
   let ty = ty image in

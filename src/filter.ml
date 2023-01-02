@@ -8,11 +8,13 @@ let v ?(x = ref 0) ?(y = ref 0) expr : ('a, 'b, 'c) t =
       if !y >= height then ()
       else
         let y' = !y in
-        let () = for x' = 0 to width - 1 do
-          x := x';
-          let px = op inputs |> Pixel.of_rgb output.color in
-          Image.set_pixel output x' y' px
-        done in
+        let () =
+          for x' = 0 to width - 1 do
+            x := x';
+            let px = op inputs |> Pixel.of_rgb output.color in
+            Image.set_pixel output x' y' px
+          done
+        in
         let () = incr y in
         inner ()
     in

@@ -67,6 +67,10 @@ val convert_to : dest:('d, 'e, 'f) t -> ('a, 'b, 'c) t -> unit
 val convert : ('d, 'e) Type.t -> 'f Color.t -> ('a, 'b, 'c) t -> ('d, 'e, 'f) t
 (** Convert an image to a new image of another ty *)
 
+
+val unsafe_get : ('a, 'b, 'c) t -> int -> int -> int -> 'a
+val unsafe_set : ('a, 'b, 'c) t -> int -> int -> int -> 'a -> unit
+
 val get : ('a, 'b, 'c) t -> int -> int -> int -> 'a
 (** [get image x y c] returns a the value at (x, y, c) *)
 

@@ -23,8 +23,7 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: '${{ matrix.ocaml-compiler }}'
-      - run: 'opam install --deps-only --with-test ./bimage.opam'
-      - run: 'opam install ctypes ctypes-foreign'
+      - run: 'opam install dune ctypes ctypes-foreign'
       - name: 'Run OCaml tests'
         run: 'opam exec -- dune runtest'
     strategy:

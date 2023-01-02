@@ -14,8 +14,8 @@ jobs:
     steps:
       - name: 'Install deps'
         run: bash -c '''case "$(uname)" in
-          (*Linux*) sudo apt-get update && sudo apt-get install -y libopenimageio-dev; ;;
-          (*Darwin*) brew install openimageio; ;;
+          (*Linux*) sudo apt-get update && sudo apt-get install -y libffi-dev libopenimageio-dev; ;;
+          (*Darwin*) brew install openimageio libffi; ;;
           esac'''
       - name: 'Checkout code'
         uses: actions/checkout@v2
@@ -25,26 +25,22 @@ jobs:
         with:
           key: 'ocaml-bimage-opam-${{ matrix.ocaml-version }}-${{ matrix.os }}'
           path: ~/.opam
-      - name: 'Use OCaml ${{ matrix.ocaml-version }}'
-        uses: avsm/setup-ocaml@v1
+      - name: 'Use OCaml ${{ matrix.ocaml-compiler }}'
+        uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-version: '${{ matrix.ocaml-version }}'
-      - name: 'Set Opam env'
-        run: 'opam env >> $GITHUB_ENV'
-      - name: 'Add Opam switch to PATH'
-        run: 'opam var bin >> $GITHUB_PATH'
-      - run: 'opam install dune lwt ctypes ctypes-foreign'
+          ocaml-compiler: '${{ matrix.ocaml-compiler }}'
+      - run: 'opam install --deps-only --with-test ./bimage.opam'
+      - run: 'opam install ctypes ctypes-foreign'
       - name: 'Run OCaml tests'
         run: 'opam exec -- dune runtest'
     strategy:
       fail-fast: true
       matrix:
-        ocaml-version:
+        ocaml-compiler:
+          - 5.0.0
+          - 4.14.1
           - 4.13.1
           - 4.12.1
-          - 4.11.1
-          - 4.10.0
-          - 4.09.1
           - 4.08.1
         os:
           - macos-latest

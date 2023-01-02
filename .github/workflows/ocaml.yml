@@ -19,12 +19,6 @@ jobs:
           esac'''
       - name: 'Checkout code'
         uses: actions/checkout@v2
-      - id: ocaml-bimage-opam-cache
-        name: 'OCaml/Opam cache'
-        uses: actions/cache@v2
-        with:
-          key: 'ocaml-bimage-opam-${{ matrix.ocaml-version }}-${{ matrix.os }}'
-          path: ~/.opam
       - name: 'Use OCaml ${{ matrix.ocaml-compiler }}'
         uses: ocaml/setup-ocaml@v2
         with:

@@ -23,7 +23,7 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: '${{ matrix.ocaml-compiler }}'
-          opam-local-packages: ['bimage.opam', 'bimage-unix.opam']
+          opam-local-packages: 'bimage.opam bimage-unix.opam'
       - run: 'opam install dune ctypes ctypes-foreign'
       - name: 'Run OCaml tests'
         run: 'opam exec -- dune runtest'

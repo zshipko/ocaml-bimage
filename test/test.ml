@@ -49,6 +49,11 @@ let test name f ~input ~output =
 
 let test_write ~output input = Image.copy_to ~dest:output input
 
+let test_read_from_memory ~output input =
+  input
+  |> Stb.read_u8_from_memory rgb
+  |> Error.unwrap |> Image.copy_to ~dest:output
+
 let test_invert ~output input =
   Filter.v (Expr.invert ()) |> Filter.run ~output [| Image.any input |]
 
@@ -117,12 +122,24 @@ let test_crop ~output input =
   let im = Image.crop ~x:240 ~y:120 ~width:200 ~height:400 input in
   Image.copy_to ~dest:output im
 
+let raw_input =
+  let ic = open_in_bin "test.jpg" in
+  try
+    let len = in_channel_length ic in
+    let buf = Bytes.create len in
+    really_input ic buf 0 len;
+    buf
+  with e ->
+    close_in ic;
+    raise e
+
 let input = Error.unwrap @@ Stb.read_u8 rgb "test.jpg"
 let output = Image.like input
 
 let tests =
   [
     test "write" test_write ~input ~output;
+    test "read-from-memory" test_read_from_memory ~input:raw_input ~output;
     test "grayscale-invert" test_grayscale_invert ~input ~output;
     test "blur" test_blur ~input ~output;
     test "sobel" test_sobel ~input ~output;

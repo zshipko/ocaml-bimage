@@ -28,17 +28,17 @@ let stbi_load_u16 =
 
 let stbi_load_u16_from_memory =
   foreign ~release_runtime_lock:true "stbi_load_16_from_memory"
-    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    (string @-> int @-> ptr int @-> ptr int @-> ptr int @-> int
     @-> returning (ptr uint16_t))
 
 let stbi_load_u8_from_memory =
   foreign ~release_runtime_lock:true "stbi_load_from_memory"
-    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    (string @-> int @-> ptr int @-> ptr int @-> ptr int @-> int
     @-> returning (ptr uint8_t))
 
 let stbi_load_f32_from_memory =
   foreign ~release_runtime_lock:true "stbi_loadf_from_memory"
-    (string @-> ptr int @-> ptr int @-> ptr int @-> int
+    (string @-> int @-> ptr int @-> ptr int @-> ptr int @-> int
     @-> returning (ptr float))
 
 let stbi_load_f =
@@ -72,7 +72,8 @@ let read_from_memory (type color) f a b c
   let height = allocate int 0 in
   let channels = allocate int 0 in
   let n = C.channels C.t in
-  let data = f data width height channels n in
+  let len = String.length data in
+  let data = f data len width height channels n in
   if is_null data then Error (`Msg "unable to decode image")
   else
     let data = coerce (ptr a) (ptr b) data in

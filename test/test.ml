@@ -122,13 +122,16 @@ let test_crop ~output input =
   let im = Image.crop ~x:240 ~y:120 ~width:200 ~height:400 input in
   Image.copy_to ~dest:output im
 
-let raw_input : bytes =
-  In_channel.(
-    with_open_bin "test.jpg" @@ fun c ->
-    let len = Int64.to_int @@ length c in
+let raw_input =
+  let ic = open_in_bin "test.jpg" in
+  try
+    let len = in_channel_length ic in
     let buf = Bytes.create len in
-    Option.get @@ really_input c buf 0 len;
-    buf)
+    really_input ic buf 0 len;
+    buf
+  with e ->
+    close_in ic;
+    raise e
 
 let input = Error.unwrap @@ Stb.read_u8 rgb "test.jpg"
 let output = Image.like input

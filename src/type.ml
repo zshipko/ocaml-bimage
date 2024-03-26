@@ -37,6 +37,18 @@ module U16 = struct
   let to_float = float_of_int
 end
 
+module F16 = struct
+  type t = float
+  type elt = float16_elt
+  type kind = (t, elt) Bigarray.kind
+
+  let name = "f16"
+  let kind = Float16
+  let of_float x = x
+  let to_float x = x
+end
+
+
 module F32 = struct
   type t = float
   type elt = float32_elt
@@ -87,6 +99,7 @@ type i32 = int32_elt
 type i64 = int64_elt
 type f32 = float32_elt
 type f64 = float64_elt
+type f16 = float16_elt
 
 let u8 : (int, u8) t = (module U8)
 let u16 : (int, u16) t = (module U16)
@@ -94,6 +107,7 @@ let i32 : (int32, i32) t = (module I32)
 let i64 : (int64, i64) t = (module I64)
 let f32 : (float, f32) t = (module F32)
 let f64 : (float, f64) t = (module F64)
+let f16 : (float, f16) t = (module F16)
 let name : type a b. (a, b) t -> string = fun (module T) -> T.name
 
 let depth : type a b. (a, b) t -> int =

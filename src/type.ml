@@ -117,6 +117,7 @@ let depth : type a b. (a, b) t -> int =
   | Int16_unsigned -> 16
   | Int32 -> 32
   | Int64 -> 64
+  | Float16 -> 16
   | Float32 -> 32
   | Float64 -> 32
   | _ -> raise Unsupported
@@ -128,6 +129,7 @@ let[@inline] max : type a b. (a, b) t -> a =
   | Int16_unsigned -> 65535
   | Int32 -> Int32.max_int
   | Int64 -> Int64.max_int
+  | Float16 -> 1.0
   | Float32 -> 1.0
   | Float64 -> 1.0
   | _ -> raise Unsupported
@@ -139,6 +141,7 @@ let[@inline] min : type a b. (a, b) t -> a =
   | Int16_unsigned -> 0
   | Int32 -> Int32.min_int
   | Int64 -> Int64.min_int
+  | Float16 -> 0.0
   | Float32 -> 0.0
   | Float64 -> 0.0
   | _ -> raise Unsupported
@@ -150,6 +153,7 @@ let[@inline] max_f : type a b. (a, b) t -> float =
   | Int16_unsigned -> 65535.
   | Int32 -> Int32.max_int |> Int32.to_float
   | Int64 -> Int64.max_int |> Int64.to_float
+  | Float16 -> 1.0
   | Float32 -> 1.0
   | Float64 -> 1.0
   | _ -> raise Unsupported
@@ -161,6 +165,7 @@ let[@inline] min_f : type a b. (a, b) t -> float =
   | Int16_unsigned -> 0.0
   | Int32 -> Int32.min_int |> Int32.to_float
   | Int64 -> Int64.min_int |> Int64.to_float
+  | Float16 -> 0.0
   | Float32 -> 0.0
   | Float64 -> 0.0
   | _ -> raise Unsupported
@@ -196,6 +201,7 @@ let of_kind (type a b) : (a, b) Bigarray.kind -> (a, b) t = function
   | Int16_unsigned -> u16
   | Int32 -> i32
   | Int64 -> i64
+  | Float16 -> f16
   | Float32 -> f32
   | Float64 -> f64
   | _ -> raise Unsupported

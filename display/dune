@@ -3,7 +3,8 @@
  (public_name bimage-display)
  (foreign_stubs
   (language c)
-  (names window))
+  (names window)
+  (flags -I/opt/homebrew/include))
  (c_library_flags
   (-lGL -lGLEW))
  (libraries bimage glfw-ocaml))

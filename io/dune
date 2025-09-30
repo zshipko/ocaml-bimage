@@ -3,7 +3,8 @@
  (public_name bimage-io)
  (foreign_stubs
   (language cxx)
-  (names input output spec))
+  (names input output spec)
+  (flags -std=c++17 -I/opt/homebrew/include))
  (c_library_flags
-  (-lOpenImageIO -lOpenImageIO_Util -lstdc++))
+  (-L/opt/homebrew/lib -lOpenImageIO -lOpenImageIO_Util -lstdc++))
  (libraries bimage threads))
